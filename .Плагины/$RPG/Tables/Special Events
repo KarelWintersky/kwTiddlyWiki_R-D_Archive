@@ -1,0 +1,98 @@
+﻿;1–20 
+:None
+;21–28 
+:Increase your Current Ability in one characteristic by <<rollon 1d6>>
+;29–32
+:Increase your Current Ability in two characteristics by 1d6+2 or in one characteristics by 1d10+2.
+;33 
+:Special Attribute
+;34–36 
+:Increase any Current Abilities by a total of <<rollon 2d10>>. The total may not exceed the number rolled.
+;37 
+:Your face bears pox scars from an old disease. Reduce Appearance 50% rounded down.
+;38 
+:You have a pronounced limp from an old wound. Reduce Agility by 20% rounded down.
+;39 
+:You recently escaped from a prison in a neighboring nation. You are a wanted felon in the land of the Referee’s choice.
+;40-41 
+:You escaped from a prison in the nation that the adventure is starting in within the last <<rollon 1d6>> days, and are a wanted felon.
+;42 
+:You are under a powerful Geas, the referee will set all parameters of its effect.
+;43 
+:You were raised among the Faerry. In addition to normal human Knowledge, you speak the tongue of the Faerry Sidh with an EL of 60.
+;44 
+:Special Attribute [Roll on a second table of bonus magical powers]
+;45–47 
+:Past luck garners you <<rollon 1d100>> SC.
+;48 
+:Past luck garners you <<rollon 2d10+10>> GC.
+;49 
+:Past luck garners you <<rollon 1d3>> bars of Silver.
+;50-51 
+:You possess <<rollon 1d3>> Small Jewels of unknown value. If your Station is zero, you stole them.
+;52 
+:You have <<rollon 1d2>> Medium Jewels of unknown value. If your Station is 1 or less, you stole them.
+;53 
+:You possess 1 Large Jewel of unknown value. If your Station is 2 or less you stole it.
+;54–56 
+:<<rollon KnownJewels>>
+;57 
+:Increase any Native Abilities by a total of <<rollon 1d6>>. (Increase Maximum Abilities as appropriate afterwards).
+;58 
+:You have a piece of Jewelry. You have no idea where you got it or what it is worth. You have had it since birth. The Referee will determine the type of jewelry.
+;59–62 
+:Take any 3 items from the Equipment List with a combined value under 40GC and an individual value of at least 5GC.
+;63 
+:Take any 1 item from the Equipment list with a value between 10 and 100GC
+;64 
+:If your Station is 4 or higher, you are a prosperous land owner in your homeland.  You control <<rollon "1d10*1d10">> hundreds of acres. (Your income from this is 1SC per acre per year). If your Station is 3 or less you control <<rollon "1d10*1d10">> acres as a personal freehold. (Income from this land is 3CC per acre per year). All income figures are gross values.
+;65 
+:You have a random Magic Amulet.
+;66 
+:Special Attribute. [Roll on a second table of bonus magical powers]
+;67–70 
+:Training with a Skilled Master raises your Expertise with all weapons in a weapon type of your choice to the maximum EL currently possible for your Character. No Expertise Cost is assessed for this training.
+;71 
+:You have a random magic weapon.
+;72 
+:You have a random type of magic armor.
+;73 
+:You have an authentic map to a large treasure. Referee will roll 1d6+14 on the Map Table for it’s value.
+;74 
+:You possess <<rollon 1d6>> doses of a random Potion or Elixir.
+;75 
+:You possess <<rollon 1d6>> doses of a random Natural Magic material.
+;76 
+:You have <<rollon 1d6>> doses of a random Powder.
+;77 
+:Special Attribute. [Roll on a second table of bonus magical powers]
+;78–81 
+:You have a Pet. It is a normally wild animal. The Referee will determine its species and full parameters.
+;82 
+:You have a Magic Item. The Referee will determine what it is.
+;83-84 
+:Apprentice in the Magic Path of your choice if your Native Intelligence is 15 or higher. If not, as for 82.
+;85-86 
+:You have a powerful enemy. Gain <<rollon 1d10*10>> Experience Points and D100 SC. The Referee will determine the enemy based on your actual gain, i.e. the more gained, the more powerful the enemy. The enemy will seek revenge whenever possible.
+;87 
+:Raise your Native Ability in any Mental Attribute by <<rollon 1d3>>. (Raise Maximum Ability as appropriate afterwards).
+;88 
+:Special Attribute. [Roll on a second table of bonus magical powers]
+;89–91 
+:You have a Personal Contact among your people. The Referee will determine his or her parameters.
+;92-93 
+:You have a Personal Contact, who must reside in the area that the party is starting in.
+;94 
+:Raise your Native Ability in any Physical Attribute, including Constitution and Appearance.
+;95–96 
+:You have a friend. You are accompanied by a Character Class NPC. The Referee will determine the attachment and all parameters of the friend. The CEL of the friend is <<rollon 1d6+4>>. He may not be a magic-user. He will defend his friend to the death.
+;97 
+:You were raised among the Elves. In addition to Human Knowledge, you speak the tongue of the Elf Sidh with an EL of 60.
+;98 
+:An old friend, who once saved your life, is lost in a hostile land. You are aware of his whereabouts. He holds the key to a great treasure that both of you were searching for.
+;99 
+:You are the master of a Firesnake.
+;100 
+:You have come under extraordinary influences. The referee will determine something exceptionally good or bad. If he does not wish to do so, roll three times on this table or twice on the Special Attribute table. 
+
+This table comes from Powers & Perils, and was recently posted at [[Jeff's Gameblog|http://jrients.blogspot.com/2009/03/master-of-firesnake.html]]

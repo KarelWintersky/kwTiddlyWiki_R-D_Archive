@@ -1,0 +1,1 @@
+<<newTiddler label:"New film template" tag:"фильмы" text:{{store.getTiddlerText('Шаблон:фильм')}}>>

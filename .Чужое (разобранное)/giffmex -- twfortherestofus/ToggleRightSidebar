@@ -1,0 +1,47 @@
+﻿/%
+|Name|ToggleRightSidebar|
+|Source|http://www.TiddlyTools.com/#ToggleRightSidebar|
+|Version|2.0.0|
+|Author|Eric Shulman - ELS Design Studios|
+|License|http://www.TiddlyTools.com/#LegalStatements <br>and [[Creative Commons Attribution-ShareAlike 2.5 License|http://creativecommons.org/licenses/by-sa/2.5/]]|
+|~CoreVersion|2.1|
+|Type|script|
+|Requires|InlineJavascriptPlugin|
+|Overrides||
+|Description|show/hide right sidebar (MainMenu)|
+
+Usage: <<tiddler ToggleRightSidebar with: "label">>
+
+Config settings:
+	config.options.chkShowRightSidebar (true)
+	config.options.txtToggleRightSideBarLabelShow (Show sidebar ►)
+	config.options.txtToggleRightSideBarLabelHide (Hide sidebar ◄)
+
+%/<script label="$1" title="show/hide right sidebar content">
+	var co=config.options;
+	if (co.chkShowRightSidebar=='undefined') co.chkShowRightSidebar=true;
+	co.chkShowRightSidebar=!co.chkShowRightSidebar;
+	var sb=document.getElementById('sidebar'); if (!sb) return;
+	sb.style.display=co.chkShowRightSidebar?'block':'none';
+	document.getElementById('displayArea').style.marginRight=co.chkShowRightSidebar?'':'1em';
+	saveOptionCookie('chkShowRightSidebar');
+	var labelShow=co.txtToggleRightSideBarLabelShow||(config.browser.isSafari?'&#x25c0;':'&#x25c4;');
+	var labelHide=co.txtToggleRightSideBarLabelHide||'&#x25ba;';
+	if (typeof(place)!='undefined' && '$1'=='$'+'1') {
+		place.innerHTML=co.chkShowRightSidebar?labelHide:labelShow;
+		place.title=(co.chkShowRightSidebar?'hide':'show')+' right sidebar';
+	}
+	var sm=document.getElementById('storyMenu'); if (sm) config.refreshers.content(sm);
+</script><script>
+	var co=config.options;
+	if (co.chkShowRightSidebar=='undefined') co.chkShowRightSidebar=true;
+	var sb=document.getElementById('sidebar'); if (!sb) return;
+	sb.style.display=co.chkShowRightSidebar?'block':'none';
+	document.getElementById('displayArea').style.marginRight=co.chkShowRightSidebar?'':'1em';
+	if ('$1'=='$'+'1') {
+		var labelShow=co.txtToggleRightSideBarLabelShow||(config.browser.isSafari?'&#x25c0;':'&#x25c4;');
+		var labelHide=co.txtToggleRightSideBarLabelHide||'&#x25ba;';
+		place.lastChild.innerHTML=co.chkShowRightSidebar?labelHide:labelShow;
+		place.lastChild.title=(co.chkShowRightSidebar?'hide':'show')+' right sidebar';
+	}
+</script>

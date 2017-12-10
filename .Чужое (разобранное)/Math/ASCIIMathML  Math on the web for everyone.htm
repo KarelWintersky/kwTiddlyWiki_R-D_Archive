@@ -1,0 +1,358 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd"><html><head>
+<meta http-equiv="content-type" content="text/html; charset=UTF-8">
+<title>ASCIIMathML: Math on the web for everyone</title>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<script type="text/javascript" src="ASCIIMathML%20%20Math%20on%20the%20web%20for%20everyone_files/ASCIIMathML.js"></script>
+<style type="text/css"><!--
+/* Effective stylesheet produced by snapshot save */
+#menu, #title, #subtitle, #author, .display { text-align: center; }
+body { font-family: Arial; background-color: beige; }
+p, table { font-family: Times; }
+--></style>
+</head>
+<body>
+
+<div id="menu">
+| <a href="#">Home Page</a> |
+<a href="http://www1.chapman.edu/%7Ejipsen/mathml/asciimathsyntax.html">Syntax</a> |
+<a href="http://www1.chapman.edu/%7Ejipsen/mathml/asciimathdemo.html">Try it</a> |
+<a href="http://www1.chapman.edu/%7Ejipsen/mathml/asciimathcalculator.html">Calculator</a> |
+<a href="http://www1.chapman.edu/%7Ejipsen/mathml/asciimatheditor/">Editor</a> |
+<a href="http://mathcs.chapman.edu/%7Ejipsen/mathml/asciimathdownload.html">Download</a> |
+<a href="http://mathcs.chapman.edu/%7Ejipsen/math/index.php/ASCIIMathML/ASCIIMathGraphs.html">Graphs</a> |
+<a href="http://mathcs.chapman.edu/%7Ejipsen/math/index.php/ASCIIMathML/ASCIIMathFAQ.html">ASCIIMath FAQ</a> |
+<a href="http://mathcs.chapman.edu/%7Ejipsen/math/index.php/ASCIIMathML/ASCIIMathMLSandbox.html">Sandbox</a> |
+<a href="http://groups.google.com/group/asciimath">Comments</a> |
+</div>
+
+<hr>
+
+<h2 id="title">
+ASCIIMathML.js (ver 2.0): Translating ASCII math notation to MathML
+and graphics</h2>
+
+<h4 align="center">
+Would you or your students like to <i>easily</i> produce
+<i>good-looking</i> math formulas on webpages<br>
+using a <i>simple</i> calculator-style syntax and your 
+own ASCII or HTML editor?
+<br>
+Here is a free multi-platform solution (and if you prefer it, 
+LaTeX-style formulas also work).
+</h4>
+
+<center>
+<b><font color="red">Now even easier to use:</font> 
+<font color="green"> just add one line to your 
+HTML file to load ASCIIMathML.js
+</font></b><p>
+ASCIIMathML.js is mentioned on the <a href="http://www.w3.org/Math/">MathML</a> page of the <a href="http://www.w3.org/">World Wide Web Consortium</a>, also on <a href="http://mathforum.org/library/resource_types/typesetting/">The
+Math Forum.</a>
+</p>
+
+<font color="red"><b>New:</b></font>
+<a href="http://www.mathjax.org/">MathJax 2.0</a> has been released and now comes with an <a href="http://math.chapman.edu/%7Ejipsen/mathml/asciimathjax.html">ASCIIMath input jax</a>!<br>
+<a href="http://code.google.com/p/astex-math-on-web/">ASTEX</a> by Michael Ziegler is loosely based on ASCIIMathML/LaTeXMathML and extends them<br>to work in most browsers as well as with 3d graphs, quiz questions and code-highlighting<br> A <a href="http://moodle.fratellino.ch/asciimathde/">german translation</a> of the ASCIIMathML homepages.<br>
+<!--a href="http://www.math.ist.utl.pt/~psoares/">Paolo Soares</a> TiddlyWiki <a href="http://www.math.ist.utl.pt/~psoares/asciimathml.html">plugin for ASCIIMathML</a><br/-->
+The <a href="http://www.stixfonts.org/">STIX fonts</a> have <em>finally</em> been released (download and select STIXGeneral as default font in Firefox).<br> ASCIIMath now with <b>automatic math recognition</b>
+mode, better LaTeX support and graphics integration<br>
+A <a href="http://mathcs.chapman.edu/%7Ejipsen/math/index.php/ASCIIMathML/ASCIIMathMLMoodleFilter.html">Moodle filter</a> and a <a href="http://mathcs.chapman.edu/%7Ejipsen/math/index.php/ASCIIMathML/ASCIIMathMLPmWikiCookbook.html">PmWiki cookbook</a> are also available<br>
+<a href="http://www.pierce.ctc.edu/dlippman/asciimathtex/AMT.html">ASCIIMath Image Fallback Scripts</a> by David Lippman (including a Moodle filter)<br>
+and a <a href="http://www.maths.nottingham.ac.uk/personal/drw/lm.html">LaTeXMathML</a> version of ASCIIMathML by <a href="http://www.maths.nottingham.ac.uk/personal/drw/">Dr Douglas R. Woodall</a> 
+(<a href="http://www.maths.nott.ac.uk/personal/drw/lmtest.html">examples</a>)
+<br>
+<a href="http://math.chapman.edu/%7Ejipsen/asciencepad/asciencepad.html">ASciencePad</a> is a WYSIWYG editor that integrates
+
+<a href="http://www.tiddlywiki.com/">TiddlyWiki</a>, ASCIIMathML and ASCIIsvg graphs.<br>
+It's free and works locally (no installation or server required).<br>
+Useful information about <a href="http://www.maths.ed.ac.uk/%7Ejames/ASCIIMathMLinfo.html">ASCIIMathML</a> 
+by <a href="http://www.maths.ed.ac.uk/%7Ejames/">James Gray</a>, including 
+a nice <a href="http://www.maths.ed.ac.uk/%7Ejames/ASCIIMathTutorial.html">tutorial</a>.<br>
+ASCIIMathML also works with <a href="http://www.meyerweb.com/eric/tools/s5/">S5</a> (CSS 
+Presentation slide show; <a href="http://math.chapman.edu/%7Ejipsen/talks/MathFest2005/JipsenMathFestSlides2005.html">S5 ASCIIMath example</a>)<br> 
+
+and in valid
+<a href="http://math.chapman.edu/%7Ejipsen/mathml/asciimathandmathmlsvg.xhtml">
+XHTML pages with standard MathML and SVG</a> in several browsers.
+<br>
+ASCIIMathML is being used with Movable Type, WordPress, phpBB, and many wikis.
+<br>
+Also available: A PHP port of ASCIIMathML.js to <a href="http://www.oldschool.com.sg/index.php/module/Shared/action/Static/tmpl/ASCIIMathPHP">ASCIIMathPHP</a> by <a href="mailto:kc56@cornell.edu">Steven Chan</a>.
+</center>
+
+<p>
+
+This is the main page (HTML version) for the ASCIIMathML.js script which allows
+incorporating mathematical formulas on webpages with a minimum of
+fuss (just add one line to a webpage to load the script). 
+If you like what you see, choose <b>Save As...</b> in your browser
+and this page should work equally well locally on your machine.
+</p>
+
+<p class="display">
+<b>
+This page requires Internet Explorer 6 + <a href="http://www.dessci.com/en/products/mathplayer/welcome.asp">MathPlayer</a>
+or Firefox/Mozilla/Netscape.<!-- (with <a href="http://web.mit.edu/is/topics/webpublishing/mathml/">MathML fonts</a>).-->
+</b>
+</p>
+
+<p>
+ASCIIMathML.js is freely available under the <a href="http://www.gnu.org/licenses/lgpl.html">GNU Lesser General Public
+License</a>. You can get your own copy from the <a href="http://www.chapman.edu/%7Ejipsen/mathml/asciimathdownload/">ASCIIMathML.js
+download page</a>. The script works with both HTML and XHTML webpages. 
+(The homepage for an XML 
+version is at <a href="http://www1.chapman.edu/%7Ejipsen/mathml/asciimath.xml">asciimath.xml</a> but is no 
+longer maintained). As noted above, MathML on IE requires <a href="http://www.dessci.com/en/products/mathplayer/welcome.asp">MathPLayer</a>
+and for Firefox one needs to install some <a href="http://web.mit.edu/is/topics/webpublishing/mathml/">math fonts</a>.
+</p>
+
+<p>
+If you use it on a webpage, please send me an email at <a href="mailto:jipsen@chapman.edu">jipsen@chapman.edu</a> with the URL
+so that I can add a link to it on the <a href="http://math.chapman.edu/cgi-bin/math.pl?Webpages_that_use_ASCIIMathML.js">users page</a>. 
+(Also send me an
+email if you have problems or would like to provide some feedback.)
+I'm currently using ASCIIMathML on a Wikiserver for lecture notes and
+<!--a href="http://math.chapman.edu/cgi-bin/mathxml.pl?Calculus_Text_Puzzles">Text
+Puzzles</a>. M-->my students are also using it in Moodle
+for writing and reading homework in their calculus class and 
+discrete mathematics class.
+<font color="red">
+If you just want to display MathML on HTML pages using 
+Netscape/Mozilla/Firefox or IE+MathPlayer, have a look at <a href="http://www1.chapman.edu/%7Ejipsen/mathml/mathhtml">mathhtmltest</a>
+(the page includes a 50 line JavaScript program that does the trick).
+</font>
+</p>
+
+<hr>
+
+<p>
+<b>Let's test the ASCIIMathML.js translator on a simple example.</b>
+</p>
+
+<p><span></span>
+<b><b>Example:</b></b> Solving the quadratic equation. 
+Suppose <span style="font-size: 1em; font-family: serif;"><math title="a x^2+b x+c=0"><mstyle displaystyle="true" fontfamily="serif" mathcolor="blue"><mi>a</mi><msup><mi>x</mi><mn>2</mn></msup><mo>+</mo><mi>b</mi><mi>x</mi><mo>+</mo><mi>c</mi><mo>=</mo><mn>0</mn></mstyle></math></span> and <span style="font-size: 1em; font-family: serif;"><math title="a!=0"><mstyle displaystyle="true" fontfamily="serif" mathcolor="blue"><mi>a</mi><mo>≠</mo><mn>0</mn></mstyle></math></span>. We first 
+divide by <span style="font-size: 1em; font-family: serif;"><math title="\a"><mstyle displaystyle="true" fontfamily="serif" mathcolor="blue"><mi>a</mi></mstyle></math></span> to get <span style="font-size: 1em; font-family: serif;"><math title="x^2+b/a x+c/a=0"><mstyle displaystyle="true" fontfamily="serif" mathcolor="blue"><msup><mi>x</mi><mn>2</mn></msup><mo>+</mo><mfrac><mi>b</mi><mi>a</mi></mfrac><mi>x</mi><mo>+</mo><mfrac><mi>c</mi><mi>a</mi></mfrac><mo>=</mo><mn>0</mn></mstyle></math></span>. 
+
+Then we complete the square and obtain <span style="font-size: 1em; font-family: serif;"><math title="x^2+b/a x+(b/(2a))^2-(b/(2a))^2+c/a=0"><mstyle displaystyle="true" fontfamily="serif" mathcolor="blue"><msup><mi>x</mi><mn>2</mn></msup><mo>+</mo><mfrac><mi>b</mi><mi>a</mi></mfrac><mi>x</mi><mo>+</mo><msup><mrow><mo>(</mo><mfrac><mi>b</mi><mrow><mn>2</mn><mi>a</mi></mrow></mfrac><mo>)</mo></mrow><mn>2</mn></msup><mo>-</mo><msup><mrow><mo>(</mo><mfrac><mi>b</mi><mrow><mn>2</mn><mi>a</mi></mrow></mfrac><mo>)</mo></mrow><mn>2</mn></msup><mo>+</mo><mfrac><mi>c</mi><mi>a</mi></mfrac><mo>=</mo><mn>0</mn></mstyle></math></span>. 
+The first three terms factor to give <span style="font-size: 1em; font-family: serif;"><math title="(x+b/(2a))^2=(b^2)/(4a^2)-c/a."><mstyle displaystyle="true" fontfamily="serif" mathcolor="blue"><msup><mrow><mo>(</mo><mi>x</mi><mo>+</mo><mfrac><mi>b</mi><mrow><mn>2</mn><mi>a</mi></mrow></mfrac><mo>)</mo></mrow><mn>2</mn></msup><mo>=</mo><mfrac><mrow><msup><mi>b</mi><mn>2</mn></msup></mrow><mrow><mn>4</mn><msup><mi>a</mi><mn>2</mn></msup></mrow></mfrac><mo>-</mo><mfrac><mi>c</mi><mi>a</mi></mfrac><mo>.</mo></mstyle></math></span>
+Now we take square roots on both sides and get <span style="font-size: 1em; font-family: serif;"><math title="x+b/(2a)=+-sqrt(((b^2)/(4a^2)-c/a)). "><mstyle displaystyle="true" fontfamily="serif" mathcolor="blue"><mi>x</mi><mo>+</mo><mfrac><mi>b</mi><mrow><mn>2</mn><mi>a</mi></mrow></mfrac><mo>=</mo><mo>±</mo><msqrt><mrow><mrow><mo>(</mo><mfrac><mrow><msup><mi>b</mi><mn>2</mn></msup></mrow><mrow><mn>4</mn><msup><mi>a</mi><mn>2</mn></msup></mrow></mfrac><mo>-</mo><mfrac><mi>c</mi><mi>a</mi></mfrac><mo>)</mo></mrow></mrow></msqrt><mo>.</mo></mstyle></math></span>
+Finally we subtract <span style="font-size: 1em; font-family: serif;"><math title="b/(2a)"><mstyle displaystyle="true" fontfamily="serif" mathcolor="blue"><mfrac><mi>b</mi><mrow><mn>2</mn><mi>a</mi></mrow></mfrac></mstyle></math></span> from both sides and simplify to get 
+the two solutions: <span style="font-size: 1em; font-family: serif;"><math title="x_(1,2)=(-b+-sqrt(b^2 - 4a c))/(2a) "><mstyle displaystyle="true" fontfamily="serif" mathcolor="blue"><msub><mi>x</mi><mrow><mn>1</mn><mo>,</mo><mn>2</mn></mrow></msub><mo>=</mo><mfrac><mrow><mo>-</mo><mi>b</mi><mo>±</mo><msqrt><mrow><msup><mi>b</mi><mn>2</mn></msup><mo>-</mo><mn>4</mn><mi>a</mi><mi>c</mi></mrow></msqrt></mrow><mrow><mn>2</mn><mi>a</mi></mrow></mfrac></mstyle></math></span></p>
+<span></span>
+
+<p>
+<b>Here is the text that was typed in (<font color="red">using the new 
+auto-math-recognize mode</font> started by "a<span style="font-size: 1em; font-family: serif;"><math title=""><mstyle displaystyle="true" fontfamily="serif" mathcolor="blue"><mo></mo></mstyle></math></span>math"):</b>
+
+</p>
+
+<pre><span></span>amath
+<b><b>Example:</b></b> Solving the quadratic equation.
+Suppose a x^2+b x+c=0 and a!=0. We first divide by \a to get x^2+b/a x+c/a=0. 
+
+Then we complete the square and obtain x^2+b/a x+(b/(2a))^2-(b/(2a))^2+c/a=0. 
+The first three terms factor to give (x+b/(2a))^2=(b^2)/(4a^2)-c/a.
+Now we take square roots on both sides and get x+b/(2a)=+-sqrt((b^2)/(4a^2)-c/a).
+
+Finally we move the b/(2a) to the right and simplify to get 
+the two solutions: x_(1,2)=(-b+-sqrt(b^2-4a c))/(2a)
+</pre>
+
+<hr>
+
+<center>
+<b>
+If you don't believe this, copy the text and paste it on the 
+<a href="http://www1.chapman.edu/%7Ejipsen/mathml/asciimathdemo.html">ASCIIMathML.js: Try it yourself</a> demo page.
+</b>
+
+</center>
+
+<hr>
+
+<h4>
+Here are a few more examples:
+</h4>
+
+<table id="examples" border="5" cellpadding="10">
+<tbody><tr>
+<th>Type this</th>
+<th>See that</th>
+<th>Comment</th>
+</tr>
+
+<tr>
+<td>`x^2+y_1+z_12^34`</td>
+<td><span style="font-size: 1em; font-family: serif;"><math title="x^2+y_1+z_12^34"><mstyle displaystyle="true" fontfamily="serif" mathcolor="blue"><msup><mi>x</mi><mn>2</mn></msup><mo>+</mo><msub><mi>y</mi><mn>1</mn></msub><mo>+</mo><mrow><msubsup><mi>z</mi><mn>12</mn><mn>34</mn></msubsup></mrow></mstyle></math></span></td>
+<td>subscripts as in TeX, but numbers are treated as a unit</td>
+</tr>
+<tr>
+<td>`sin^-1(x)`</td>
+<td><span style="font-size: 1em; font-family: serif;"><math title="sin^-1(x)"><mstyle displaystyle="true" fontfamily="serif" mathcolor="blue"><msup><mo>sin</mo><mrow><mo>-</mo><mn>1</mn></mrow></msup><mrow><mo>(</mo><mi>x</mi><mo>)</mo></mrow></mstyle></math></span></td>
+<td>function names are treated as constants</td>
+</tr>
+<tr>
+
+<td>`d/dxf(x)=lim_(h-&gt;0)(f(x+h)-f(x))/h`</td>
+<td><span style="font-size: 1em; font-family: serif;"><math title="d/dxf(x)=lim_(h-&gt;0)(f(x+h)-f(x))/h"><mstyle displaystyle="true" fontfamily="serif" mathcolor="blue"><mfrac><mi>d</mi><mrow><mi>d</mi><mi>x</mi></mrow></mfrac><mrow><mi>f</mi><mrow><mo>(</mo><mi>x</mi><mo>)</mo></mrow></mrow><mo>=</mo><munder><mo>lim</mo><mrow><mi>h</mi><mo>→</mo><mn>0</mn></mrow></munder><mfrac><mrow><mrow><mi>f</mi><mrow><mo>(</mo><mi>x</mi><mo>+</mo><mi>h</mi><mo>)</mo></mrow></mrow><mo>-</mo><mrow><mi>f</mi><mrow><mo>(</mo><mi>x</mi><mo>)</mo></mrow></mrow></mrow><mi>h</mi></mfrac></mstyle></math></span></td>
+<td>complex subscripts are bracketed, displayed under lim</td>
+</tr>
+<tr>
+<td>$\frac{d}{dx}f(x)=\lim_{h\to 0}\frac{f(x+h)-f(x)}{h}$</td>
+<td><span style="font-size: 1em; font-family: serif;"><math title="\frac{d}{dx}f(x)=\lim_{h\to 0}\frac{f(x+h)-f(x)}{h}"><mstyle fontfamily="serif"><mfrac><mrow><mi>d</mi></mrow><mrow><mi>d</mi><mi>x</mi></mrow></mfrac><mi>f</mi><mo maxsize="1">(</mo><mi>x</mi><mo maxsize="1">)</mo><mo>=</mo><mrow><munder><mo>lim</mo><mrow><mi>h</mi><mo>→</mo><mn>0</mn></mrow></munder></mrow><mfrac><mrow><mi>f</mi><mo maxsize="1">(</mo><mi>x</mi><mo>+</mo><mi>h</mi><mo maxsize="1">)</mo><mo>-</mo><mi>f</mi><mo maxsize="1">(</mo><mi>x</mi><mo maxsize="1">)</mo></mrow><mrow><mi>h</mi></mrow></mfrac></mstyle></math></span></td>
+<td>standard LaTeX notation is an alternative</td>
+</tr>
+<tr>
+<td>`f(x)=sum_(n=0)^oo(f^((n))(a))/(n!)(x-a)^n`</td>
+
+<td><span style="font-size: 1em; font-family: serif;"><math title="f(x)=sum_(n=0)^oo(f^((n))(a))/(n!)(x-a)^n"><mstyle displaystyle="true" fontfamily="serif" mathcolor="blue"><mrow><mi>f</mi><mrow><mo>(</mo><mi>x</mi><mo>)</mo></mrow></mrow><mo>=</mo><mrow><munderover><mo>∑</mo><mrow><mi>n</mi><mo>=</mo><mn>0</mn></mrow><mo>∞</mo></munderover></mrow><mfrac><mrow><msup><mi>f</mi><mrow><mrow><mo>(</mo><mi>n</mi><mo>)</mo></mrow></mrow></msup><mrow><mo>(</mo><mi>a</mi><mo>)</mo></mrow></mrow><mrow><mi>n</mi><mo>!</mo></mrow></mfrac><msup><mrow><mo>(</mo><mi>x</mi><mo>-</mo><mi>a</mi><mo>)</mo></mrow><mi>n</mi></msup></mstyle></math></span></td>
+<td>f^((n))(a) must be bracketed, else the numerator is only <span style="font-size: 1em; font-family: serif;"><math title="a"><mstyle displaystyle="true" fontfamily="serif" mathcolor="blue"><mi>a</mi></mstyle></math></span></td>
+</tr>
+<tr>
+<td>$f(x)=\sum_{n=0}^\infty\frac{f^{(n)}(a)}{n!}(x-a)^n$</td>
+<td><span style="font-size: 1em; font-family: serif;"><math title="f(x)=\sum_{n=0}^\infty\frac{f^{(n)}(a)}{n!}(x-a)^n"><mstyle fontfamily="serif"><mi>f</mi><mo maxsize="1">(</mo><mi>x</mi><mo maxsize="1">)</mo><mo>=</mo><mrow><munderover><mo>∑</mo><mrow><mi>n</mi><mo>=</mo><mn>0</mn></mrow><mo>∞</mo></munderover></mrow><mfrac><mrow><mrow><msup><mi>f</mi><mrow><mo maxsize="1">(</mo><mi>n</mi><mo maxsize="1">)</mo></mrow></msup></mrow><mo maxsize="1">(</mo><mi>a</mi><mo maxsize="1">)</mo></mrow><mrow><mi>n</mi><mo>!</mo></mrow></mfrac><mo maxsize="1">(</mo><mi>x</mi><mo>-</mo><mi>a</mi><mrow><msup><mo maxsize="1">)</mo><mi>n</mi></msup></mrow></mstyle></math></span></td>
+<td>standard LaTeX produces the same result</td>
+</tr>
+<tr>
+<td>`int_0^1f(x)dx`</td>
+<td><span style="font-size: 1em; font-family: serif;"><math title="int_0^1f(x)dx"><mstyle displaystyle="true" fontfamily="serif" mathcolor="blue"><mrow><msubsup><mo>∫</mo><mn>0</mn><mn>1</mn></msubsup></mrow><mrow><mi>f</mi><mrow><mo>(</mo><mi>x</mi><mo>)</mo></mrow></mrow><mrow><mi>d</mi><mi>x</mi></mrow></mstyle></math></span></td>
+
+<td>subscripts must come before superscripts</td>
+</tr>
+<tr>
+<td>`[[a,b],[c,d]]((n),(k))`</td>
+<td><span style="font-size: 1em; font-family: serif;"><math title="[[a,b],[c,d]]((n),(k))"><mstyle displaystyle="true" fontfamily="serif" mathcolor="blue"><mrow><mo>[</mo><mtable><mtr><mtd><mi>a</mi></mtd><mtd><mi>b</mi></mtd></mtr><mtr><mtd><mi>c</mi></mtd><mtd><mi>d</mi></mtd></mtr></mtable><mo>]</mo></mrow><mrow><mo>(</mo><mtable><mtr><mtd><mi>n</mi></mtd></mtr><mtr><mtd><mi>k</mi></mtd></mtr></mtable><mo>)</mo></mrow></mstyle></math></span></td>
+<td>matrices and column vectors are simple to type</td>
+</tr>
+<tr>
+<td>`x/x={(1,if x!=0),(text{undefined},if x=0):}`</td>
+<td><span style="font-size: 1em; font-family: serif;"><math title="x/x={(1,if x!=0),(text{undefined},if x=0):}"><mstyle displaystyle="true" fontfamily="serif" mathcolor="blue"><mfrac><mi>x</mi><mi>x</mi></mfrac><mo>=</mo><mrow><mo>{</mo><mtable columnalign="left"><mtr><mtd><mn>1</mn></mtd><mtd><mrow><mspace width="1ex"></mspace><mo>if</mo><mspace width="1ex"></mspace></mrow><mi>x</mi><mo>≠</mo><mn>0</mn></mtd></mtr><mtr><mtd><mrow><mtext>undefined</mtext></mrow></mtd><mtd><mrow><mspace width="1ex"></mspace><mo>if</mo><mspace width="1ex"></mspace></mrow><mi>x</mi><mo>=</mo><mn>0</mn></mtd></mtr></mtable></mrow></mstyle></math></span></td>
+<td>piecewise defined functions are based on matrix notation</td>
+
+</tr>
+<tr>
+<td>`a//b`</td>
+<td><span style="font-size: 1em; font-family: serif;"><math title="a//b"><mstyle displaystyle="true" fontfamily="serif" mathcolor="blue"><mi>a</mi><mo>/</mo><mi>b</mi></mstyle></math></span></td>
+<td>use // for inline fractions</td>
+</tr>
+<tr>
+<td>`(a/b)/(c/d)`</td>
+<td><span style="font-size: 1em; font-family: serif;"><math title="(a/b)/(c/d)"><mstyle displaystyle="true" fontfamily="serif" mathcolor="blue"><mfrac><mrow><mfrac><mi>a</mi><mi>b</mi></mfrac></mrow><mrow><mfrac><mi>c</mi><mi>d</mi></mfrac></mrow></mfrac></mstyle></math></span></td>
+<td>with brackets, multiple fraction work as expected</td>
+</tr>
+
+<tr>
+<td>`a/b/c/d`</td>
+<td><span style="font-size: 1em; font-family: serif;"><math title="a/b/c/d"><mstyle displaystyle="true" fontfamily="serif" mathcolor="blue"><mfrac><mi>a</mi><mi>b</mi></mfrac><mo>/</mo><mfrac><mi>c</mi><mi>d</mi></mfrac></mstyle></math></span></td>
+<td>without brackets the parser chooses this particular expression</td>
+</tr>
+<tr>
+<td>`((a*b))/c`</td>
+<td><span style="font-size: 1em; font-family: serif;"><math title="((a*b))/c"><mstyle displaystyle="true" fontfamily="serif" mathcolor="blue"><mfrac><mrow><mrow><mo>(</mo><mi>a</mi><mo>⋅</mo><mi>b</mi><mo>)</mo></mrow></mrow><mi>c</mi></mfrac></mstyle></math></span></td>
+<td>only one level of brackets is removed; * gives standard product</td>
+</tr>
+<tr>
+
+<td>`sqrt sqrt root3x`</td>
+<td><span style="font-size: 1em; font-family: serif;"><math title="sqrt sqrt root3x"><mstyle displaystyle="true" fontfamily="serif" mathcolor="blue"><msqrt><msqrt><mroot><mi>x</mi><mn>3</mn></mroot></msqrt></msqrt></mstyle></math></span></td>
+<td>spaces are optional, only serve to split strings that should not match</td>
+</tr>
+<tr>
+<td>`&lt;&lt; a,b &gt;&gt; and {:(x,y),(u,v):}`</td>
+<td><span style="font-size: 1em; font-family: serif;"><math title="&lt;&lt; a,b &gt;&gt; and {:(x,y),(u,v):}"><mstyle displaystyle="true" fontfamily="serif" mathcolor="blue"><mrow><mo>〈</mo><mi>a</mi><mo>,</mo><mi>b</mi><mo>〉</mo></mrow><mrow><mspace width="1ex"></mspace><mtext>and</mtext><mspace width="1ex"></mspace></mrow><mrow><mtable columnalign="left"><mtr><mtd><mi>x</mi></mtd><mtd><mi>y</mi></mtd></mtr><mtr><mtd><mi>u</mi></mtd><mtd><mi>v</mi></mtd></mtr></mtable></mrow></mstyle></math></span></td>
+<td>angle brackets and invisible brackets</td>
+</tr>
+<tr>
+<td>`(a,b]={x in RR | a &lt; x &lt;= b}`</td>
+
+<td><span style="font-size: 1em; font-family: serif;"><math title="(a,b]={x in RR | a &lt; x &lt;= b}"><mstyle displaystyle="true" fontfamily="serif" mathcolor="blue"><mrow><mo>(</mo><mi>a</mi><mo>,</mo><mi>b</mi><mo>]</mo></mrow><mo>=</mo><mrow><mo>{</mo><mi>x</mi><mo>∈</mo><mo>ℝ</mo><mrow><mo>|</mo></mrow><mi>a</mi><mo>&lt;</mo><mi>x</mi><mo>≤</mo><mi>b</mi><mo>}</mo></mrow></mstyle></math></span></td>
+<td>grouping brackets don't have to match</td>
+</tr>
+<tr>
+<td>`abc-123.45^-1.1`</td>
+<td><span style="font-size: 1em; font-family: serif;"><math title="abc-123.45^-1.1"><mstyle displaystyle="true" fontfamily="serif" mathcolor="blue"><mi>a</mi><mi>b</mi><mi>c</mi><mo>-</mo><msup><mn>123.45</mn><mrow><mo>-</mo><mn>1.1</mn></mrow></msup></mstyle></math></span></td>
+<td>non-tokens are split into single characters,<br>
+but decimal numbers are parsed with possible sign</td>
+</tr>
+
+<tr>
+<td>`hat(ab) bar(xy) ulA vec v dotx ddot y`</td>
+<td><span style="font-size: 1em; font-family: serif;"><math title="hat(ab) bar(xy) ulA vec v dotx ddot y"><mstyle displaystyle="true" fontfamily="serif" mathcolor="blue"><mover><mrow><mi>a</mi><mi>b</mi></mrow><mo>^</mo></mover><mover><mrow><mi>x</mi><mi>y</mi></mrow><mo>¯</mo></mover><munder><mi>A</mi><mo>̲</mo></munder><mover><mi>v</mi><mo>→</mo></mover><mover><mi>x</mi><mo>.</mo></mover><mover><mi>y</mi><mo>..</mo></mover></mstyle></math></span></td>
+<td>accents can be used on any expression (work well in IE)</td>
+</tr>
+<tr>
+<td>`bb{AB3}.bbb(AB].cc(AB).fr{AB}.tt[AB].sf(AB)`</td>
+<td><span style="font-size: 1em; font-family: serif;"><math title="bb{AB3}.bbb(AB].cc(AB).fr{AB}.tt[AB].sf(AB)"><mstyle displaystyle="true" fontfamily="serif" mathcolor="blue"><mstyle fontweight="bold"><mrow><mi>A</mi><mi>B</mi><mn>3</mn></mrow></mstyle><mo>.</mo><mstyle mathvariant="double-struck"><mrow></mrow></mstyle><mo>.</mo><mstyle mathvariant="script"><mrow>ℬ</mrow></mstyle><mo>.</mo><mstyle mathvariant="fraktur"><mrow></mrow></mstyle><mo>.</mo><mstyle fontfamily="monospace"><mrow><mi>A</mi><mi>B</mi></mrow></mstyle><mo>.</mo><mstyle fontfamily="sans-serif"><mrow><mi>A</mi><mi>B</mi></mrow></mstyle></mstyle></math></span></td>
+<td>font commands; can use any brackets around argument</td>
+</tr>
+<tr>
+
+<td>`stackrel"def"= or \stackrel{\Delta}{=}" "("or ":=)`</td>
+<td><span style="font-size: 1em; font-family: serif;"><math title="stackrel&quot;def&quot;= or \stackrel{\Delta}{=}&quot; &quot;(&quot;or &quot;:=)"><mstyle displaystyle="true" fontfamily="serif" mathcolor="blue"><mover><mo>=</mo><mrow><mtext>def</mtext></mrow></mover><mrow><mspace width="1ex"></mspace><mtext>or</mtext><mspace width="1ex"></mspace></mrow><mover><mrow><mo>=</mo></mrow><mrow><mo>Δ</mo></mrow></mover><mrow><mspace width="1ex"></mspace><mtext></mtext><mspace width="1ex"></mspace></mrow><mrow><mo>(</mo><mrow><mtext>or</mtext><mspace width="1ex"></mspace></mrow><mo>:=</mo><mo>)</mo></mrow></mstyle></math></span></td>
+<td>symbols can be stacked</td>
+</tr>
+<tr>
+<td>`{::}_(\ 92)^238U`</td>
+<td><span style="font-size: 1em; font-family: serif;"><math title="{::}_(\ 92)^238U"><mstyle displaystyle="true" fontfamily="serif" mathcolor="blue"><mrow><msubsup><mrow></mrow><mrow><mo> </mo><mn>92</mn></mrow><mn>238</mn></msubsup></mrow><mi>U</mi></mstyle></math></span></td>
+<td>prescripts simulated by subsuperscripts</td>
+</tr>
+</tbody></table>
+
+<p>
+If you are familiar with MathML, you can appreciate that this ASCII
+input form is less verbose and more readable. If you are familiar with
+TeX, this is still somewhat less cluttered. The aim is to have input
+notation that is close to graphing calculator notation, so that
+students are able to use it on webpages and in emails without having
+to learn another specialized syntax.
+</p>
+
+<p>
+For an explicit description of the input syntax see <a href="http://www1.chapman.edu/%7Ejipsen/mathml/asciimathsyntax.html">ASCIIMathML.js Syntax and List of
+Constants</a>.
+</p>
+
+<p>
+<b>Acknowledgements:</b> Many thanks to the numerous people who have
+contributed to the fantastic MathML standard. Without such a
+well designed standard, a project like this would be impossible.<br>
+
+Thanks to the many volunteers who implemented MathML in the
+Gecko layout engine for Netscape7/Mozilla/Firefox.<br> 
+
+
+Thanks to the people at Design Science for producing the excellent
+MathPlayer plugin and making it freely available.<br>
+
+Finally, thanks to the designers and implementors of JavaScript.  All
+these tools work together fairly seemlessly to allow us to put
+mathematical formulas on webpages in a convenient and inexpensive way.<br>
+
+And thanks to Andrew White for making a logo for ASCIIMathML (see below).
+</p>
+<hr>
+
+<div id="author">
+<a href="http://www1.chapman.edu/%7Ejipsen/asciimath.html">
+<img src="ASCIIMathML%20%20Math%20on%20the%20web%20for%20everyone_files/ASCIIMathML.gif" alt="ASCIIMathML" border="0"></a>
+
+<a href="http://www.chapman.edu/%7Ejipsen/">Peter Jipsen</a>, 
+<a href="http://www.chapman.edu/">Chapman University</a>, February 2012
+
+<a href="http://validator.w3.org/check/referer"><img src="ASCIIMathML%20%20Math%20on%20the%20web%20for%20everyone_files/valid-html401.png" alt="Valid HTML 4.01!" border="0" height="31" width="88"></a>
+</div>
+
+<p></p><div class="display">
+<a style="color:white" href="http://www1.chapman.edu/%7Ejipsen/asciimath.html">
+<img src="ASCIIMathML%20%20Math%20on%20the%20web%20for%20everyone_files/asciimathml.jpeg.jpg" alt="ASCIIMathML"></a>
+</div>
+
+<script src="ASCIIMathML%20%20Math%20on%20the%20web%20for%20everyone_files/urchin.js" type="text/javascript">
+</script>
+<script type="text/javascript"><!--
+/* Script removed by snapshot save */
+--></script>
+
+
+</body></html>

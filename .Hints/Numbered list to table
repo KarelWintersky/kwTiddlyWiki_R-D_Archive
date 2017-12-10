@@ -1,0 +1,20 @@
+This script allows you to convert a numbered list into a table. The numbers represent the column where the data is to be presented.
+
+/%
+!tasks
+1. got to do now
+1. another important task
+2. do soon
+3. do in a month
+4. on the back burner
+2. maybe it can be in any order
+!end
+%/<script>
+        var here=story.findContainingTiddler(place); if (!here) return;
+        var lines=store.getTiddlerText(here.getAttribute('tiddler')+'##tasks','').split('\n');
+        var out=[]; for (var i=0; i<lines.length; i++) {
+                var c=parseInt(lines[i]); if (isNaN(c)) continue;
+                out[c-1]=(out[c-1]?out[c-1]+'<br>':'')+lines[i].replace(new RegExp(c+'\. '),'');
+        }
+        return '\n|'+out.join('|')+'|\n';
+</script> 

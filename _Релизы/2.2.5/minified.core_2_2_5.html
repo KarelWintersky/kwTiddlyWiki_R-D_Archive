@@ -1,0 +1,757 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+    <meta http-equiv="Content-Type" content="text/html;charset=utf-8"/>
+
+    <script type="text/javascript">
+        var version = {title:"TiddlyWiki", major:2, minor:2, revision:5, date:new Date("Aug 24, 2007"), extensions:{}};
+    </script>
+
+    <!--PRE-HEAD-START-->
+    <link rel='alternate' type='application/rss+xml' title='RSS' href='index.xml'/>
+    <!--PRE-HEAD-END-->
+    <title> НАЗВАНИЕ - Подназвание </title>
+    <script src="core.225.js" type="text/javascript"></script>
+  <style type="text/css">
+#saveTest {display:none;}
+#messageArea {display:none;}
+#copyright {display:none;}
+#storeArea {display:none;}
+#storeArea div {padding:0.5em; margin:1em 0em 0em 0em; border-color:#fff #666 #444 #ddd; border-style:solid; border-width:2px; overflow:auto;}
+#shadowArea {display:none;}
+#javascriptWarning {width:100%; text-align:center; font-weight:bold; background-color:#dd1100; color:#fff; padding:1em 0em;}
+  </style>
+</head>
+
+
+<body onload="main();"
+      onunload="if(window.checkUnsavedChanges) checkUnsavedChanges(); if(window.scrubNodes) scrubNodes(document.div);">
+
+<!--PRE-BODY-START-->
+
+<!--PRE-BODY-END-->
+<div id="copyright">Welcome to TiddlyWiki created by
+    Jeremy Ruston, Copyright &copy; 2007 UnaMesa Association
+</div>
+
+<noscript>
+    <div id="javascriptWarning">This page requires
+        JavaScript to function properly.<br/><br/>If you are
+        using Microsoft Internet Explorer you may need to click on the yellow
+        bar above and select 'Allow Blocked Content'. You must then click 'Yes'
+        on the following security warning.
+    </div>
+</noscript>
+
+<div id="saveTest"></div>
+
+<div id="backstageCloak"></div>
+
+<div id="backstageButton"></div>
+
+<div id="backstageArea">
+    <div id="backstageToolbar"></div>
+
+</div>
+
+<div id="backstage">
+    <div id="backstagePanel"></div>
+
+</div>
+
+<div id="contentWrapper"></div>
+
+<div id="contentStash"></div>
+
+<div id="shadowArea">
+<div title="ColorPalette">
+<pre>Background: #fff
+Foreground: #000
+PrimaryPale: #8cf
+PrimaryLight: #18f
+PrimaryMid: #04b
+PrimaryDark: #014
+SecondaryPale: #ffc
+SecondaryLight: #fe8
+SecondaryMid: #db4
+SecondaryDark: #841
+TertiaryPale: #eee
+TertiaryLight: #ccc
+TertiaryMid: #999
+TertiaryDark: #666
+Error: #f88</pre>
+
+</div>
+
+<div title="StyleSheetColors">
+<pre>/*{{{*/
+body {background:[[ColorPalette::Background]]; color:[[ColorPalette::Foreground]];}
+a {color:[[ColorPalette::PrimaryMid]];}
+a:hover {background-color:[[ColorPalette::PrimaryMid]]; color:[[ColorPalette::Background]];}
+a img {border:0;}
+h1,h2,h3,h4,h5,h6 {color:[[ColorPalette::SecondaryDark]]; background:transparent;}
+h1 {border-bottom:2px solid [[ColorPalette::TertiaryLight]];}
+h2,h3 {border-bottom:1px solid [[ColorPalette::TertiaryLight]];}
+.button {color:[[ColorPalette::PrimaryDark]]; border:1px solid [[ColorPalette::Background]];}
+.button:hover {color:[[ColorPalette::PrimaryDark]]; background:[[ColorPalette::SecondaryLight]]; border-color:[[ColorPalette::SecondaryMid]];}
+.button:active {color:[[ColorPalette::Background]]; background:[[ColorPalette::SecondaryMid]]; border:1px solid [[ColorPalette::SecondaryDark]];}
+.header {background:[[ColorPalette::PrimaryMid]];}
+.headerShadow {color:[[ColorPalette::Foreground]];}
+.headerShadow a {font-weight:normal; color:[[ColorPalette::Foreground]];}
+.headerForeground {color:[[ColorPalette::Background]];}
+.headerForeground a {font-weight:normal; color:[[ColorPalette::PrimaryPale]];}
+.tabSelected{color:[[ColorPalette::PrimaryDark]];
+background:[[ColorPalette::TertiaryPale]];
+border-left:1px solid [[ColorPalette::TertiaryLight]];
+border-top:1px solid [[ColorPalette::TertiaryLight]];
+border-right:1px solid [[ColorPalette::TertiaryLight]];
+}
+.tabUnselected {color:[[ColorPalette::Background]]; background:[[ColorPalette::TertiaryMid]];}
+.tabContents {color:[[ColorPalette::PrimaryDark]]; background:[[ColorPalette::TertiaryPale]]; border:1px solid [[ColorPalette::TertiaryLight]];}
+.tabContents .button {border:0;}
+#sidebar {}
+#sidebarOptions input {border:1px solid [[ColorPalette::PrimaryMid]];}
+#sidebarOptions .sliderPanel {background:[[ColorPalette::PrimaryPale]];}
+#sidebarOptions .sliderPanel a {border:none;color:[[ColorPalette::PrimaryMid]];}
+#sidebarOptions .sliderPanel a:hover {color:[[ColorPalette::Background]]; background:[[ColorPalette::PrimaryMid]];}
+#sidebarOptions .sliderPanel a:active {color:[[ColorPalette::PrimaryMid]]; background:[[ColorPalette::Background]];}
+.wizard {background:[[ColorPalette::PrimaryPale]]; border:1px solid [[ColorPalette::PrimaryMid]];}
+.wizard h1 {color:[[ColorPalette::PrimaryDark]]; border:none;}
+.wizard h2 {color:[[ColorPalette::Foreground]]; border:none;}
+.wizardStep {background:[[ColorPalette::Background]]; color:[[ColorPalette::Foreground]];
+border:1px solid [[ColorPalette::PrimaryMid]];}
+.wizardStep.wizardStepDone {background:[[ColorPalette::TertiaryLight]];}
+.wizardFooter {background:[[ColorPalette::PrimaryPale]];}
+.wizardFooter .status {background:[[ColorPalette::PrimaryDark]]; color:[[ColorPalette::Background]];}
+.wizard .button {color:[[ColorPalette::Foreground]]; background:[[ColorPalette::SecondaryLight]]; border: 1px solid;
+border-color:[[ColorPalette::SecondaryPale]] [[ColorPalette::SecondaryDark]] [[ColorPalette::SecondaryDark]] [[ColorPalette::SecondaryPale]];}
+.wizard .button:hover {color:[[ColorPalette::Foreground]]; background:[[ColorPalette::Background]];}
+.wizard .button:active {color:[[ColorPalette::Background]]; background:[[ColorPalette::Foreground]]; border: 1px solid;
+border-color:[[ColorPalette::PrimaryDark]] [[ColorPalette::PrimaryPale]] [[ColorPalette::PrimaryPale]] [[ColorPalette::PrimaryDark]];}
+#messageArea {border:1px solid [[ColorPalette::SecondaryMid]]; background:[[ColorPalette::SecondaryLight]]; color:[[ColorPalette::Foreground]];}
+#messageArea .button {color:[[ColorPalette::PrimaryMid]]; background:[[ColorPalette::SecondaryPale]]; border:none;}
+.popupTiddler {background:[[ColorPalette::TertiaryPale]]; border:2px solid [[ColorPalette::TertiaryMid]];}
+.popup {background:[[ColorPalette::TertiaryPale]]; color:[[ColorPalette::TertiaryDark]]; border-left:1px solid [[ColorPalette::TertiaryMid]]; border-top:1px solid [[ColorPalette::TertiaryMid]]; border-right:2px solid [[ColorPalette::TertiaryDark]]; border-bottom:2px solid [[ColorPalette::TertiaryDark]];}
+.popup hr {color:[[ColorPalette::PrimaryDark]]; background:[[ColorPalette::PrimaryDark]]; border-bottom:1px;}
+.popup li.disabled {color:[[ColorPalette::TertiaryMid]];}
+.popup li a, .popup li a:visited {color:[[ColorPalette::Foreground]]; border: none;}
+.popup li a:hover {background:[[ColorPalette::SecondaryLight]]; color:[[ColorPalette::Foreground]]; border: none;}
+.popup li a:active {background:[[ColorPalette::SecondaryPale]]; color:[[ColorPalette::Foreground]]; border: none;}
+.popupHighlight {background:[[ColorPalette::Background]]; color:[[ColorPalette::Foreground]];}
+.listBreak div {border-bottom:1px solid [[ColorPalette::TertiaryDark]];}
+.tiddler .defaultCommand {font-weight:bold;}
+.shadow .title {color:[[ColorPalette::TertiaryDark]];}
+.title {color:[[ColorPalette::SecondaryDark]];}
+.subtitle {color:[[ColorPalette::TertiaryDark]];}
+.toolbar {color:[[ColorPalette::PrimaryMid]];}
+.toolbar a {color:[[ColorPalette::TertiaryLight]];}
+.selected .toolbar a {color:[[ColorPalette::TertiaryMid]];}
+.selected .toolbar a:hover {color:[[ColorPalette::Foreground]];}
+.tagging, .tagged {border:1px solid [[ColorPalette::TertiaryPale]]; background-color:[[ColorPalette::TertiaryPale]];}
+.selected .tagging, .selected .tagged {background-color:[[ColorPalette::TertiaryLight]]; border:1px solid [[ColorPalette::TertiaryMid]];}
+.tagging .listTitle, .tagged .listTitle {color:[[ColorPalette::PrimaryDark]];}
+.tagging .button, .tagged .button {border:none;}
+.footer {color:[[ColorPalette::TertiaryLight]];}
+.selected .footer {color:[[ColorPalette::TertiaryMid]];}
+.sparkline {background:[[ColorPalette::PrimaryPale]]; border:0;}
+.sparktick {background:[[ColorPalette::PrimaryDark]];}
+.error, .errorButton {color:[[ColorPalette::Foreground]]; background:[[ColorPalette::Error]];}
+.warning {color:[[ColorPalette::Foreground]]; background:[[ColorPalette::SecondaryPale]];}
+.lowlight {background:[[ColorPalette::TertiaryLight]];}
+.zoomer {background:none; color:[[ColorPalette::TertiaryMid]]; border:3px solid [[ColorPalette::TertiaryMid]];}
+.imageLink, #displayArea .imageLink {background:transparent;}
+.annotation {background:[[ColorPalette::SecondaryLight]]; color:[[ColorPalette::Foreground]]; border:2px solid [[ColorPalette::SecondaryMid]];}
+.viewer .listTitle {list-style-type:none; margin-left:-2em;}
+.viewer .button {border:1px solid [[ColorPalette::SecondaryMid]];}
+.viewer blockquote {border-left:3px solid [[ColorPalette::TertiaryDark]];}
+.viewer table, table.twtable {border:2px solid [[ColorPalette::TertiaryDark]];}
+.viewer th, .viewer thead td, .twtable th, .twtable thead td {background:[[ColorPalette::SecondaryMid]]; border:1px solid [[ColorPalette::TertiaryDark]]; color:[[ColorPalette::Background]];}
+.viewer td, .viewer tr, .twtable td, .twtable tr {border:1px solid [[ColorPalette::TertiaryDark]];}
+.viewer pre {border:1px solid [[ColorPalette::SecondaryLight]]; background:[[ColorPalette::SecondaryPale]];}
+.viewer code {color:[[ColorPalette::SecondaryDark]];}
+.viewer hr {border:0; border-top:dashed 1px [[ColorPalette::TertiaryDark]]; color:[[ColorPalette::TertiaryDark]];}
+.highlight, .marked {background:[[ColorPalette::SecondaryLight]];}
+.editor input {border:1px solid [[ColorPalette::PrimaryMid]];}
+.editor textarea {border:1px solid [[ColorPalette::PrimaryMid]]; width:100%;}
+.editorFooter {color:[[ColorPalette::TertiaryMid]];}
+#backstageArea {background:[[ColorPalette::Foreground]]; color:[[ColorPalette::TertiaryMid]];}
+#backstageArea a {background:[[ColorPalette::Foreground]]; color:[[ColorPalette::Background]]; border:none;}
+#backstageArea a:hover {background:[[ColorPalette::SecondaryLight]]; color:[[ColorPalette::Foreground]]; }
+#backstageArea a.backstageSelTab {background:[[ColorPalette::Background]]; color:[[ColorPalette::Foreground]];}
+#backstageButton a {background:none; color:[[ColorPalette::Background]]; border:none;}
+#backstageButton a:hover {background:[[ColorPalette::Foreground]]; color:[[ColorPalette::Background]]; border:none;}
+#backstagePanel {background:[[ColorPalette::Background]]; border-color: [[ColorPalette::Background]] [[ColorPalette::TertiaryDark]] [[ColorPalette::TertiaryDark]] [[ColorPalette::TertiaryDark]];}
+.backstagePanelFooter .button {border:none; color:[[ColorPalette::Background]];}
+.backstagePanelFooter .button:hover {color:[[ColorPalette::Foreground]];}
+#backstageCloak {background:[[ColorPalette::Foreground]]; opacity:0.6; filter:'alpha(opacity:60)';}
+/*}}}*/</pre>
+
+</div>
+
+<div title="StyleSheetLayout">
+<pre>/*{{{*/
+* html .tiddler {height:1%;}
+body {font-size:.75em; font-family:arial,helvetica; margin:0; padding:0;}
+h1,h2,h3,h4,h5,h6 {font-weight:bold; text-decoration:none;}
+h1,h2,h3 {padding-bottom:1px; margin-top:1.2em;margin-bottom:0.3em;}
+h4,h5,h6 {margin-top:1em;}
+h1 {font-size:1.35em;}
+h2 {font-size:1.25em;}
+h3 {font-size:1.1em;}
+h4 {font-size:1em;}
+h5 {font-size:.9em;}
+hr {height:1px;}
+a {text-decoration:none;}
+dt {font-weight:bold;}
+ol {list-style-type:decimal;}
+ol ol {list-style-type:lower-alpha;}
+ol ol ol {list-style-type:lower-roman;}
+ol ol ol ol {list-style-type:decimal;}
+ol ol ol ol ol {list-style-type:lower-alpha;}
+ol ol ol ol ol ol {list-style-type:lower-roman;}
+ol ol ol ol ol ol ol {list-style-type:decimal;}
+.txtOptionInput {width:11em;}
+#contentWrapper .chkOptionInput {border:0;}
+.externalLink {text-decoration:underline;}
+.indent {margin-left:3em;}
+.outdent {margin-left:3em; text-indent:-3em;}
+code.escaped {white-space:nowrap;}
+.tiddlyLinkExisting {font-weight:bold;}
+.tiddlyLinkNonExisting {font-style:italic;}
+/* the 'a' is required for IE, otherwise it renders the whole tiddler in bold */
+a.tiddlyLinkNonExisting.shadow {font-weight:bold;}
+#mainMenu .tiddlyLinkExisting,
+#mainMenu .tiddlyLinkNonExisting,
+#sidebarTabs .tiddlyLinkNonExisting {font-weight:normal; font-style:normal;}
+#sidebarTabs .tiddlyLinkExisting {font-weight:bold; font-style:normal;}
+.header {position:relative;}
+.header a:hover {background:transparent;}
+.headerShadow {position:relative; padding:4.5em 0em 1em 1em; left:-1px; top:-1px;}
+.headerForeground {position:absolute; padding:4.5em 0em 1em 1em; left:0px; top:0px;}
+.siteTitle {font-size:3em;}
+.siteSubtitle {font-size:1.2em;}
+#mainMenu {position:absolute; left:0; width:10em; text-align:right; line-height:1.6em; padding:1.5em 0.5em 0.5em 0.5em; font-size:1.1em;}
+#sidebar {position:absolute; right:3px; width:16em; font-size:.9em;}
+#sidebarOptions {padding-top:0.3em;}
+#sidebarOptions a {margin:0em 0.2em; padding:0.2em 0.3em; display:block;}
+#sidebarOptions input {margin:0.4em 0.5em;}
+#sidebarOptions .sliderPanel {margin-left:1em; padding:0.5em; font-size:.85em;}
+#sidebarOptions .sliderPanel a {font-weight:bold; display:inline; padding:0;}
+#sidebarOptions .sliderPanel input {margin:0 0 .3em 0;}
+#sidebarTabs .tabContents {width:15em; overflow:hidden;}
+.wizard {padding:0.1em 1em 0em 2em;}
+.wizard h1 {font-size:2em; font-weight:bold; background:none; padding:0em 0em 0em 0em; margin:0.4em 0em 0.2em 0em;}
+.wizard h2 {font-size:1.2em; font-weight:bold; background:none; padding:0em 0em 0em 0em; margin:0.4em 0em 0.2em 0em;}
+.wizardStep {padding:1em 1em 1em 1em;}
+.wizard .button {margin:0.5em 0em 0em 0em; font-size:1.2em;}
+.wizardFooter {padding:0.8em 0.4em 0.8em 0em;}
+.wizardFooter .status {padding:0em 0.4em 0em 0.4em; margin-left:1em;}
+.wizard .button {padding:0.1em 0.2em 0.1em 0.2em;}
+#messageArea {position:fixed; top:2em; right:0em; margin:0.5em; padding:0.5em; z-index:2000; _position:absolute;}
+.messageToolbar {display:block; text-align:right; padding:0.2em 0.2em 0.2em 0.2em;}
+#messageArea a {text-decoration:underline;}
+.tiddlerPopupButton {padding:0.2em 0.2em 0.2em 0.2em;}
+.popupTiddler {position: absolute; z-index:300; padding:1em 1em 1em 1em; margin:0;}
+.popup {position:absolute; z-index:300; font-size:.9em; padding:0; list-style:none; margin:0;}
+.popup .popupMessage {padding:0.4em;}
+.popup hr {display:block; height:1px; width:auto; padding:0; margin:0.2em 0em;}
+.popup li.disabled {padding:0.4em;}
+.popup li a {display:block; padding:0.4em; font-weight:normal; cursor:pointer;}
+.listBreak {font-size:1px; line-height:1px;}
+.listBreak div {margin:2px 0;}
+.tabset {padding:1em 0em 0em 0.5em;}
+.tab {margin:0em 0em 0em 0.25em; padding:2px;}
+.tabContents {padding:0.5em;}
+.tabContents ul, .tabContents ol {margin:0; padding:0;}
+.txtMainTab .tabContents li {list-style:none;}
+.tabContents li.listLink { margin-left:.75em;}
+#contentWrapper {display:block;}
+#splashScreen {display:none;}
+#displayArea {margin:1em 17em 0em 14em;}
+.toolbar {text-align:right; font-size:.9em;}
+.tiddler {padding:1em 1em 0em 1em;}
+.missing .viewer,.missing .title {font-style:italic;}
+.title {font-size:1.6em; font-weight:bold;}
+.missing .subtitle {display:none;}
+.subtitle {font-size:1.1em;}
+.tiddler .button {padding:0.2em 0.4em;}
+.tagging {margin:0.5em 0.5em 0.5em 0; float:left; display:none;}
+.isTag .tagging {display:block;}
+.tagged {margin:0.5em; float:right;}
+.tagging, .tagged {font-size:0.9em; padding:0.25em;}
+.tagging ul, .tagged ul {list-style:none; margin:0.25em; padding:0;}
+.tagClear {clear:both;}
+.footer {font-size:.9em;}
+.footer li {display:inline;}
+.annotation {padding:0.5em; margin:0.5em;}
+* html .viewer pre {width:99%; padding:0 0 1em 0;}
+.viewer {line-height:1.4em; padding-top:0.5em;}
+.viewer .button {margin:0em 0.25em; padding:0em 0.25em;}
+.viewer blockquote {line-height:1.5em; padding-left:0.8em;margin-left:2.5em;}
+.viewer ul, .viewer ol {margin-left:0.5em; padding-left:1.5em;}
+.viewer table, table.twtable {border-collapse:collapse; margin:0.8em 1.0em;}
+.viewer th, .viewer td, .viewer tr,.viewer caption,.twtable th, .twtable td, .twtable tr,.twtable caption {padding:3px;}
+table.listView {font-size:0.85em; margin:0.8em 1.0em;}
+table.listView th, table.listView td, table.listView tr {padding:0px 3px 0px 3px;}
+.viewer pre {padding:0.5em; margin-left:0.5em; font-size:1.2em; line-height:1.4em; overflow:auto;}
+.viewer code {font-size:1.2em; line-height:1.4em;}
+.editor {font-size:1.1em;}
+.editor input, .editor textarea {display:block; width:100%; font:inherit;}
+.editorFooter {padding:0.25em 0em; font-size:.9em;}
+.editorFooter .button {padding-top:0px; padding-bottom:0px;}
+.fieldsetFix {border:0; padding:0; margin:1px 0px 1px 0px;}
+.sparkline {line-height:1em;}
+.sparktick {outline:0;}
+.zoomer {font-size:1.1em; position:absolute; overflow:hidden;}
+.zoomer div {padding:1em;}
+* html #backstage {width:99%;}
+* html #backstageArea {width:99%;}
+#backstageArea {display:none; position:relative; overflow: hidden; z-index:150; padding:0.3em 0.5em 0.3em 0.5em;}
+#backstageToolbar {position:relative;}
+#backstageArea a {font-weight:bold; margin-left:0.5em; padding:0.3em 0.5em 0.3em 0.5em;}
+#backstageButton {display:none; position:absolute; z-index:175; top:0em; right:0em;}
+#backstageButton a {padding:0.1em 0.4em 0.1em 0.4em; margin:0.1em 0.1em 0.1em 0.1em;}
+#backstage {position:relative; width:100%; z-index:50;}
+#backstagePanel {display:none; z-index:100; position:absolute; margin:0em 3em 0em 3em; padding:1em 1em 1em 1em;}
+.backstagePanelFooter {padding-top:0.2em; float:right;}
+.backstagePanelFooter a {padding:0.2em 0.4em 0.2em 0.4em;}
+#backstageCloak {display:none; z-index:20; position:absolute; width:100%; height:100px;}
+.whenBackstage {display:none;}
+.backstageVisible .whenBackstage {display:block;}
+/*}}}*/</pre>
+
+</div>
+
+<div title="StyleSheetLocale">
+<pre>/***
+StyleSheet for use when a translation requires any css style changes.
+This StyleSheet can be used directly by languages such as Chinese, Japanese and Korean which use a logographic writing system and need larger font sizes.
+***/
+/*{{{*/
+body {font-size:0.8em;}
+#sidebarOptions {font-size:1.05em;}
+#sidebarOptions a {font-style:normal;}
+#sidebarOptions .sliderPanel {font-size:0.95em;}
+.subtitle {font-size:0.8em;}
+.viewer table.listView {font-size:0.95em;}
+.htmlarea .toolbarHA table {border:1px solid ButtonFace; margin:0em 0em;}
+/*}}}*/</pre>
+
+</div>
+
+<div title="StyleSheetPrint">
+<pre>/*{{{*/
+@media print {
+#mainMenu, #sidebar, #messageArea, .toolbar, #backstageButton, #backstageArea {display: none ! important;}
+#displayArea {margin: 1em 1em 0em 1em;}
+/* Fixes a feature in Firefox 1.5.0.2 where print preview displays the noscript content */
+noscript {display:none;}
+}
+/*}}}*/</pre>
+
+</div>
+
+<div title="PageTemplate">
+<pre>&lt;!--{{{--&gt;
+&lt;div class='header' macro='gradient vert [[ColorPalette::PrimaryLight]] [[ColorPalette::PrimaryMid]]'&gt;
+&lt;div class='headerShadow'&gt;
+&lt;span class='siteTitle' refresh='content' tiddler='SiteTitle'&gt;&lt;/span&gt;&amp;nbsp;
+&lt;span class='siteSubtitle' refresh='content' tiddler='SiteSubtitle'&gt;&lt;/span&gt;
+&lt;/div&gt;
+&lt;div class='headerForeground'&gt;
+&lt;span class='siteTitle' refresh='content' tiddler='SiteTitle'&gt;&lt;/span&gt;&amp;nbsp;
+&lt;span class='siteSubtitle' refresh='content' tiddler='SiteSubtitle'&gt;&lt;/span&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div id='mainMenu' refresh='content' tiddler='MainMenu'&gt;&lt;/div&gt;
+&lt;div id='sidebar'&gt;
+&lt;div id='sidebarOptions' refresh='content' tiddler='SideBarOptions'&gt;&lt;/div&gt;
+&lt;div id='sidebarTabs' refresh='content' force='true' tiddler='SideBarTabs'&gt;&lt;/div&gt;
+&lt;/div&gt;
+&lt;div id='displayArea'&gt;
+&lt;div id='messageArea'&gt;&lt;/div&gt;
+&lt;div id='tiddlerDisplay'&gt;&lt;/div&gt;
+&lt;/div&gt;
+&lt;!--}}}--&gt;</pre>
+
+</div>
+
+<div title="ViewTemplate">
+<pre>&lt;!--{{{--&gt;
+&lt;div class='toolbar' macro='toolbar closeTiddler closeOthers +editTiddler &gt; fields syncing permalink references jump'&gt;&lt;/div&gt;
+&lt;div class='title' macro='view title'&gt;&lt;/div&gt;
+&lt;div class='subtitle'&gt;&lt;span macro='view modifier link'&gt;&lt;/span&gt;, &lt;span macro='view modified date'&gt;&lt;/span&gt; (&lt;span macro='message views.wikified.createdPrompt'&gt;&lt;/span&gt; &lt;span macro='view created date'&gt;&lt;/span&gt;)&lt;/div&gt;
+&lt;div class='tagging' macro='tagging'&gt;&lt;/div&gt;
+&lt;div class='tagged' macro='tags'&gt;&lt;/div&gt;
+&lt;div class='viewer' macro='view text wikified'&gt;&lt;/div&gt;
+&lt;div class='tagClear'&gt;&lt;/div&gt;
+&lt;!--}}}--&gt;</pre>
+
+</div>
+
+<div title="EditTemplate">
+<pre>&lt;!--{{{--&gt;
+&lt;div class='toolbar' macro='toolbar +saveTiddler -cancelTiddler deleteTiddler'&gt;&lt;/div&gt;
+&lt;div class='title' macro='view title'&gt;&lt;/div&gt;
+&lt;div class='editor' macro='edit title'&gt;&lt;/div&gt;
+&lt;div macro='annotations'&gt;&lt;/div&gt;
+&lt;div class='editor' macro='edit text'&gt;&lt;/div&gt;
+&lt;div class='editor' macro='edit tags'&gt;&lt;/div&gt;&lt;div class='editorFooter'&gt;&lt;span macro='message views.editor.tagPrompt'&gt;&lt;/span&gt;&lt;span macro='tagChooser'&gt;&lt;/span&gt;&lt;/div&gt;
+&lt;!--}}}--&gt;</pre>
+
+</div>
+
+<div title="OptionsPanel">
+<pre>Имя, которым будут подписаны все записи. Рекомендуется использовать [[ВикиСлова]]
+&lt;&lt;option txtUserName&gt;&gt;
+&lt;&lt;option chkSaveBackups&gt;&gt; SaveBackups
+&lt;&lt;option chkAutoSave&gt;&gt; AutoSave
+&lt;&lt;option chkRegExpSearch&gt;&gt; RegExpSearch
+&lt;&lt;option chkCaseSensitiveSearch&gt;&gt; CaseSensitiveSearch
+&lt;&lt;option chkAnimate&gt;&gt; EnableAnimations
+----
+Открыть AdvancedOptions</pre>
+
+</div>
+
+</div>
+
+<!--POST-SHADOWAREA-->
+<div id="storeArea">
+<div title="BlockQuotes" modifier="Rain Skylark" modified="200711041039" created="200509200116" tags="tweak"
+     changecount="6">
+<pre>Делаем блок цитаты:
+{{{
+Что дает:
+&lt;&lt;&lt;
+Текст цитаты
+&lt;&lt;&lt;
+}}}
+Что дает:
+&lt;&lt;&lt;
+Текст цитаты
+&lt;&lt;&lt;
+----
+Можно использовать и многоуровневые цитаты: {{{
+&gt;level 1
+&gt;level 1
+&gt;&gt;level 2
+&gt;&gt;level 2
+&gt;&gt;&gt;level 3
+&gt;&gt;&gt;level 3
+&gt;&gt;level 2
+&gt;level 1
+}}}
+что дает: &gt;level 1
+&gt;level 1
+&gt;&gt;level 2
+&gt;&gt;level 2
+&gt;&gt;&gt;level 3
+&gt;&gt;&gt;level 3
+&gt;&gt;level 2
+&gt;level 1</pre>
+</div>
+<div title="Configuration" modifier="YourName" modified="200711041056" created="200606010000" tags="tweak"
+     changecount="1">
+<pre>PageTemplate
+|&gt;|&gt;|SiteTitle - SiteSubtitle|
+|MainMenu|DefaultTiddlers&lt;&lt;br&gt;&gt;&lt;&lt;br&gt;&gt;&lt;&lt;br&gt;&gt;&lt;&lt;br&gt;&gt;ViewTemplate&lt;&lt;br&gt;&gt;&lt;&lt;br&gt;&gt;EditTemplate|SideBarOptions|
+|~|~|OptionsPanel|
+|~|~|AdvancedOptions|
+|~|~|&lt;&lt;tiddler Configuration.SideBarTabs&gt;&gt;|
+''StyleSheet:'' StyleSheetColors - StyleSheetLayout - StyleSheetPrint
+SiteUrl</pre>
+</div>
+<div title="Configuration.SideBarTabs" modifier="YourName" modified="200711041057" created="200606010000" tags="tweak"
+     changecount="1">
+<pre>SideBarTabs
+|[[Timeline|TabTimeline]]|[[All|TabAll]]|[[Tags|TabTags]]|&gt;|&gt;|[[More|TabMore]] |
+|&gt;|&gt;||[[Missing|TabMoreMissing]]|[[Orphans|TabMoreOrphans]]|[[Shadowed|TabMoreShadowed]]|</pre>
+</div>
+<div title="Customisation" modifier="Rain Skylark" modified="200711041050" created="200609291356" tags="tweak"
+     changecount="2">
+<pre>You can customise the appearance and behaviour of TiddlyWiki to almost any degree you want:
+* Use the ColorPalette to change the basic colour scheme
+* Create a CustomStyleSheet for finer grained control over the appearance
+* Customise the PageTemplate, ViewTemplate or EditTemplate to change the composition of the page and the layout of individual tiddlers
+* Use off-the-shelf themes from [[TiddlyThemes|http://tiddlythemes.com/]]
+* Visit the [[Configuration]] summary to see all the special configuration tiddlers
+* Install [[Plugins]] to extend the core functionality (and you can also easily [[write or adapt your own|http://gimcrackd.com/etc/src/codex/]])
+* Use TiddlyBookmarklets for low level hacking of TiddlyWiki documents
+There are also a bunch of TiddlyWikiTools that you can use to enhance TiddlyWiki.</pre>
+</div>
+<div title="DefaultTiddlers" modifier="Rain Skylark" modified="200801201111" created="200512211000" tags="tweak"
+     changecount="6">
+    <pre>[[Общий обзор]]</pre>
+</div>
+<div title="EditTemplate" modifier="YourName" created="200711041144" tags="tweak" changecount="1">
+<pre>&lt;!--{{{--&gt;
+&lt;div class='toolbar' macro='toolbar +saveTiddler -cancelTiddler deleteTiddler'&gt;&lt;/div&gt;
+&lt;div class='title' macro='view title'&gt;&lt;/div&gt;
+&lt;div class='editor' macro='edit title'&gt;&lt;/div&gt;
+&lt;div macro='annotations'&gt;&lt;/div&gt;
+&lt;div class='editor' macro='edit text'&gt;&lt;/div&gt;
+&lt;div class='editor' macro='edit tags'&gt;&lt;/div&gt;&lt;div class='editorFooter'&gt;&lt;span macro='message views.editor.tagPrompt'&gt;&lt;/span&gt;&lt;span macro='tagChooser'&gt;&lt;/span&gt;&lt;/div&gt;
+&lt;!--}}}--&gt;</pre>
+</div>
+<div title="EmbeddedImages" modifier="YourName" modified="200711041101" created="200509200101" tags="tweak"
+     changecount="3">
+<pre>{{{
+[img[title|filename]]
+[img[filename]]
+[img[title|filename][link]]
+[img[filename][link]]
+}}}
+Images can be included by their filename or full URL. It's good practice to include a title to be shown as a tooltip, and when the image isn't available. An image can also link to another tiddler or or a URL
+[img[Romanesque broccoli|fractalveg.jpg][http://www.flickr.com/photos/jermy/10134618/]]
+{{{
+[img[Fractal vegetable|fractalveg.jpg]]
+[img[This is shown as a tooltip|http://example.com/image.jpg]]
+[img[http://example.com/image.jpg]]
+[img[http://example.com/image.jpg][ExampleDotCom]]
+}}}
+The tooltip is optional.
+[&lt;img[Forest|forest.jpg][http://www.flickr.com/photos/jermy/8749660/]][&gt;img[Field|field.jpg][http://www.flickr.com/photos/jermy/8749285/]]You can also float images to the left or right: the forest is left aligned with {{{[&lt;img[}}}, and the field is right aligned with {{{[&gt;img[}}}.
+@@clear(left):clear(right):display(block):You can use CSS to clear the floats@@
+{{{
+[&lt;img[A woody bit of Hampstead Heath|forest.jpg]]
+[&gt;img[A field near Milton Keynes|field.jpg]]
+}}}</pre>
+</div>
+<div title="ExtendedFormatting" modifier="YourName" modified="200711041103" created="200509241218" tags="tweak"
+     changecount="3">
+<pre>Like most wikis, TiddlyWiki supports a range of simplified character formatting:
+| !To get | !Type this |h
+| ''Bold'' | {{{''Bold''}}} |
+| --Strikethrough-- | {{{--Strikethrough--}}} |
+| __Underline__ | {{{__Underline__}}} (that's two underline characters) |
+| //Italic// | {{{//Italic//}}} |
+| Superscript: 2^^3^^=8 | {{{2^^3^^=8}}} |
+| Subscript: a~~ij~~ = -a~~ji~~ | {{{a~~ij~~ = -a~~ji~~}}} |
+| @@highlight@@ | {{{@@highlight@@}}} |
+&lt;&lt;&lt;
+The highlight can also accept CSS syntax to directly style the text:
+@@color:green;green coloured@@
+@@background-color:#ff0000;color:#ffffff;red coloured@@
+@@text-shadow:black 3px 3px 8px;font-size:18pt;display:block;margin:1em 1em 1em 1em;border:1px solid black;Access any CSS style@@
+&lt;&lt;&lt;
+//For backwards compatibility, the following highlight syntax is also accepted://
+{{{
+@@bgcolor(#ff0000):color(#ffffff):red coloured@@
+}}}
+@@bgcolor(#ff0000):color(#ffffff):red coloured@@</pre>
+</div>
+<div title="HtmlEntities" modifier="YourName" modified="200711041106" created="200602011228" tags="tweak"
+     changecount="3">
+<pre>Entities in HTML documents allow characters to be entered that can't easily be typed on an ordinary keyboard. They take the form of an ampersand (&amp;), an identifying string, and a terminating semi-colon (;). There's a complete reference [[here|http://www.htmlhelp.com/reference/html40/entities/]]; some of the more common and useful ones are shown below. Also see [[Paul's Notepad|http://thepettersons.org/PaulsNotepad.html#GreekHtmlEntities%20HtmlEntitiesList%20LatinHtmlEntities%20MathHtmlEntities]] for a more complete list.
+|&gt;|&gt;|&gt;|&gt;|&gt;|&gt;| !HTML Entities |
+| &amp;amp;nbsp; | &amp;nbsp; | no-break space | &amp;nbsp;&amp;nbsp; | &amp;amp;apos; | &amp;apos; | single quote, apostrophe |
+| &amp;amp;ndash; | &amp;ndash; | en dash |~| &amp;amp;quot; | &quot; | quotation mark |
+| &amp;amp;mdash; | &amp;mdash; | em dash |~| &amp;amp;prime; | &amp;prime; | prime; minutes; feet |
+| &amp;amp;hellip; | &amp;hellip; | horizontal ellipsis |~| &amp;amp;Prime; | &amp;Prime; | double prime; seconds; inches |
+| &amp;amp;copy; | &amp;copy; | Copyright symbol |~| &amp;amp;lsquo; | &amp;lsquo; | left single quote |
+| &amp;amp;reg; | &amp;reg; | Registered symbol |~| &amp;amp;rsquo; | &amp;rsquo; | right single quote |
+| &amp;amp;trade; | &amp;trade; | Trademark symbol |~| &amp;amp;ldquo; | &amp;ldquo; | left double quote |
+| &amp;amp;dagger; | &amp;dagger; | dagger |~| &amp;amp;rdquo; | &amp;rdquo; | right double quote |
+| &amp;amp;Dagger; | &amp;Dagger; | double dagger |~| &amp;amp;laquo; | &amp;laquo; | left angle quote |
+| &amp;amp;para; | &amp;para; | paragraph sign |~| &amp;amp;raquo; | &amp;raquo; | right angle quote |
+| &amp;amp;sect; | &amp;sect; | section sign |~| &amp;amp;times; | &amp;times; | multiplication symbol |
+| &amp;amp;uarr; | &amp;uarr; | up arrow |~| &amp;amp;darr; | &amp;darr; | down arrow |
+| &amp;amp;larr; | &amp;larr; | left arrow |~| &amp;amp;rarr; | &amp;rarr; | right arrow |
+| &amp;amp;lArr; | &amp;lArr; | double left arrow |~| &amp;amp;rArr; | &amp;rArr; | double right arrow |
+| &amp;amp;harr; | &amp;harr; | left right arrow |~| &amp;amp;hArr; | &amp;hArr; | double left right arrow |
+The table below shows how accented characters can be built up by subsituting a base character into the various accent entities in place of the underscore ('_'):
+|&gt;|&gt;|&gt;|&gt;|&gt;|&gt;|&gt;|&gt;|&gt;|&gt;|&gt;|&gt;|&gt;|&gt;|&gt;|&gt;|&gt;| !Accented Characters |
+| grave accent | &amp;amp;_grave; | &amp;Agrave; | &amp;agrave; | &amp;Egrave; | &amp;egrave; | &amp;Igrave; | &amp;igrave; | &amp;Ograve; | &amp;ograve; | &amp;Ugrave; | &amp;ugrave; | &amp;nbsp; | &amp;nbsp; | &amp;nbsp; | &amp;nbsp; | &amp;nbsp; | &amp;nbsp; |
+| acute accent | &amp;amp;_acute; | &amp;Aacute; | &amp;aacute; | &amp;Eacute; | &amp;eacute; | &amp;Iacute; | &amp;iacute; | &amp;Oacute; | &amp;oacute; | &amp;Uacute; | &amp;uacute; | &amp;nbsp; | &amp;nbsp; | &amp;Yacute; | &amp;yacute; | &amp;nbsp; | &amp;nbsp; |
+| circumflex accent | &amp;amp;_circ; | &amp;Acirc; | &amp;acirc; | &amp;Ecirc; | &amp;ecirc; | &amp;Icirc; | &amp;icirc; | &amp;Ocirc; | &amp;ocirc; | &amp;Ucirc; | &amp;ucirc; | &amp;nbsp; | &amp;nbsp; | &amp;nbsp; | &amp;nbsp; | &amp;nbsp; | &amp;nbsp; |
+| umlaut mark | &amp;amp;_uml; | &amp;Auml; | &amp;auml; | &amp;Euml; | &amp;euml; | &amp;Iuml; | &amp;iuml; | &amp;Ouml; | &amp;ouml; | &amp;Uuml; | &amp;uuml; | &amp;nbsp; | &amp;nbsp; | &amp;Yuml; | &amp;yuml; | &amp;nbsp; | &amp;nbsp; |
+| tilde | &amp;amp;_tilde; | &amp;Atilde; | &amp;atilde; | &amp;nbsp; | &amp;nbsp; | &amp;nbsp; | &amp;nbsp; | &amp;Otilde; | &amp;otilde; | &amp;nbsp; | &amp;nbsp; | &amp;Ntilde; | &amp;ntilde; | &amp;nbsp; | &amp;nbsp; | &amp;nbsp; | &amp;nbsp; |
+| ring | &amp;amp;_ring; | &amp;Aring; | &amp;aring; | &amp;nbsp; | &amp;nbsp; | &amp;nbsp; | &amp;nbsp; | &amp;nbsp; | &amp;nbsp; | &amp;nbsp; | &amp;nbsp; | &amp;nbsp; | &amp;nbsp; | &amp;nbsp; | &amp;nbsp; | &amp;nbsp; |
+| slash | &amp;amp;_slash; | &amp;nbsp; | &amp;nbsp; | &amp;nbsp; | &amp;nbsp; | &amp;nbsp; | &amp;nbsp; | &amp;Oslash; | &amp;oslash; | &amp;nbsp; | &amp;nbsp; | &amp;nbsp; | &amp;nbsp; | &amp;nbsp; | &amp;nbsp; | &amp;nbsp; |
+| cedilla | &amp;amp;_cedil; | &amp;nbsp; | &amp;nbsp; | &amp;nbsp; | &amp;nbsp; | &amp;nbsp; | &amp;nbsp; | &amp;nbsp; | &amp;nbsp; | &amp;nbsp; | &amp;nbsp; | &amp;nbsp; | &amp;nbsp; | &amp;nbsp; | &amp;nbsp; | &amp;Ccedil; | &amp;ccedil; |</pre>
+</div>
+<div title="InterfaceOptions" modifier="YourName" modified="200711041108" created="200508181412" tags="tweak"
+     changecount="1">
+<pre>InterfaceOptions are displayed when you click the 'options' button on the right. They are saved in a cookie on your browser, making them sticky between visits:
+&lt;&lt;&lt;
+&lt;&lt;tiddler OptionsPanel&gt;&gt;
+&lt;&lt;&lt;
+* The user name for edits should be set //before// starting to edit things (ouch. another bug)
+* SaveBackups gives the option of whether to generate backup files * AutoSave gives the option of automatically saving every time a change is made
+* RegExpSearch allows more complex search expressions
+* CaseSensitiveSearch does as its name implies</pre>
+</div>
+<div title="Macros" modifier="YourName" modified="200711041110" created="200510302320" tags="tweak" changecount="1">
+<pre>[[Macros]] let you write tiddlers containing more exotic objects than just text. Built-in macros include:
+* NewJournalMacro and NewTiddlerMacro
+* GradientMacro
+* [[Sparklines]]
+* TabMacro
+* TaggingMacro
+* TodayMacro
+* ToolbarMacro
+Tag popup:
+{{{
+&lt;&lt;tag features&gt;&gt;
+}}}
+will result in &lt;&lt;tag features&gt;&gt;
+Slider:
+{{{
+&lt;&lt;slider chkTestSlider OptionsPanel options &quot;Change TiddlyWiki advanced options&quot;&gt;&gt;
+}}}
+Results in this button &lt;&lt;slider chkTestSlider OptionsPanel options &quot;Change TiddlyWiki advanced options&quot;&gt;&gt;
+The parameters are:
+* cookie name to be used to save the state of the slider
+* name of the tiddler to include in the slider
+* title text of the slider
+* tooltip text of the slider</pre>
+</div>
+<div title="MainMenu" modifier="Rain Skylark" modified="200801201454" created="200510302117" tags="tweak"
+     changecount="18">
+<pre>[[Общий обзор]]
+[[Лоция]]
+----
+[[Сборная солянка]]
+[[Изнанка|ДМ:Изнанка]]
+[[Хронология]]
+----
+[[Досье]]
+[[Досье - персонажи]]
+[[Группы]]
+----
+[[Словарь]]
+[[Заметки]]
+----
+[[Общая справка]]
+[[Шаблоны]]
+~~[[настроить меню|MainMenu]]~~</pre>
+</div>
+<div title="ShadowTiddlers" modifier="YourName" modified="200711041128" created="200602232324" tags="tweak"
+     changecount="1">
+<pre>ShadowTiddlers are special tiddlers that have default values that take over if they are undefined or deleted. For example, PageTemplate and StyleSheetColors are both shadow tiddlers.
+ShadowTiddlers make it harder to render a TiddlyWiki inoperative by accidentally deleting something important. You can see a list of shadow tiddlers in the Shadowed tab under the More tab in the right hand column. When you create a tiddler with the same title you override the underlying shadow tiddler. ----
+&lt;&lt;list shadowed&gt;&gt;</pre>
+</div>
+<div title="SiteSubtitle" modifier="Rain Skylark" modified="200801200836" created="200507121318" tags="tweak"
+     changecount="4">
+    <pre>Подназвание</pre>
+</div>
+<div title="SiteTitle" modifier="Rain Skylark" modified="200801200835" created="200509212109" changecount="4">
+    <pre>НАЗВАНИЕ</pre>
+</div>
+<div title="StyleSheet" modifier="YourName" modified="200711041130" created="200603311518" tags="tweak" changecount="3">
+<pre>/***
+Здесь прописываются патчи для базового набора стилей CSS
+***/
+/*{{{*/
+.wrappingClass {color: #666; background: #bbb;}
+.firstletter{ float:left; width:0.75em; font-size:400%; font-family:times,arial; line-height:60%; }
+.textleft {text-align:left;}
+.textright {text-align:right;}
+.textcenter {text-align:center;}
+.textjustify {text-align:justify;}
+.textindent25 {text-indent:25px;}
+/*}}}*/</pre>
+</div>
+<div title="TiddlerComments" modifier="YourName" modified="200711041141" created="200510302324" tags="tweak"
+     changecount="6">
+    <pre>To hide text within a tiddler so that it is not displayed you can wrap it in {{{/%}}} and {{{%/}}}. It can be a useful trick for hiding drafts or annotating complex markup. </pre>
+</div>
+<div title="ToolbarMacro" modifier="YourName" modified="200711041142" created="200512081447" tags="tweak"
+     changecount="4">
+<pre>The ToolbarMacro is used in the TiddlerTemplateMechanism to define the toolbar that appears when the mouse is hovered over a tiddler. It looks like this:
+{{{
+&lt;&lt;toolbar closeTiddler -editTiddler +jump&gt;&gt;
+}}}
+You can precede a command name with a &quot;+&quot; to specify a default command that is automatically chosen when a tiddler is double-clicked, or the ctrl-Enter key combination pressed. Similarly, precede it with &quot;-&quot; to specify a command to be chosen when the Escape key is pressed.
+----
+Deletes the current tiddler. A confirmation dialogue is displayed unless disabled with the ConfirmBeforeDeleting checkbox in AdvancedOptions. It is used with the ToolbarMacro like this:
+{{{
+&lt;&lt;toolbar deleteTiddler&gt;&gt;
+}}}
+Switches the current tiddler to the current edit view. It is used with the ToolbarMacro like this:
+{{{
+&lt;&lt;toolbar editTiddler&gt;&gt;
+}}}
+Offers a popup menu to jump directly to any of the currently open tiddlers. It is used with the ToolbarMacro like this:
+{{{
+&lt;&lt;toolbar jump&gt;&gt;
+}}}
+Offers a popup menu displaying the tiddlers that link to the current one. It is used with the ToolbarMacro like this:
+{{{
+&lt;&lt;toolbar references&gt;&gt;
+}}}
+Saves any pending edits to the current tiddler, and switches it to the default view. It is used with the ToolbarMacro like this:
+{{{
+&lt;&lt;toolbar saveTiddler&gt;&gt;
+}}}
+Закрывает все открытые записки кроме текущей (редактируемой). Используется с макросом ToolbarMacro так:
+{{{
+&lt;&lt;toolbar closeOthers&gt;&gt;
+}}}
+Сбрасывает все изменения, внесенные в записку и возвращает ее к режиму просмотра.
+Используется с макросом ToolbarMacro так:
+{{{
+&lt;&lt;toolbar cancelTiddler&gt;&gt;
+}}}
+Closes the current tiddler, regardless of whether it is being editted. It is used with the ToolbarMacro like this:
+{{{
+&lt;&lt;toolbar closeTiddler&gt;&gt;
+}}}</pre>
+</div>
+<div title="ViewTemplate" modifier="YourName" modified="200711041153" created="200711041150" changecount="3">
+<pre>&lt;!--{{{--&gt;
+&lt;div class='toolbar' macro='toolbar closeTiddler closeOthers +editTiddler &gt; fields syncing permalink references jump'&gt;&lt;/div&gt;
+&lt;div class='title' macro='view title'&gt;&lt;/div&gt;
+&lt;div class='subtitle'&gt;&lt;span macro='view modifier link'&gt;&lt;/span&gt;, &lt;span macro='view modified date'&gt;&lt;/span&gt; (&lt;span macro='message views.wikified.createdPrompt'&gt;&lt;/span&gt; &lt;span macro='view created date'&gt;&lt;/span&gt;)&lt;/div&gt;
+&lt;div class='tagging' macro='tagging'&gt;&lt;/div&gt;
+&lt;div class='tagged' macro='tags'&gt;&lt;/div&gt;
+&lt;div class='viewer' macro='view text wikified'&gt;&lt;/div&gt;
+&lt;div class='tagClear'&gt;&lt;/div&gt;
+&lt;!--}}}--&gt;</pre>
+</div>
+<div title="Настройки" modifier="YourName" modified="200711041139" created="200709060946" tags="tweak" changecount="7">
+<pre>* [[Customisation]] - настройки тиддл-файла
+* [[PluginManager]] - менеджер плагинов (см. также PluginFormat, TiddlerSlicing)
+* InstallingPlugins - установка плагинов
+* ImportTiddlers - импорт записок (или плагинов) со сторонних сайтов или из файла. Список серверов с плагинами [[здесь|systemServer]], ChrisKlimas has written [[The Macrocodex|http://gimcrackd.com/etc/src/codex/]], some superb documentation on writing plugins and macros for TiddlyWiki.
+* SpecialTiddlers</pre>
+</div>
+<div title="Общая справка" modifier="Rain Skylark" modified="200801201452" created="200801201105" changecount="3">
+<pre>[[Форматирование]]
+[[Настройки]]
+{{{
+@@color(WHITE):
+текст
+@@
+}}}
+</pre>
+</div>
+<div title="Форматирование" modifier="Rain Skylark" modified="200801201112" created="200709060819" tags="tweak"
+     changecount="33">
+<pre>!!! Основные элементы форматирования
+&lt;&lt;slider sldExtendedFormatting ExtendedFormatting &quot;Форматирование текста&quot; &quot;tooltip'&quot;&gt;&gt;
+&lt;&lt;slider sldBlockQuotes BlockQuotes &quot;Цитаты с отступом&quot; &quot;BlockQuotes'&quot;&gt;&gt;
+&lt;&lt;slider sldHtmlEntities HtmlEntities &quot;Спецсимволы HTML&quot; &quot;tooltip'&quot;&gt;&gt;
+!!! Ссылки и изображения
+&lt;&lt;slider sldEmbeddedImages EmbeddedImages &quot;Вставка изображений&quot; &quot;tooltip'&quot;&gt;&gt;
+!!! Прочее
+&lt;&lt;slider sldTiddlerComments TiddlerComments &quot;Скрытые комментарии&quot; &quot;tooltip'&quot;&gt;&gt;
+!!! Добавки через патчи
+[[Добавочные элементы форматирования через патчи]]</pre>
+</div>
+</div>
+
+<!--POST-STOREAREA--><!--POST-BODY-START--><!--POST-BODY-END-->
+<script type="text/javascript">
+    //<![CDATA[
+    if (useJavaSaver)
+        document.write("<applet style='position:absolute;left:-1px' name='TiddlySaver' code='core/TiddlySaver.class' archive='core/TiddlySaver.jar' width='1' height='1'></applet>");
+    //]]>
+</script>
+<!--POST-SCRIPT-START-->
+
+<!--POST-SCRIPT-END-->
+</body>
+</html>

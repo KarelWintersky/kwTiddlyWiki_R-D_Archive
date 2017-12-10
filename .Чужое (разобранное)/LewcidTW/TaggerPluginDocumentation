@@ -1,0 +1,45 @@
+﻿''If you want this documentation available offline, copy this tiddler to your TW.''
+
+!Description:
+The tagger plugin is a result of combining key features from the dropTags and tagAdder macro's. However, since it departs somewhat from the interface tagAdder users will be familiar with, I'm making this available as a new plugin alongside tagAdder.
+
+Tagger provides a dropdown list of the current tiddler tags, along with the ability to toggle them. Further it can optionally display a list of tags in the dropdown, which can be addded to the tiddler.
+
+*Clicking on ''[x]'' and ''[ ]'' removes and adds the tag respectively.
+*Clicking on the tag text displays the tag dropdown for that tag, listing tiddlers tagged with it.
+*The ''Create new tag'' lets you quickly type in a new tag not in the list.
+*Click on this button to see the dropdown: <<tagger>>
+
+Further note that each tag dropdown has a ''Rename tag'' option. This can be used to quickly rename a tag in the entire TW, also rename it's tiddler if it exists.
+
+//''tagAdder, dropTags and the future''
+- tagAdder will no longer will be developed, but will remain available. I encourage all tagAdder users to upgrade to tagger.
+- dropTags will still be developed for those users that dont want the 'tag editing' features.//
+
+!Examples & Usage:
+*At it's simplest, using tagger is as simple as {{{<<tagger>>}}} <<tagger>>
+**This gives a dropdown with the current tiddler tags, followed by all the tags in the TW.
+*You can also use a list of specified tags instead of all tags in the TW, by specifying a source tiddler.
+**{{{<<tagger source:TagsDB>>}}} <<tagger source:TagDataBase>>
+*You can also display ONLY the current tiddler tags
+**{{{<<tagger taglist:false>>}}} <<tagger taglist:false>>
+
+*To exclude tags from the list: {{{<<tagger exclude:"excludeLists Tag2 [[Tag with spaces]]">>}}} <<tagger exclude:"excludeLists Tag2 [[Tag with spaces]]">>
+
+*For a custom button label: {{{<<tagger label:"custom label">>}}} <<tagger label:"custom label">>
+*For a custom tooltip: {{{<<tagger tooltip:"custom tooltip">>}}} <<tagger tooltip:"custom tooltip">>
+
+!CSS and Styling:
+For those wishing to customize the popup appearance:
+*the main popup has a class and id of popup has with all other popups.
+*the nested tag popups have an id of nestedpopup
+
+!Advanced Users:
+You can change the global defaults for tagger, like the button label, the tags to exclude or whether to display the taglist or not, by editing the ''config.tagger.defaults'' section in the code.
+
+!To Do:
+*code optimization
+*possibly a 'delete this tag' option.
+
+!History
+*version 1.0.1 (2006-06-01): fixed conflicts with QuickOpenTag (TagglyTagging) and AutoTagger.

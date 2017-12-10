@@ -1,0 +1,24 @@
+﻿/***
+|''Name:''|saveAndReloadPlugin|
+|''Version:''|1.0.1 (11-Oct-2005)|
+|''Author:''|SimonBaird|
+|''Type:''|Plugin|
+|''Description''|Save and Reload - add macros {{{ <<saveAndReload>> }}} anywhere.|
+
+!Code
+***/
+//{{{
+config.macros.saveAndReload = {};
+config.macros.saveAndReload.handler = function(place,macroName,params,wikifier,paramString,tiddler)
+{
+        var label = params[0]||"Save & Reload";
+        var tooltip = params[1]||"Save & reload";
+        createTiddlyButton(place,label,tooltip,this.onclick);
+}
+config.macros.saveAndReload.onclick = function()
+{
+       saveChanges();
+       window.location.reload( false );
+}
+
+//}}}

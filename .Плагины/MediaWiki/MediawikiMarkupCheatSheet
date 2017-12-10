@@ -1,0 +1,132 @@
+﻿= Basic =
+'''bold'''
+''italic''
+<b>bold</b>
+<sub>subscript</sub>
+<sup>superscript</sup>
+<u>underline</u>
+<s>strikethrough</s>
+<code>code</code>
+
+'''bold''' ''italic'' <b>bold</b> <sub>subscript</sub> <sup>superscript</sup> <u>underline</u> <s>strikethrough</s> <code>code</code>
+
+
+* You can even create mixed lists
+*# and nest them
+*#* like this
+*#*; can I mix definition list as well?
+*#*: yes
+*#*; how?
+*#*: it's easy as
+*#*:* a 
+*#*:* b
+*#*:* c
+
+<blockquote>
+a block to
+quote
+</blockquote>
+
+=H1=
+== H2==
+some text
+===H3===
+====H4====
+=====H5=====
+======H6======
+----
+[[BasicLink]]
+[[BasicLink|PipedLink]]
+
+[[0PeriodicTable]]
+[[0PeriodicTable|PipedLink to PeriodicTable]]
+
+= Span =
+{| class="infobox bordered vcard"
+! colspan="4" | <span class="fn">Brussels Airport</span><br/>Luchthaven Zaventem<br/><span style="font-size:120%;"></span>
+|}
+
+= Basic Tables =
+some text
+{| 
+| Cell 1, row 1 
+| Cell 2, row 1 
+|- 
+| Cell 1, row 2 
+| Cell 2, row 2 
+|}
+
+{| 
+| Cell 1, row 1 || Cell 2, row 1 
+|- 
+| Cell 1, row 2 || Cell 2, row 2 
+|}
+
+some text
+
+{| 
+| Cell 1, row 1 
+| Cell 2, row 1 
+|- 
+| Cell 1, row 2 
+| Cell 2, row 2 
+|}
+
+{| 
+| Cell 1, row 1 
+| Cell 2, row 1 
+|- 
+| Cell 1, row 2 
+| Cell 2, row 2 
+|}
+
+= Nested Tables =
+some text
+{| border="1"
+| &alpha;
+| align="center" | cell2
+{| border="2" style="background:#ABCDEF;" <!-- The nested table must be on a new line -->
+| NESTED
+|-
+| TABLE
+|}
+| valign="bottom" | the original table again
+|}
+
+{| border="1"
+| &alpha;
+| align="center" | cell2
+{| border="2" style="background:#ABCDEF;" <!-- The nested table must be on a new line -->
+| NESTED
+|-
+| TABLE
+|}
+| valign="bottom" | the original table again
+| style="width:100px;" |
+{| border="2" style="background:#ABCDEF;;"
+| A
+|}
+{| border="2" style="background:#ABCDEF;"
+| B || B
+|}
+| style="width:50px;" |
+{| border="2" style="background:#ABCDEF; float:left;"
+| C
+|}
+{| border="2" style="background:#ABCDEF; float:right;"
+| D
+|}
+|}
+
+= Table Row Span = 
+{|
+! colspan="4" | Runways
+|-
+| rowspan="2" | Direction
+| colspan="2" | Length
+| rowspan="2" | Surface
+|-
+| m
+| ft
+|}
+

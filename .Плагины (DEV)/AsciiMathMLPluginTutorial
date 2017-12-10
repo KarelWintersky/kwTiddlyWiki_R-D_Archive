@@ -1,0 +1,40 @@
+﻿!Basic ~TiddlyWiki notions
+*A chunk of data, like the one you are viewing now is called a tiddler. It consists of a title, a text body, tags (to be used to find similar tiddlers and group them), fields for storing data with the tiddler of any kind, and modifier with dates. 
+*Clicking on a blue link opens up the tiddler or closes it if it is open (depending on settings). 
+*Double clicking a tiddler shows the code for the tiddler. If you cannot edit it, go to AdvancedOptions and click Edit while HTTPing. This is to prevent you from making changes and not being able to save them. 
+*The whole system is called TiddlyWiki and http://www.tiddlywiki.com is the home of the original and a great jumping off point to learn more. 
+!Basic syntax common to all TW's and generally wikis
+*There is a lot to practice with. Two single quotes on the left and two on the right ''bold'' the quantity surrounded. 
+*To italicize use slashes //italics//  {{{//italics// }}}
+*Tables are done with vertical bars separating columns:
+|hi|first|table|
+| hi| first |table |
+Type: 
+{{{
+|hi|first| table|
+| hi| first |table |
+}}}
+Spaces are critical near the bars for changing behavior. 
+*Highlighting and general CSS styling are accomplished by pairs of double at signs: @@high@@ or @@font-size:2em;high@@ Type: {{{@@high@@ or @@font-size:2em;high@@}}}
+*Bullet lists and numbered lists are done with asterisks and number signs at beginning of line
+**Nested is okay  {{{*Bullet lists and numbered lists are done with asterisks and number signs at beginning of line
+**Nested is okay
+}}}
+*Headings are done with exclamations at the beginning of a line. One is   the largest, 5 is the smallest, I believe.
+*Links are either done with WikiWords or done by using double square brackets [[Sample Link]].
+*No doubt much more such as __this__ or --this-- or even slides and tooltips and images and and and
+*Plugins extend this system and there are a lot of amazing ones out there. 
+!~AsciiMath 
+*adapted from Peter Jipsen's AsciiMath.
+*To do mathematics, first get FireFox. It can be done in IE and that is on my list, but it is a pain and not very good looking. FireFox 1.5.+ or 2.+ are good. You may need fonts from http://www.mozilla.org/projects/mathml/fonts/
+*To do math, use a single backtick, followed by a math expression, followed by another backtick. While styling is doable, that is not quite nicely dealt with yet. Ditto with displaying centered math. But soon. 
+*Simple: `x^2 + 3x = 5`  Type:{{{ `x^2 + 3x = 5` }}}
+*Calculus:   `(d [int_0^x f(t) dt ])/(dx) = f(x)` Type:{{{ `(d [int_0^x f(t) dt ])/(dx) = f(x)` }}} 
+*Functions: `sin(x)/cos(x)=tan(x)` and `e^(ix) = cos(x) + i sin(x)` and `log_3(x)` `root 3 4` Type: {{{`sin(x)/cos(x)=tan(x)` and `e^(ix) = cos(x) + i sin(x)` and `log_3(x)` `root 3 4`}}}
+*Matrices:  `[(3,4, 6),(3/4, int_3^4 theta d theta,  sqrt(a_34^56))]` Type: {{{`[(3,4, 6),(3/4, int_3^4 theta d theta,  sqrt(a_34^56))]`}}}
+*Symbols:  `Sigma sigma odot oplus otimes in nn cup cap delta del omega psi` Type: {{{`Sigma sigma odot oplus otimes in nn cup cap delta del omega psi` }}}
+!~AsciiSVG
+*adapted from Peter Jipsen's AsciiSVG
+*To draw pictures, use 2 backticks on either side. This is a full javascript environment, so be careful. 
+*See [[Sample Pictures]] for lots of static examples. Code included in viewpoint.
+*See InteractiveGallery for a baby step taste of what can be done. 

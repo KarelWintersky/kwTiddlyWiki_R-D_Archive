@@ -1,0 +1,36 @@
+/***
+|Name|EmailObfuscationMacro|
+|Created by|AndrewGregory|
+|Location|http://www.scss.com.au/family/andrew/tiddlywiki/#EmailObfuscationMacro|
+|Version|1.1|
+|Requires|~TW2.x|
+!Description
+Supports hard to harvest email addresses. The TiddlyWiki version of my [[Anti-Spam Email Links|http://www.scss.com.au/family/andrew/webdesign/emaillinks/]].
+
+!History
+*24-Apr-2007, version 1.1 - Added missing text replacements.
+*23-Apr-2007, version 1.0
+
+!Examples
+|!Source|!Output|h
+|{{{<<email 'andrew at scss dot com dot au'>>}}}|<<email 'andrew at scss dot com dot au'>>|
+|{{{<<email 'andrew at scss dot com dot au' 'Andrew'>>}}}|<<email 'andrew at scss dot com dot au' 'Andrew'>>|
+|{{{<<email 'andrew at scss dot com dot au dot invalid'>>}}}|<<email 'andrew at scss dot com dot au'>>|
+
+!Code
+***/
+//{{{
+config.macros.email = {};
+config.macros.email.handler = function (place,macroName,params,wikifier,paramString,tiddler) {
+	var address = params[0];
+	address = address.replace(/ \(at\) /ig, '@');
+	address = address.replace(/ \-at\- /ig, '@');
+	address = address.replace(/ at /ig, '@');
+	address = address.replace(/ \(dot\) /ig, '.');
+	address = address.replace(/ \-dot\- /ig, '.');
+	address = address.replace(/ dot /ig, '.');
+	address = address.replace(/[\.]?invalid$/i, '');
+	var name = params.length > 1 ? params[1] : address;
+	wikify('[[' + name + '|mailto:' + address + ']]', place);
+};
+//}}}

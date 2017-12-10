@@ -1,0 +1,58 @@
+﻿/***
+|''Name''|OrgDocPlugin|
+|''Author''|Tobias Beer|
+|''Version''|1.0|
+|''Description''|Shows annotations for plugins and shadows which point to the corresponding documentation tiddler.|
+!Usage
+Add to ViewTemplate...
+{{{
+<div macro='orgDoc'></div>
+}}}
+!Code
+***/
+//{{{
+config.macros.orgDoc = {
+    local: {
+        msgIntro: "This is a [[%0|%1]].",
+        msgGoTo: " You may find documentation for it at [[%0|%1]]",
+        msgMissing: " Unfortunately, there is no documentation yet at [[%0]]",
+        txtPLUGIN: 'plugin',
+        txtSHADOW: 'shadow tiddler'
+    },
+    handler: function (place, macroName, params, wikifier, paramString, tiddler) {
+        var
+            tid = tiddler.title,
+            url = window.location.href,
+            source = /^(http\:\/\/tiddlywiki.org|http\:\/\/tiddlywiki.tiddlyspace.com)/,
+            match = null != source.exec(url),
+            isShadow = config.shadowTiddlers[tid] != null,
+            type = isShadow ? 'SHADOW' : (
+                tiddler.tags && tiddler.tags.contains('systemConfig') ?
+                'PLUGIN' :
+                null
+            ),
+            doc = tid + '...',
+            docTid = store.getTiddler(doc);
+
+        if (!type) return;
+
+        wikify(
+            "\n{{annotation{\n''Note:'' " +
+            this.local.msgIntro.format([
+                this.local['txt' + type],
+                (
+                    (match ? '' : 'http://tiddlyWiki.org/#') +
+                    (type == 'PLUGIN' ? 'Plugins' : 'ShadowTiddler')
+                )
+            ]) +
+            this.local['msg' + (docTid ? 'GoTo' : 'Missing')].format([
+                match ?
+                doc :
+                ('TiddlyWiki.Org|http://tiddlywiki.org#' + encodeURIComponent(String.encodeTiddlyLink('[[' + doc + ']]')))
+            ]) +
+            "\n}}}\n",
+            place
+        );
+    }
+}
+//}}}

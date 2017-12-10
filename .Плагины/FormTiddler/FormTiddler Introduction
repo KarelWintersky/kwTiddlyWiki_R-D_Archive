@@ -1,0 +1,82 @@
+﻿The [[FormTiddlerPlugin]] allows you to enter your data in a form and store the form's data in your tiddlers.
+
+(For more information on tiddler data see the [[DataTiddlerPlugin]].)
+
+//''Define ~FormTemplate''//
+
+When you want to enter data in a form you first have to define a [[FormTemplate]] tiddler. A FormTemplate tiddler is a tiddler that contains named HTML INPUT elements (such as textfields, password fields, lists etc.) that define the stuff that should be edited in the form. E.g. you may have a FormTemplate that looks like this:
+
+<html>
+ <b>Name:</b><br/>
+ <input name=userName type=text /><br/>
+ <b>Password:</b><br/>
+ <input name=pwd type=password /><br/>
+</html>
+
+The correspond HTML text looks like this
+{{{
+<html>
+ <b>Name:</b><br/>
+ <input name=userName type=text /><br/>
+ <b>Password:</b><br/>
+ <input name=pwd type=password /><br/>
+</html>
+}}}
+
+The name of the INPUT element is also the name of the data field it is editing. E.g. a text field defined like this: 
+{{{
+<input name=userName type=text />
+}}}
+will edit the data field "userName" of the tiddler.
+
+
+You are free to layout the INPUT elements as you like, but don't add a "form" element around them and don't define 'onchange' handlers, since this will be done automatically by the {{{<<formTiddler ...>>}}} macro.
+
+
+//''Use ~FormTemplates (through the {{{<<formTiddler ...>>}}} macro)''//
+
+In a second step you add the {{{<<formTiddler ...>>}}} macro to tiddlers that should be edited. In the macro you are referencing the [[FormTemplate]] that should be used to edit the tiddler's data. You may refer to the same FormTemplate tiddler in as many tiddlers as you like. Every such tiddler displays the same INPUT elements as the FormTemplate, but with the "data" of each individual tiddler.
+
+In addition you may more than one {{{<<formTiddler...>>}}} macro call in one tiddler. Just make sure that the names of the elements in the referenced FormTemplate tiddlers do not collide. This feature may be useful if you want to construct a larger input form from a set of smaller FormTemplates.
+
+You can easily create tiddlers with an embedded {{{<<formTiddler...>>}}} macro call using the [[<<newTiddlerWithForm...>>|NewTiddlerWithFormMacro]] macro. The macro shows a button similar to the "new tiddler" button and creates the requested tiddler, ready to enter data. For details see NewTiddlerWithFormMacro.
+
+
+//''"Structured" and "Free" Data''//
+
+Typically you will edit a tiddler that uses the {{{<<formTiddler...>>}}} macro through the form. But you are free to also edit the tiddler "as usual", through the build-in edit feature. I.e. you may mix "structured data" (as entered through the form) with "free data". I.e. on a "Contact" tiddler you may add an image to the tiddler, or add extra links to related persons. Or you add more tags. Just make sure that you don't modify the {{{<data>...</data>}}} section of the tiddler, since this contains the data maintained by the form.
+
+Also notice that since the data entered in the forms is stored in the tiddler's text (in the {{{<data>...</data>}}} section) using the "search" feature will also find the texts you entered in the forms (even though it will not hilite the texts in the fields).
+
+
+//''Applications''//
+
+Using the [[FormTiddlerPlugin]] it is easy to manage things like:
+* [[Contacts]]
+* [[Bugreports]]
+* ~ToDo Lists
+* and many more.
+
+Since a FormTemplate is typically used for many tiddlers of the same kind you may also consider using the ForEachTiddlerMacro to collect data across multiple tiddlers (e.g. to get a list of all contacts, a summary page for the bug reports etc.)
+
+(See also [[FormTiddler Examples]])
+
+
+//''HTML Elements''//
+
+For those not that familiar with the HTML INPUT elements here a short overview with HTML snippets. 
+|!Type|!HTML Example|!Comment|
+|button|{{{<input name=btn type=button value="Just a button" />}}}|no data|
+|checkbox|{{{<input name=isVIP type=checkbox />is VIP}}}||
+|file|{{{<input name=attachment type=file />}}}|The "file" input element typically does not restore the path of the previously selected file. Nevertheless the path of the file is stored in the tiddler.|
+|hidden|{{{<input name=hiddenValue type=hidden value="This is a hidden value" />}}}||
+|password|{{{<input name=pwd type=password />}}}|The data entered in a "password" field is stored as clear text in the tiddler.|
+|radio|{{{<input name=level type=radio value="Beginner" />Beginner<input name=level type=radio value="Expert" />Expert<input name=level type=radio value="Guru" />Guru}}}||
+|reset|{{{<input name=btnReset type=reset />}}}|no data|
+|select-one|{{{<select name=browser ><option>Firefox<option>Internet Explorer<option>Opera<option>Other</select >}}}||
+|select-multiple|{{{<select name=music MULTIPLE ><option> R&B <option> Jazz <option> Blues <option> New Age</select >}}}||
+|submit|{{{<input name=btnSubmit type=submit />}}}|no data|
+|text|{{{<input name=userName type=text/>}}}||
+|textarea|{{{<TEXTAREA name=notes rows=4 cols=80 ></TEXTAREA>}}}||
+
+For details consult the Web or a textbook on HTML editing.

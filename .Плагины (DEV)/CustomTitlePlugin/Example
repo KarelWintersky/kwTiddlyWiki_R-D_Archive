@@ -1,0 +1,2 @@
+﻿Open tiddler [[Foo]] which has the custom field {{{customtitle}}} set to ''Bar''.
+Also look for [[Bar|Foo]] in the recent tab in the sidebar, which actually links to [[Foo]].

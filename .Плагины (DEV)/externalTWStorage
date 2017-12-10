@@ -1,0 +1,30 @@
+﻿/***
+|''Name:''|extTest|
+|''Description:''| Loads TiddlyWiki text from external files, keeps main TiddlyWiki small|
+|''Version:''|0.1.0|
+|''Date:''|Feb 03, 2007|
+|''Source:''|N/A|
+|''Author:''|Andrew Huynh|
+|''License:''|N/A (Do what you want)|
+|''CoreVersion:''|2.1.0|
+|''Browser:''|Firefox 1.0.4+; Firefox 1.5; InternetExplorer 6.0+|
+
+***/
+
+/*{{{*/
+//Usage <<extText fileName>>
+config.macros.extText = {};
+config.macros.extText.handler = function(place, macroName, params)
+{
+	var req = new XMLHttpRequest();
+	
+	var box = createTiddlyElement(place,"div", "info", null, "");
+	
+	req.onreadystatechange = {};
+	req.open("GET", params[0], false);
+	req.send("");
+	
+	wikify(req.responseText, box, null, null);
+}
+
+/*}}}*/

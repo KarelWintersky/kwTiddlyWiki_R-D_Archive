@@ -1,0 +1,34 @@
+﻿/***
+|''Name''|MorePlugin|
+|''Author''|Tobias Beer|
+|''Version''|0.9 beta|
+|''Description''|adds a ''Read more about [[XYZ]]...'' reference to a tiddler|
+!Usage
+Add to ViewTemplate...
+{{{
+<div macro='more'></div>
+}}}
+Use your prefered fields editor to add and edit a field called ''more''. A value will be interpreted as follows...
+;when the value is the name of an existing tiddler or contained in double square brackets
+:» e.g. when {{{more='Valid Tiddler Name'}}} or {{{more='[[Pretty|Link]]'}}}
+:» then {{{%0}}} in {{{config.macros.more.template}}} is replaced with the {{{[[Link]]}}}
+:» the result gets wikified
+;any other value
+:» is wikified as-is, without using {{{config.macros.more.template}}}
+;no value or field "more" not present
+:» nothing is wikified
+!Code
+***/
+//{{{
+config.macros.more = {
+	template: "For more information, see %0...<br><br>",
+	handler: function(place, macroName, params, wikifier, paramString, tiddler) {
+		var tid = story.findContainingTiddler( place );
+		tid = tid ? store.getValue( tid.getAttribute( 'tiddler' ) , 'more' ) : '';
+		tid = store.getTiddler( tid ) ? "[[" + tid + "]]" : tid;
+		var isLink = tid && tid.substr( 0, 2 ) == '[[' && tid.substr( tid.length - 2 , 2 ) == ']]';
+		tid = isLink ? this.template.format([tid]) : tid;
+		if( tid ) wikify( tid , place );
+	}
+};
+//}}}

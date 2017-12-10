@@ -1,0 +1,11 @@
+﻿//{{{
+config.options.chkSearchTitles=true;
+config.options.chkSearchText=true;
+config.options.chkSearchTags=true;
+config.options.chkSearchFields=true;
+config.options.chkSearchTitlesFirst=false;
+config.options.chkSearchList=true;
+config.options.chkSearchByDate=false;
+config.options.chkSearchIncremental=true;
+config.options.chkSearchShadows=false; 
+//}}}

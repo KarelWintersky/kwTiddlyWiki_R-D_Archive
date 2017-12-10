@@ -1,0 +1,6 @@
+see
+
+config.macros.edit.handler = function(place,macroName,params,wikifier,paramString,tiddler)
+....
+
+			rows = rows || 25;  /* KW Patch: rows in edit textarea */

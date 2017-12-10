@@ -1,0 +1,5 @@
+This script allows you to insert the current time.
+
+ <script label="what time is it?">
+      return "<br>"+new Date().toString();
+   </script> 

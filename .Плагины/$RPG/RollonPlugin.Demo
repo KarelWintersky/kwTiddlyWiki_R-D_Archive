@@ -1,0 +1,7 @@
+﻿<<rollon "Bag of the Luck God">>
+
+<<rollon "Character Names" times:3>>
+
+<<rollon "Special Events">>
+
+<<rollon "SW Random NPC" times:prompt separator:"<br>">>

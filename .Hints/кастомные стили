@@ -1,0 +1,4 @@
+﻿{{warning{This tutorial assumes some familiarity with a computer. And an IQ of at least 100, because anything less and this tutorial might set fire to your brain. You have been warned.}}}
+
+{{code{open smtp.fictionalserver.com 25}}}
+

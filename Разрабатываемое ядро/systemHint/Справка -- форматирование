@@ -1,0 +1,295 @@
+﻿В целях уменьшения количества "служебных" записок я решил не использовать плагин slidebar и собрал всю справочную информацию в одну записку, применив плагин [[NestedSlidersPlugin]] - он генерирует более красивое представление, чем плагин SectionMacro.
+Для упрощения форматирования можно воспользоваться установленным плагином [[WikiBar]].
+----
++++[Ссылки]>
+|!Пример|!Реализация|!примечание|
+|[[ссылка]]|{{{[[ссылка]]}}}|
+|[[внешняя ссылка|куда-то]]|{{{[[внешняя ссылка|куда-то]]}}}|
+===
+----
++++[Форматирование текста]>
+|!Пример|!Реализация|!примечание|
+|''жирный''|{{{''жирный''}}}|базовая английская версия, важно: это одинарные кавычки|
+|++альтернатива++|{{{++альтернатива++}}}|требует [[RussianTextFormattingPlugin]]|
+|==зачеркнутый==|{{{==зачеркнутый==}}}|требует [[RussianTextFormattingPlugin]]|
+|__подчеркнутый__|{{{__подчеркнутый__}}}|базовый|
+|//курсив//|{{{//курсив//}}}|базовый|
+|Superscript: 2^^3^^=8|{{{2^^3^^=8}}}||
+|Subscript: a~~ij~~ = -a~~ji~~|{{{a~~ij~~ = -a~~ji~~}}}||
+|@@color(green):цветной@@|{{{@@color(green):цветной@@}}}||
+|@@bgcolor(green):фон@@|{{{|@@bgcolor(green):фон@@}}}||
+|@@выделение@@|{{{@@выделение@@}}}|на основе правила CSS .marked из [[StyleSheetColors]] |
+|{{{моноширинный}}}|{{{ {{{моноширинный}}} }}}||
+|~ОтменитьWikiWord|{{{~ОтменитьWikiWord}}}||
+|[[ссылка]]|{{{[[ссылка]]}}}|
+|[[внешняя ссылка|куда-то]]|{{{[[внешняя ссылка|куда-то]]}}}|
+===
+----
++++[Блок моноширинного текста]>
+<html>{{{ пример }}}</html>
+{{{
+пример
+}}}
+===
+----
++++[Горизонтальная линия (hr)]>
+{{{ в html реализуется тегом <hr> }}}
+{{{ ---- }}}
+===
+----
++++[Список (ul)]>
+{{{
+* 1st
+** 1st-sub1
+* 2nd
+** 2nd-sub-1
+** 2nd-sub-2
+}}}
+* 1st
+** 1st-sub1
+* 2nd
+** 2nd-sub-1
+** 2nd-sub-2
+===
+----
++++[Нумерованный список]>
+{{{
+# 1st
+## 1st-sub1
+## 1st-sub2
+}}}
+Альтернатива
+{{{
+№ 1st
+№№ 1st-sub1
+№№ 1st-sub2
+}}}
+# 1st
+## 1st-sub1
+## 1st-sub2
+===
+----
++++[Изображение]>
+{{{
+[img[замещающий текст|image URL]]
+}}}
+{{{
+[img[title|filename]]
+[img[filename]]
+[img[title|filename][link]]
+[img[filename][link]]
+}}}
+Images can be included by their filename or full URL. It's good practice to include a title to be shown as a tooltip, and when the image isn't available. An image can also link to another tiddler or or a URL
+[img[Romanesque broccoli|fractalveg.jpg][http://www.flickr.com/photos/jermy/10134618/]]
+{{{
+[img[Fractal vegetable|fractalveg.jpg]]
+[img[This is shown as a tooltip|http://example.com/image.jpg]]
+[img[http://example.com/image.jpg]]
+[img[http://example.com/image.jpg][ExampleDotCom]]
+}}}
+The tooltip is optional.
+[<img[Forest|forest.jpg][http://www.flickr.com/photos/jermy/8749660/]][>img[Field|field.jpg][http://www.flickr.com/photos/jermy/8749285/]]You can also float images to the left or right: the forest is left aligned with {{{[<img[}}}, and the field is right aligned with {{{[>img[}}}.
+@@clear(left):clear(right):display(block):You can use CSS to clear the floats@@
+{{{
+[<img[A woody bit of Hampstead Heath|forest.jpg]]
+[>img[A field near Milton Keynes|field.jpg]]
+}}}
+===
+----
++++[Изображение в заголовке]>
+Открываем [[PageTemplate]] и заменяем {{{<div class='header'...> }}} на следущее:
+
+{{{ <div class='header' style='background: #A9CDEF url(path/image.extension) top left no-repeat'> }}}
+
+{{{ role='banner' }}} я думаю, можно оставить. Таким образом, для данного tw будет следущий вид:
+
+{{{<div class='header' role='banner' style='background: #A9CDEF url(path/image.extension) top left no-repeat'> }}}
+@@Важно:@@
+background: color стоит подбирать в тон картинке. 
+Может быть, можно использовать base64-encoded изображения.
+===
+----
++++[Таблицы]>
+Строка таблицы начинается с вертикальной черты (|).
+{{{
+|Закончите строку латинской с, чтобы создать название таблицы|c
+|!Для заголовка "!" сразу после вертикальной черты.|!Заголовок2|!Заголовок3|
+|строка1 столбец1|строка1 столбец2|строка1 столбец3|
+|>|>|Объединение столбцов - знак "больше" ( >)|
+|Объединение строк - знак " ~"|>| Пробел выравнивает вправо|
+|~|>| Пробелы с обеих сторон центруют |
+|>|>|bgcolor(green):Цвет фона bgcolor(цвет):|
+}}}
+|Закончите строку латинской с, чтобы создать название таблицы|c
+|!Для заголовка "!" сразу после вертикальной черты.|!Заголовок2|!Заголовок3|
+|строка1 столбец1|строка1 столбец2|строка1 столбец3|
+|>|>|Объединение столбцов - знак "больше" ( >)|
+|Объединение строк - знак " ~"|>| Пробел выравнивает вправо|
+|~|>| Пробелы с обеих сторон центруют |
+|>|>|bgcolor(green):Цвет фона bgcolor(цвет):|
+
+===
+----
++++[Цитаты (blockquotes)]>
+{{{
+<<<
+"Beware the Jabberwock, my son!
+The jaws that bite, the claws that catch!
+Beware the Jubjub bird, and shun
+The frumious Bandersnatch!"
+<<<
+}}}
+<<<
+"Beware the Jabberwock, my son!
+The jaws that bite, the claws that catch!
+Beware the Jubjub bird, and shun
+The frumious Bandersnatch!"
+<<<
+{{{
+>У попа была собака
+>...
+>На могиле написал:
+>>У попа была собака
+>>...
+>>На могиле написал:
+}}}
+>У попа была собака
+>...
+>На могиле написал:
+>>У попа была собака
+>>...
+>>На могиле написал:
+===
+----
++++[Заголовки (headers, H*)]>
+{{{
+!Заголовок
+!!Подзаголовок
+!!!Подзаголовок 2
+!!!!Подзаголовок 3
+!!!!!Подзаголовок 4
+}}}
+!Заголовок
+!!Подзаголовок
+!!!Подзаголовок 2
+!!!!Подзаголовок 3
+!!!!!Подзаголовок 4
+(и так далее до 6 уровня)
+===
+----
++++[inline HTML]>
+{{{
+<html>
+С недавних пор в <a href="http://www.tiddlywiki.com/">TiddlyWiki</a> появилась возможность использовать <b>внедренный HTML</b>
+</html>
+}}}
+<html>
+С недавних пор в <a href="http://www.tiddlywiki.com/">TiddlyWiki</a> появилась возможность использовать <b>внедренный HTML</b>
+</html>
+===
+----
++++[Спецсимволы HTML]>
+Entities in HTML documents allow characters to be entered that can't easily be typed on an ordinary keyboard. They take the form of an ampersand (&), an identifying string, and a terminating semi-colon (;). There's a complete reference [[here|http://www.htmlhelp.com/reference/html40/entities/]]; some of the more common and useful ones are shown below. 
+|>|>|>|>|>|>| !HTML Entities |
+| &amp;nbsp; | &nbsp; | no-break space | &nbsp;&nbsp; | &amp;apos; | &apos; | single quote, apostrophe |
+| &amp;ndash; | &ndash; | en dash |~| &amp;quot; | " | quotation mark |
+| &amp;mdash; | &mdash; | em dash |~| &amp;prime; | &prime; | prime; minutes; feet |
+| &amp;hellip; | &hellip; | horizontal ellipsis |~| &amp;Prime; | &Prime; | double prime; seconds; inches |
+| &amp;copy; | &copy; | Copyright symbol |~| &amp;lsquo; | &lsquo; | left single quote |
+| &amp;reg; | &reg; | Registered symbol |~| &amp;rsquo; | &rsquo; | right single quote |
+| &amp;trade; | &trade; | Trademark symbol |~| &amp;ldquo; | &ldquo; | left double quote |
+| &amp;dagger; | &dagger; | dagger |~| &amp;rdquo; | &rdquo; | right double quote |
+| &amp;Dagger; | &Dagger; | double dagger |~| &amp;laquo; | &laquo; | left angle quote |
+| &amp;para; | &para; | paragraph sign |~| &amp;raquo; | &raquo; | right angle quote |
+| &amp;sect; | &sect; | section sign |~| &amp;times; | &times; | multiplication symbol |
+| &amp;uarr; | &uarr; | up arrow |~| &amp;darr; | &darr; | down arrow |
+| &amp;larr; | &larr; | left arrow |~| &amp;rarr; | &rarr; | right arrow |
+| &amp;lArr; | &lArr; | double left arrow |~| &amp;rArr; | &rArr; | double right arrow |
+| &amp;harr; | &harr; | left right arrow |~| &amp;hArr; | &hArr; | double left right arrow |
+The table below shows how accented characters can be built up by subsituting a base character into the various accent entities in place of the underscore ('_'):
+|>|>|>|>|>|>|>|>|>|>|>|>|>|>|>|>|>| !Accented Characters |
+| grave accent | &amp;_grave; | &Agrave; | &agrave; | &Egrave; | &egrave; | &Igrave; | &igrave; | &Ograve; | &ograve; | &Ugrave; | &ugrave; | &nbsp; | &nbsp; | &nbsp; | &nbsp; | &nbsp; | &nbsp; |
+| acute accent | &amp;_acute; | &Aacute; | &aacute; | &Eacute; | &eacute; | &Iacute; | &iacute; | &Oacute; | &oacute; | &Uacute; | &uacute; | &nbsp; | &nbsp; | &Yacute; | &yacute; | &nbsp; | &nbsp; |
+| circumflex accent | &amp;_circ; | &Acirc; | &acirc; | &Ecirc; | &ecirc; | &Icirc; | &icirc; | &Ocirc; | &ocirc; | &Ucirc; | &ucirc; | &nbsp; | &nbsp; | &nbsp; | &nbsp; | &nbsp; | &nbsp; |
+| umlaut mark | &amp;_uml; | &Auml; | &auml; | &Euml; | &euml; | &Iuml; | &iuml; | &Ouml; | &ouml; | &Uuml; | &uuml; | &nbsp; | &nbsp; | &Yuml; | &yuml; | &nbsp; | &nbsp; |
+| tilde | &amp;_tilde; | &Atilde; | &atilde; | &nbsp; | &nbsp; | &nbsp; | &nbsp; | &Otilde; | &otilde; | &nbsp; | &nbsp; | &Ntilde; | &ntilde; | &nbsp; | &nbsp; | &nbsp; | &nbsp; |
+| ring | &amp;_ring; | &Aring; | &aring; | &nbsp; | &nbsp; | &nbsp; | &nbsp; | &nbsp; | &nbsp; | &nbsp; | &nbsp; | &nbsp; | &nbsp; | &nbsp; | &nbsp; | &nbsp; |
+| slash | &amp;_slash; | &nbsp; | &nbsp; | &nbsp; | &nbsp; | &nbsp; | &nbsp; | &Oslash; | &oslash; | &nbsp; | &nbsp; | &nbsp; | &nbsp; | &nbsp; | &nbsp; | &nbsp; |
+| cedilla | &amp;_cedil; | &nbsp; | &nbsp; | &nbsp; | &nbsp; | &nbsp; | &nbsp; | &nbsp; | &nbsp; | &nbsp; | &nbsp; | &nbsp; | &nbsp; | &nbsp; | &nbsp; | &Ccedil; | &ccedil; |
+===
+----
++++[Особые стили CSS]>
+!!Inline-стили
+{{{
+@@color:green;green coloured@@
+@@background-color:#ff0000;color:#ffffff;red coloured@@
+@@text-shadow:black 3px 3px 8px;font-size:18pt;display:block;margin:1em 1em 1em 1em;border:1px solid black;Access any CSS style@@
+@@color:#4bbbbb;Some random text@@
+}}}
+@@color:green;green coloured@@
+@@background-color:#ff0000;color:#ffffff;red coloured@@
+@@text-shadow:black 3px 3px 8px;font-size:18pt;display:block;margin:1em 1em 1em 1em;border:1px solid black;Access any CSS style@@
+@@color:#4bbbbb;Some random text@@
+!!CSS классы
+CSS-классы можно применить к строкам или текстовым блокам. Так создается {{{span}}}-элемент:
+{{{
+{{customClassName{Some random text}}}
+}}}
+Отображается как:
+{{customClassName{Some random text}}}
+
+Так создается {{{<div>}}}-элемент:
+{{{
+ {{customClassName{
+ Some random text
+ }}}
+}}}
+Отображается как:
+{{customClassName{
+Some random text
+}}}
+===
+----
++++[Комментарии]>
+To hide text within a tiddler so that it is not displayed you can wrap it in {{{/%}}} and {{{%/}}}. It can be a useful trick for hiding drafts or annotating complex markup. 
+===
+----
++++[PluginFormatting]>
+To make plugins, stylesheets and templates easier to read, you can use special alternative formatting for monospaced blocks.
+
+In [[JavaScript|http://en.wikipedia.org/wiki/JavaScript]] code:
+{{{
+//{{{
+var id = document.getElementById("mainMenu");
+//}}}
+}}}
+In HTML templates:
+{{{
+<!--{{{-->
+<div id="MainMenu">
+</div>
+<!--}}}-->
+}}}
+In CSS stylesheets
+{{{
+/*{{{*/
+div {color: #ff0000;}
+/*}}}*/
+}}}
+It will be displayed as:
+//{{{
+var id = document.getElementById("mainMenu");
+//}}}
+
+<!--{{{-->
+<div id="MainMenu">
+</div>
+<!--}}}-->
+
+/*{{{*/
+div {color: #ff0000;}
+/*}}}*/
+===
+<<br>>
+Принудительный перенос текста: {{{<<br>>}}}
+{{{ а это - ́ - знак уда́рения: aaaábbb }}}

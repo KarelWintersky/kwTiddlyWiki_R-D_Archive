@@ -1,0 +1,42 @@
+Edit Template:
+
+<div class='toolbar' macro='toolbar +saveTiddler -cancelTiddler deleteTiddler wikibar'></div>
+<div class='title' macro='view title'></div>
+<div class='editor' macro='edit title'></div>
+<div class='toolbar wikibar' macro='wikibar'></div>
+<div macro='annotations'></div>
+<div class='editor' macro='edit text'></div>
+<div class='editor' macro='edit tags'></div><div class='editorFooter' macro='deliciousTagging'></div>
+
+Вставка сюда макро викибар важна, если мы хотим получить список команд в нужном месте.
+
+Wikibar:
+
+place.id = 'wikibar'+title;
+
+заменить на:
+
+place.id = 'wikibar'+(tiddler.title).replace(/_/g, "__").replace(/ /g, "_"); // @KW Patch for CORE 2.7.0
+
+
+Перед 
+var theButton = resolveTarget(e);
+
+написать:
+
+title = title.replace(/_/g, "__").replace(/ /g, "_");  // @KW Patch for CORE 2.7.0
+
+---
+В чем фишка?
+В том, что CORE 2.7.0 отличается от CORE 2.2.5 наличием важной строчки:
+
+	this.tiddlerId = function(title) {
+>>>>		title = title.replace(/_/g, "__").replace(/ /g, "_");
+		var id = this.idPrefix + title;
+		return id==this.container ? this.idPrefix + "_" + title : id;
+	};
+Все пробелы заменяются на "_", подчеркивание - на двойное. Смысл не знаю.
+
+Цена вопроса - 4,5 часа ковыряния кода и экспериментов с консолью. Кое что стало проясняться, когда я увидел реальный айдишник тиддла, который ищется как родитель к викибару.
+
+// 13.12.2013 23:26

@@ -1,0 +1,2248 @@
+﻿//{{{
+
+scratch ={};
+//for variables--avoids polluting main space too much
+v = scratch;
+//for math functions
+mathfun = {};
+m = mathfun;
+
+//AsciiMath only need backticks
+config.formatters.push( {
+	name: "AsciiMath",
+        match: "(?:\\\`)(?!\\\`)",
+        lookahead: "(?:\\\`)((?:.|\\n)*?)(?:\\\`)",
+	handler: function(w) {
+            var lookaheadRegExp = new RegExp(this.lookahead,"mg");
+            lookaheadRegExp.lastIndex = w.matchStart;
+            var lookaheadMatch = lookaheadRegExp.exec(w.source);
+            if(lookaheadMatch && lookaheadMatch.index == w.matchStart) {
+                var e = createTiddlyElement(w.output,"span");
+                var g = document.createElement("span"); 
+                g.appendChild(document.createComment(lookaheadMatch[0]));
+                ascii.math.processNode(g, true);
+                e.appendChild(g);
+                w.nextMatch = lookaheadMatch.index + lookaheadMatch[0].length;
+            }
+        }
+    }
+);
+
+config.formatters.push( {
+	name: "AsciiSvgDiv",
+	match: "(?:\\\`){2}(?!\\\`)",
+	lookahead: "(?:\\\`){2}((?:.|\\n)*?)(?:\\\`){2}",
+	handler: function(w)
+		{
+		var lookaheadRegExp = new RegExp(this.lookahead,"mg");
+		lookaheadRegExp.lastIndex = w.matchStart;
+		var lookaheadMatch = lookaheadRegExp.exec(w.source);
+		if(lookaheadMatch && lookaheadMatch.index == w.matchStart) {
+			var e = createTiddlyElement(w.output,"div");
+                        ascii.svg.parse(lookaheadMatch[1], e);
+                        w.nextMatch = lookaheadMatch.index + lookaheadMatch[0].length;
+                }
+		}
+    }
+    );
+
+
+config.formatters.push( {
+	name: "AsciiSvgSpan",
+	match: "(?:\\\`){4}(?!\\\`)",
+	lookahead: "(?:\\\`){4}((?:.|\\n)*?)(?:\\\`){4}",
+	handler: function(w)
+		{
+		var lookaheadRegExp = new RegExp(this.lookahead,"mg");
+		lookaheadRegExp.lastIndex = w.matchStart;
+		var lookaheadMatch = lookaheadRegExp.exec(w.source);
+		if(lookaheadMatch && lookaheadMatch.index == w.matchStart) {
+			var e = createTiddlyElement(w.output,"span");
+                        ascii.svg.parse(lookaheadMatch[1], e);
+                        w.nextMatch = lookaheadMatch.index + lookaheadMatch[0].length;
+                }
+		}
+    }
+    );
+
+
+
+if (document.getElementById==null) 
+  alert("This webpage requires a recent browser such as\
+\nMozilla/Netscape 7+/Firefox or Internet Explorer 6+MathPlayer");
+
+      
+ascii = {};  //This contains all Ascii functions, mathstuff, and svg
+
+//silly function to encapsulate all variables
+//only stuff stored in ascii can be seen
+ascii.initializer = function () {
+
+ascii.cpi = "\u03C0";
+ascii.ctheta = "\u03B8";
+
+ascii.myCreateElementXHTML= function(t) {
+  if (ascii.isIE) return document.createElement(t);
+  else return document.createElementNS("http://www.w3.org/1999/xhtml",t);
+};
+
+
+ascii.isIE = (document.createElementNS==null);
+
+/*
+ASCII MathEvaluator
+
+This portion sets up the evaluating functions. 
+
+*/
+
+ascii.func = {};
+
+var af = ascii.func;
+
+af.abs  = Math.abs;
+af.acos = Math.acos;
+af.asin = Math.asin;
+af.atan = Math.atan;
+af.atan2 = Math.atan2;
+af.ceil = Math.ceil;
+af.cos  = Math.cos;
+af.exp  = Math.exp;
+af.floor = Math.floor;
+af.log  = Math.log;
+af.max = Math.max;
+af.min = Math.min;
+af.pow = Math.pow;
+af.random = Math.random;
+af.round = Math.round;
+af.sin  = Math.sin;
+af.sqrt = Math.sqrt;
+af.tan  = Math.tan;
+af.E	   = Math.E;	    
+af.PI	   = Math.PI;
+
+af.pi = Math.PI;
+af.ln = Math.log;
+af.e = Math.E;
+af.arcsin = Math.asin;
+af.arccos = Math.acos;
+af.arctan = Math.atan;
+af.sec = function(x) { return 1/Math.cos(x) };
+af.csc = function(x) { return 1/Math.sin(x) };
+af.cot = function(x) { return 1/Math.tan(x) };
+af.arcsec = function(x) { return arccos(1/x) };
+af.arccsc = function(x) { return arcsin(1/x) };
+af.arccot = function(x) { return arctan(1/x) };
+af.sinh = function(x) { return (Math.exp(x)-Math.exp(-x))/2 };
+af.cosh = function(x) { return (Math.exp(x)+Math.exp(-x))/2 };
+af.tanh = 
+  function(x) { return (Math.exp(x)-Math.exp(-x))/(Math.exp(x)+Math.exp(-x)) };
+af.sech = function(x) { return 1/cosh(x) };
+af.csch = function(x) { return 1/sinh(x) };
+af.coth = function(x) { return 1/tanh(x) };
+af.arcsinh = function(x) { return ln(x+Math.sqrt(x*x+1)) };
+af.arccosh = function(x) { return ln(x+Math.sqrt(x*x-1)) };
+af.arctanh = function(x) { return ln((1+x)/(1-x))/2 };
+af.sech = function(x) { return 1/cosh(x) };
+af.csch = function(x) { return 1/sinh(x) };
+af.coth = function(x) { return 1/tanh(x) };
+af.arcsech = function(x) { return arccosh(1/x) };
+af.arccsch = function(x) { return arcsinh(1/x) };
+af.arccoth = function(x) { return arctanh(1/x) };
+af.sign = function(x) { return (x==0?0:(x<0?-1:1)) };
+
+af.factorial = function(x,n) {
+  if (n==null) n=1;
+  for (var i=x-n; i>0; i-=n) x*=i;
+  return (x<0?NaN:(x==0?1:x));
+};
+
+af.C = function(x,k) {
+  var res=1;
+  for (var i=0; i<k; i++) res*=(x-i)/(k-i);
+  return res;
+};
+
+af.chop = function(x,n) {
+  if (n==null) n=0;
+  return Math.floor(x*Math.pow(10,n))/Math.pow(10,n);
+};
+
+af.ran = function(a,b,n) {
+  if (n==null) n=0;
+  return chop((b+Math.pow(10,-n)-a)*Math.random()+a,n);
+};
+
+
+af.less =  function(x,y)  { return x < y };  // used for scripts in XML files
+                                     // since IE does not handle CDATA well
+
+
+
+
+/*
+ASCIIMathML.js
+==============
+This file contains JavaScript functions to convert ASCII math notation
+to Presentation MathML. The conversion is done while the (X)HTML page 
+loads, and should work with Firefox/Mozilla/Netscape 7+ and Internet 
+Explorer 6+MathPlayer (http://www.dessci.com/en/products/mathplayer/).
+Just add the next line to your (X)HTML page with this file in the same folder:
+<script type="text/javascript" src="ASCIIMathML.js"></script>
+This is a convenient and inexpensive solution for authoring MathML.
+
+Version 1.4.7 Dec 15, 2005, (c) Peter Jipsen http://www.chapman.edu/~jipsen
+Latest version at http://www.chapman.edu/~jipsen/mathml/ASCIIMathML.js
+For changes see http://www.chapman.edu/~jipsen/mathml/asciimathchanges.txt
+If you use it on a webpage, please send the URL to jipsen@chapman.edu
+
+This program is free software; you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation; either version 2 of the License, or (at
+your option) any later version.
+
+This program is distributed in the hope that it will be useful, 
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+General Public License (at http://www.gnu.org/copyleft/gpl.html) 
+for more details.
+*/
+
+ascii.math ={};
+
+ascii.math.parser = function () {}; //need to think about how to use this
+
+var am = ascii.math;
+var ame = ascii.math.parser;
+var amep = ascii.math.parser.prototype;
+
+am.checkForMathML = true;   // check if browser can display MathML
+am.notifyIfNoMathML = false; // display note if no MathML capability
+am.alertIfNoMathML = true;  // show alert box if no MathML capability
+
+amep.mathcolor = "black";       // change it to "" (to inherit) or any other color
+amep.mathfontfamily = "serif"; // change to "" to inherit (works in IE) 
+                              // or another family (e.g. "arial")
+amep.displaystyle = true;      // puts limits above and below large operators
+amep.showasciiformulaonhover = true; // helps students learn ASCIIMath
+amep.decimalsign = ".";        // change to "," if you like, beware of `(1,2)`!
+amep.delimiter1 = "`";
+amep.escape1 = "\\\\`"; // can use other characters
+amep.delimiter2 = "$";
+amep.escape2 = "\\\\\\$";
+amep.delimiter2regexp = "\\$";
+amep.doubleblankmathdelimiter = false; // if true,  x+1  is equal to `x+1`
+                                      // for IE this works only in <!--   -->
+//var separatetokens;// has been removed (email me if this is a problem)
+
+
+// all further global variables start with "AM"
+
+
+am.noMathMLNote = function() {
+    var nd = ascii.myCreateElementXHTML("h3");
+    nd.setAttribute("align","center")
+    nd.appendChild(ascii.myCreateElementXHTML("p"));
+  nd.appendChild(document.createTextNode("To view the "));
+  var an = ascii.myCreateElementXHTML("a");
+  an.appendChild(document.createTextNode("ASCIIMathML"));
+  an.setAttribute("href","http://www.chapman.edu/~jipsen/asciimath.html");
+  nd.appendChild(an);
+  nd.appendChild(document.createTextNode(" notation use Internet Explorer 6+"));  
+  an = ascii.myCreateElementXHTML("a");
+  an.appendChild(document.createTextNode("MathPlayer"));
+  an.setAttribute("href","http://www.dessci.com/en/products/mathplayer/download.htm");
+  nd.appendChild(an);
+  nd.appendChild(document.createTextNode(" or Netscape/Mozilla/Firefox"));
+  nd.appendChild(ascii.myCreateElementXHTML("p"));
+  return nd;
+};
+
+am.isMathMLavailable= function() {
+  if (navigator.appName.slice(0,8)=="Netscape") 
+    if (navigator.appVersion.slice(0,1)>="5") return null;
+    else return am.noMathMLNote();
+  else if (navigator.appName.slice(0,9)=="Microsoft")
+    try {
+        var ActiveX = new ActiveXObject("MathPlayer.Factory.1");
+        return null;
+    } catch (e) {
+        return am.noMathMLNote();
+    }
+  else return am.noMathMLNote();
+};
+
+// character lists for Mozilla/Netscape fonts
+am.cal =
+["\uD835\uDC9C","\u212C","\uD835\uDC9E","\uD835\uDC9F","\u2130","\u2131","\uD835\uDCA2","\u210B","\u2110","\uD835\uDCA5","\uD835\uDCA6","\u2112","\u2133","\uD835\uDCA9","\uD835\uDCAA","\uD835\uDCAB",
+"\uD835\uDCAC","\u211B","\uD835\uDCAE","\uD835\uDCAF","\uD835\uDCB0","\uD835\uDCB1","\uD835\uDCB2","\uD835\uDCB3","\uD835\uDCB4","\uD835\uDCB5",
+"\uD835\uDCB6","\uD835\uDCB7","\uD835\uDCB8","\uD835\uDCB9","\u212F","\uD835\uDCBB","\u210A","\uD835\uDCBD","\uD835\uDCBE","\uD835\uDCBF","\uD835\uDCC0","\uD835\uDCC1","\uD835\uDCC2","\uD835\uDCC3",
+"\u2134","\uD835\uDCC5","\uD835\uDCC6","\uD835\uDCC7","\uD835\uDCC8","\uD835\uDCC9","\uD835\uDCCA","\uD835\uDCCB","\uD835\uDCCC","\uD835\uDCCD","\uD835\uDCCE","\uD835\uDCCF"];
+
+am.frk =
+["\uD835\uDD04","\uD835\uDD05","\u212D","\uD835\uDD07","\uD835\uDD08","\uD835\uDD09","\uD835\uDD0A","\u210C","\u2111","\uD835\uDD0D","\uD835\uDD0E","\uD835\uDD0F","\uD835\uDD10","\uD835\uDD11",
+"\uD835\uDD12","\uD835\uDD13","\uD835\uDD14","\u211C","\uD835\uDD16","\uD835\uDD17","\uD835\uDD18","\uD835\uDD19","\uD835\uDD1A","\uD835\uDD1B","\uD835\uDD1C","\u2128",
+"\uD835\uDD1E","\uD835\uDD1F","\uD835\uDD20","\uD835\uDD21","\uD835\uDD22","\uD835\uDD23","\uD835\uDD24","\uD835\uDD25","\uD835\uDD26","\uD835\uDD27","\uD835\uDD28","\uD835\uDD29","\uD835\uDD2A",
+"\uD835\uDD2B","\uD835\uDD2C","\uD835\uDD2D","\uD835\uDD2E","\uD835\uDD2F","\uD835\uDD30","\uD835\uDD31","\uD835\uDD32","\uD835\uDD33","\uD835\uDD34","\uD835\uDD35","\uD835\uDD36","\uD835\uDD37"];
+
+am.bbb =
+["\uD835\uDD38","\uD835\uDD39","\u2102","\uD835\uDD3B","\uD835\uDD3C","\uD835\uDD3D","\uD835\uDD3E","\u210D","\uD835\uDD40","\uD835\uDD41","\uD835\uDD42","\uD835\uDD43","\uD835\uDD44",
+"\u2115","\uD835\uDD46","\u2119","\u211A","\u211D","\uD835\uDD4A","\uD835\uDD4B","\uD835\uDD4C","\uD835\uDD4D","\uD835\uDD4E","\uD835\uDD4F","\uD835\uDD50","\u2124",
+"\uD835\uDD52","\uD835\uDD53","\uD835\uDD54","\uD835\uDD55","\uD835\uDD56","\uD835\uDD57","\uD835\uDD58","\uD835\uDD59","\uD835\uDD5A","\uD835\uDD5B","\uD835\uDD5C","\uD835\uDD5D",
+"\uD835\uDD5E","\uD835\uDD5F","\uD835\uDD60","\uD835\uDD61","\uD835\uDD62","\uD835\uDD63","\uD835\uDD64","\uD835\uDD65","\uD835\uDD66","\uD835\uDD67","\uD835\uDD68","\uD835\uDD69","\uD835\uDD6A","\uD835\uDD6B"]; 
+
+am.CONST = 0;
+am.UNARY = 1;
+am.BINARY = 2;
+am.INFIX = 3;
+am.LEFTBRACKET = 4; 
+am.RIGHTBRACKET = 5;
+am.SPACE = 6;
+am.UNDEROVER = 7;
+am.DEFINITION = 8; 
+am.LEFTRIGHT = 9;
+am.TEXT = 10; // token types
+
+am.sqrt = {input:"sqrt", tag:"msqrt", output:"sqrt", tex:null, ttype:am.UNARY};
+am.root  = {input:"root", tag:"mroot", output:"root", tex:null, ttype:am.BINARY};
+am.frac  = {input:"frac", tag:"mfrac", output:"/",    tex:null, ttype:am.BINARY};
+am.div   = {input:"/",    tag:"mfrac", output:"/",    tex:null, ttype:am.INFIX};
+am.over  = {input:"stackrel", tag:"mover", output:"stackrel", tex:null, ttype:am.BINARY};
+am.sub   = {input:"_",    tag:"msub",  output:"_",    tex:null, ttype:am.INFIX};
+am.sup   = {input:"^",    tag:"msup",  output:"^",    tex:null, ttype:am.INFIX};
+am.text  = {input:"text", tag:"mtext", output:"text", tex:null, ttype:am.TEXT};
+am.mbox  = {input:"mbox", tag:"mtext", output:"mbox", tex:null, ttype:am.TEXT};
+am.quote = {input:"\"",   tag:"mtext", output:"mbox", tex:null, ttype:am.TEXT};
+
+am.symbols = [
+//some greek symbols
+{input:"alpha",  tag:"mi", output:"\u03B1", tex:null, ttype:am.CONST},
+{input:"beta",   tag:"mi", output:"\u03B2", tex:null, ttype:am.CONST},
+{input:"chi",    tag:"mi", output:"\u03C7", tex:null, ttype:am.CONST},
+{input:"delta",  tag:"mi", output:"\u03B4", tex:null, ttype:am.CONST},
+{input:"Delta",  tag:"mo", output:"\u0394", tex:null, ttype:am.CONST},
+{input:"epsi",   tag:"mi", output:"\u03B5", tex:"epsilon", ttype:am.CONST},
+{input:"varepsilon", tag:"mi", output:"\u025B", tex:null, ttype:am.CONST},
+{input:"eta",    tag:"mi", output:"\u03B7", tex:null, ttype:am.CONST},
+{input:"gamma",  tag:"mi", output:"\u03B3", tex:null, ttype:am.CONST},
+{input:"Gamma",  tag:"mo", output:"\u0393", tex:null, ttype:am.CONST},
+{input:"iota",   tag:"mi", output:"\u03B9", tex:null, ttype:am.CONST},
+{input:"kappa",  tag:"mi", output:"\u03BA", tex:null, ttype:am.CONST},
+{input:"lambda", tag:"mi", output:"\u03BB", tex:null, ttype:am.CONST},
+{input:"Lambda", tag:"mo", output:"\u039B", tex:null, ttype:am.CONST},
+{input:"mu",     tag:"mi", output:"\u03BC", tex:null, ttype:am.CONST},
+{input:"nu",     tag:"mi", output:"\u03BD", tex:null, ttype:am.CONST},
+{input:"omega",  tag:"mi", output:"\u03C9", tex:null, ttype:am.CONST},
+{input:"Omega",  tag:"mo", output:"\u03A9", tex:null, ttype:am.CONST},
+{input:"phi",    tag:"mi", output:"\u03C6", tex:null, ttype:am.CONST},
+{input:"varphi", tag:"mi", output:"\u03D5", tex:null, ttype:am.CONST},
+{input:"Phi",    tag:"mo", output:"\u03A6", tex:null, ttype:am.CONST},
+{input:"pi",     tag:"mi", output:"\u03C0", tex:null, ttype:am.CONST},
+{input:"Pi",     tag:"mo", output:"\u03A0", tex:null, ttype:am.CONST},
+{input:"psi",    tag:"mi", output:"\u03C8", tex:null, ttype:am.CONST},
+{input:"Psi",    tag:"mi", output:"\u03A8", tex:null, ttype:am.CONST},
+{input:"rho",    tag:"mi", output:"\u03C1", tex:null, ttype:am.CONST},
+{input:"sigma",  tag:"mi", output:"\u03C3", tex:null, ttype:am.CONST},
+{input:"Sigma",  tag:"mo", output:"\u03A3", tex:null, ttype:am.CONST},
+{input:"tau",    tag:"mi", output:"\u03C4", tex:null, ttype:am.CONST},
+{input:"theta",  tag:"mi", output:"\u03B8", tex:null, ttype:am.CONST},
+{input:"vartheta", tag:"mi", output:"\u03D1", tex:null, ttype:am.CONST},
+{input:"Theta",  tag:"mo", output:"\u0398", tex:null, ttype:am.CONST},
+{input:"upsilon", tag:"mi", output:"\u03C5", tex:null, ttype:am.CONST},
+{input:"xi",     tag:"mi", output:"\u03BE", tex:null, ttype:am.CONST},
+{input:"Xi",     tag:"mo", output:"\u039E", tex:null, ttype:am.CONST},
+{input:"zeta",   tag:"mi", output:"\u03B6", tex:null, ttype:am.CONST},
+
+//binary operation symbols
+{input:"*",  tag:"mo", output:"\u22C5", tex:"cdot", ttype:am.CONST},
+{input:"**", tag:"mo", output:"\u22C6", tex:"star", ttype:am.CONST},
+{input:"//", tag:"mo", output:"/",      tex:null, ttype:am.CONST},
+{input:"\\\\", tag:"mo", output:"\\",   tex:"backslash", ttype:am.CONST},
+{input:"setminus", tag:"mo", output:"\\", tex:null, ttype:am.CONST},
+{input:"xx", tag:"mo", output:"\u00D7", tex:"times", ttype:am.CONST},
+{input:"-:", tag:"mo", output:"\u00F7", tex:"divide", ttype:am.CONST},
+{input:"@",  tag:"mo", output:"\u2218", tex:"circ", ttype:am.CONST},
+{input:"o+", tag:"mo", output:"\u2295", tex:"oplus", ttype:am.CONST},
+{input:"ox", tag:"mo", output:"\u2297", tex:"otimes", ttype:am.CONST},
+{input:"o.", tag:"mo", output:"\u2299", tex:"odot", ttype:am.CONST},
+{input:"sum", tag:"mo", output:"\u2211", tex:null, ttype:am.UNDEROVER},
+{input:"prod", tag:"mo", output:"\u220F", tex:null, ttype:am.UNDEROVER},
+{input:"^^",  tag:"mo", output:"\u2227", tex:"wedge", ttype:am.CONST},
+{input:"^^^", tag:"mo", output:"\u22C0", tex:"bigwedge", ttype:am.UNDEROVER},
+{input:"vv",  tag:"mo", output:"\u2228", tex:"vee", ttype:am.CONST},
+{input:"vvv", tag:"mo", output:"\u22C1", tex:"bigvee", ttype:am.UNDEROVER},
+{input:"nn",  tag:"mo", output:"\u2229", tex:"cap", ttype:am.CONST},
+{input:"nnn", tag:"mo", output:"\u22C2", tex:"bigcap", ttype:am.UNDEROVER},
+{input:"uu",  tag:"mo", output:"\u222A", tex:"cup", ttype:am.CONST},
+{input:"uuu", tag:"mo", output:"\u22C3", tex:"bigcup", ttype:am.UNDEROVER},
+
+//binary relation symbols
+{input:"!=",  tag:"mo", output:"\u2260", tex:"ne", ttype:am.CONST},
+{input:":=",  tag:"mo", output:":=",     tex:null, ttype:am.CONST},
+{input:"lt",  tag:"mo", output:"<",      tex:null, ttype:am.CONST},
+{input:"<=",  tag:"mo", output:"\u2264", tex:"le", ttype:am.CONST},
+{input:"lt=", tag:"mo", output:"\u2264", tex:"leq", ttype:am.CONST},
+{input:">=",  tag:"mo", output:"\u2265", tex:"ge", ttype:am.CONST},
+{input:"geq", tag:"mo", output:"\u2265", tex:null, ttype:am.CONST},
+{input:"-<",  tag:"mo", output:"\u227A", tex:"prec", ttype:am.CONST},
+{input:"-lt", tag:"mo", output:"\u227A", tex:null, ttype:am.CONST},
+{input:">-",  tag:"mo", output:"\u227B", tex:"succ", ttype:am.CONST},
+{input:"-<=", tag:"mo", output:"\u2AAF", tex:"preceq", ttype:am.CONST},
+{input:">-=", tag:"mo", output:"\u2AB0", tex:"succeq", ttype:am.CONST},
+{input:"in",  tag:"mo", output:"\u2208", tex:null, ttype:am.CONST},
+{input:"!in", tag:"mo", output:"\u2209", tex:"notin", ttype:am.CONST},
+{input:"sub", tag:"mo", output:"\u2282", tex:"subset", ttype:am.CONST},
+{input:"sup", tag:"mo", output:"\u2283", tex:"supset", ttype:am.CONST},
+{input:"sube", tag:"mo", output:"\u2286", tex:"subseteq", ttype:am.CONST},
+{input:"supe", tag:"mo", output:"\u2287", tex:"supseteq", ttype:am.CONST},
+{input:"-=",  tag:"mo", output:"\u2261", tex:"equiv", ttype:am.CONST},
+{input:"~=",  tag:"mo", output:"\u2245", tex:"cong", ttype:am.CONST},
+{input:"~~",  tag:"mo", output:"\u2248", tex:"approx", ttype:am.CONST},
+{input:"prop", tag:"mo", output:"\u221D", tex:"propto", ttype:am.CONST},
+
+//logical symbols
+{input:"and", tag:"mtext", output:"and", tex:null, ttype:am.SPACE},
+{input:"or",  tag:"mtext", output:"or",  tex:null, ttype:am.SPACE},
+{input:"not", tag:"mo", output:"\u00AC", tex:"neg", ttype:am.CONST},
+{input:"=>",  tag:"mo", output:"\u21D2", tex:"implies", ttype:am.CONST},
+{input:"if",  tag:"mo", output:"if",     tex:null, ttype:am.SPACE},
+{input:"<=>", tag:"mo", output:"\u21D4", tex:"iff", ttype:am.CONST},
+{input:"AA",  tag:"mo", output:"\u2200", tex:"forall", ttype:am.CONST},
+{input:"EE",  tag:"mo", output:"\u2203", tex:"exists", ttype:am.CONST},
+{input:"_|_", tag:"mo", output:"\u22A5", tex:"bot", ttype:am.CONST},
+{input:"TT",  tag:"mo", output:"\u22A4", tex:"top", ttype:am.CONST},
+{input:"|--",  tag:"mo", output:"\u22A2", tex:"vdash", ttype:am.CONST},
+{input:"|==",  tag:"mo", output:"\u22A8", tex:"models", ttype:am.CONST},
+
+//grouping brackets
+{input:"(", tag:"mo", output:"(", tex:null, ttype:am.LEFTBRACKET},
+{input:")", tag:"mo", output:")", tex:null, ttype:am.RIGHTBRACKET},
+{input:"[", tag:"mo", output:"[", tex:null, ttype:am.LEFTBRACKET},
+{input:"]", tag:"mo", output:"]", tex:null, ttype:am.RIGHTBRACKET},
+{input:"{", tag:"mo", output:"{", tex:null, ttype:am.LEFTBRACKET},
+{input:"}", tag:"mo", output:"}", tex:null, ttype:am.RIGHTBRACKET},
+{input:"|", tag:"mo", output:"|", tex:null, ttype:am.LEFTRIGHT},
+//{input:"||", tag:"mo", output:"||", tex:null, ttype:am.LEFTRIGHT},
+{input:"(:", tag:"mo", output:"\u2329", tex:"langle", ttype:am.LEFTBRACKET},
+{input:":)", tag:"mo", output:"\u232A", tex:"rangle", ttype:am.RIGHTBRACKET},
+{input:"<<", tag:"mo", output:"\u2329", tex:null, ttype:am.LEFTBRACKET},
+{input:">>", tag:"mo", output:"\u232A", tex:null, ttype:am.RIGHTBRACKET},
+{input:"{:", tag:"mo", output:"{:", tex:null, ttype:am.LEFTBRACKET, invisible:true},
+{input:":}", tag:"mo", output:":}", tex:null, ttype:am.RIGHTBRACKET, invisible:true},
+
+//miscellaneous symbols
+{input:"int",  tag:"mo", output:"\u222B", tex:null, ttype:am.CONST},
+{input:"dx",   tag:"mi", output:"{:d x:}", tex:null, ttype:am.DEFINITION},
+{input:"dy",   tag:"mi", output:"{:d y:}", tex:null, ttype:am.DEFINITION},
+{input:"dz",   tag:"mi", output:"{:d z:}", tex:null, ttype:am.DEFINITION},
+{input:"dt",   tag:"mi", output:"{:d t:}", tex:null, ttype:am.DEFINITION},
+{input:"oint", tag:"mo", output:"\u222E", tex:null, ttype:am.CONST},
+{input:"del",  tag:"mo", output:"\u2202", tex:"partial", ttype:am.CONST},
+{input:"grad", tag:"mo", output:"\u2207", tex:"nabla", ttype:am.CONST},
+{input:"+-",   tag:"mo", output:"\u00B1", tex:"pm", ttype:am.CONST},
+{input:"O/",   tag:"mo", output:"\u2205", tex:"emptyset", ttype:am.CONST},
+{input:"oo",   tag:"mo", output:"\u221E", tex:"infty", ttype:am.CONST},
+{input:"aleph", tag:"mo", output:"\u2135", tex:null, ttype:am.CONST},
+{input:"...",  tag:"mo", output:"...",    tex:"ldots", ttype:am.CONST},
+{input:":.",  tag:"mo", output:"\u2234",  tex:"therefore", ttype:am.CONST},
+{input:"/_",  tag:"mo", output:"\u2220",  tex:"angle", ttype:am.CONST},
+{input:"\\ ",  tag:"mo", output:"\u00A0", tex:null, ttype:am.CONST},
+{input:"quad", tag:"mo", output:"\u00A0\u00A0", tex:null, ttype:am.CONST},
+{input:"qquad", tag:"mo", output:"\u00A0\u00A0\u00A0\u00A0", tex:null, ttype:am.CONST},
+{input:"cdots", tag:"mo", output:"\u22EF", tex:null, ttype:am.CONST},
+{input:"vdots", tag:"mo", output:"\u22EE", tex:null, ttype:am.CONST},
+{input:"ddots", tag:"mo", output:"\u22F1", tex:null, ttype:am.CONST},
+{input:"diamond", tag:"mo", output:"\u22C4", tex:null, ttype:am.CONST},
+{input:"square", tag:"mo", output:"\u25A1", tex:null, ttype:am.CONST},
+{input:"|__", tag:"mo", output:"\u230A",  tex:"lfloor", ttype:am.CONST},
+{input:"__|", tag:"mo", output:"\u230B",  tex:"rfloor", ttype:am.CONST},
+{input:"|~", tag:"mo", output:"\u2308",  tex:"lceiling", ttype:am.CONST},
+{input:"~|", tag:"mo", output:"\u2309",  tex:"rceiling", ttype:am.CONST},
+{input:"CC",  tag:"mo", output:"\u2102", tex:null, ttype:am.CONST},
+{input:"NN",  tag:"mo", output:"\u2115", tex:null, ttype:am.CONST},
+{input:"QQ",  tag:"mo", output:"\u211A", tex:null, ttype:am.CONST},
+{input:"RR",  tag:"mo", output:"\u211D", tex:null, ttype:am.CONST},
+{input:"ZZ",  tag:"mo", output:"\u2124", tex:null, ttype:am.CONST},
+{input:"f",   tag:"mi", output:"f",      tex:null, ttype:am.UNARY, func:true},
+{input:"g",   tag:"mi", output:"g",      tex:null, ttype:am.UNARY, func:true},
+
+//standard functions
+{input:"lim",  tag:"mo", output:"lim", tex:null, ttype:am.UNDEROVER},
+{input:"Lim",  tag:"mo", output:"Lim", tex:null, ttype:am.UNDEROVER},
+{input:"sin",  tag:"mo", output:"sin", tex:null, ttype:am.UNARY, func:true},
+{input:"cos",  tag:"mo", output:"cos", tex:null, ttype:am.UNARY, func:true},
+{input:"tan",  tag:"mo", output:"tan", tex:null, ttype:am.UNARY, func:true},
+{input:"sinh", tag:"mo", output:"sinh", tex:null, ttype:am.UNARY, func:true},
+{input:"cosh", tag:"mo", output:"cosh", tex:null, ttype:am.UNARY, func:true},
+{input:"tanh", tag:"mo", output:"tanh", tex:null, ttype:am.UNARY, func:true},
+{input:"cot",  tag:"mo", output:"cot", tex:null, ttype:am.UNARY, func:true},
+{input:"sec",  tag:"mo", output:"sec", tex:null, ttype:am.UNARY, func:true},
+{input:"csc",  tag:"mo", output:"csc", tex:null, ttype:am.UNARY, func:true},
+{input:"log",  tag:"mo", output:"log", tex:null, ttype:am.UNARY, func:true},
+{input:"ln",   tag:"mo", output:"ln",  tex:null, ttype:am.UNARY, func:true},
+{input:"det",  tag:"mo", output:"det", tex:null, ttype:am.UNARY, func:true},
+{input:"dim",  tag:"mo", output:"dim", tex:null, ttype:am.CONST},
+{input:"mod",  tag:"mo", output:"mod", tex:null, ttype:am.CONST},
+{input:"gcd",  tag:"mo", output:"gcd", tex:null, ttype:am.UNARY, func:true},
+{input:"lcm",  tag:"mo", output:"lcm", tex:null, ttype:am.UNARY, func:true},
+{input:"lub",  tag:"mo", output:"lub", tex:null, ttype:am.CONST},
+{input:"glb",  tag:"mo", output:"glb", tex:null, ttype:am.CONST},
+{input:"min",  tag:"mo", output:"min", tex:null, ttype:am.UNDEROVER},
+{input:"max",  tag:"mo", output:"max", tex:null, ttype:am.UNDEROVER},
+
+//arrows
+{input:"uarr", tag:"mo", output:"\u2191", tex:"uparrow", ttype:am.CONST},
+{input:"darr", tag:"mo", output:"\u2193", tex:"downarrow", ttype:am.CONST},
+{input:"rarr", tag:"mo", output:"\u2192", tex:"rightarrow", ttype:am.CONST},
+{input:"->",   tag:"mo", output:"\u2192", tex:"to", ttype:am.CONST},
+{input:"|->",  tag:"mo", output:"\u21A6", tex:"mapsto", ttype:am.CONST},
+{input:"larr", tag:"mo", output:"\u2190", tex:"leftarrow", ttype:am.CONST},
+{input:"harr", tag:"mo", output:"\u2194", tex:"leftrightarrow", ttype:am.CONST},
+{input:"rArr", tag:"mo", output:"\u21D2", tex:"Rightarrow", ttype:am.CONST},
+{input:"lArr", tag:"mo", output:"\u21D0", tex:"Leftarrow", ttype:am.CONST},
+{input:"hArr", tag:"mo", output:"\u21D4", tex:"Leftrightarrow", ttype:am.CONST},
+
+//commands with argument
+am.sqrt, am.root, am.frac, am.div, am.over, am.sub, am.sup,
+{input:"hat", tag:"mover", output:"\u005E", tex:null, ttype:am.UNARY, acc:true},
+{input:"bar", tag:"mover", output:"\u00AF", tex:"overline", ttype:am.UNARY, acc:true},
+{input:"vec", tag:"mover", output:"\u2192", tex:null, ttype:am.UNARY, acc:true},
+{input:"dot", tag:"mover", output:".",      tex:null, ttype:am.UNARY, acc:true},
+{input:"ddot", tag:"mover", output:"..",    tex:null, ttype:am.UNARY, acc:true},
+{input:"ul", tag:"munder", output:"\u0332", tex:"underline", ttype:am.UNARY, acc:true},
+am.text, am.mbox, am.quote,
+{input:"bb", tag:"mstyle", atname:"fontweight", atval:"bold", output:"bb", tex:null, ttype:am.UNARY},
+{input:"mathbf", tag:"mstyle", atname:"fontweight", atval:"bold", output:"mathbf", tex:null, ttype:am.UNARY},
+{input:"sf", tag:"mstyle", atname:"fontfamily", atval:"sans-serif", output:"sf", tex:null, ttype:am.UNARY},
+{input:"mathsf", tag:"mstyle", atname:"fontfamily", atval:"sans-serif", output:"mathsf", tex:null, ttype:am.UNARY},
+{input:"bbb", tag:"mstyle", atname:"mathvariant", atval:"double-struck", output:"bbb", tex:null, ttype:am.UNARY, codes:am.bbb},
+{input:"mathbb", tag:"mstyle", atname:"mathvariant", atval:"double-struck", output:"mathbb", tex:null, ttype:am.UNARY, codes:am.bbb},
+{input:"cc",  tag:"mstyle", atname:"mathvariant", atval:"script", output:"cc", tex:null, ttype:am.UNARY, codes:am.cal},
+{input:"mathcal", tag:"mstyle", atname:"mathvariant", atval:"script", output:"mathcal", tex:null, ttype:am.UNARY, codes:am.cal},
+{input:"tt",  tag:"mstyle", atname:"fontfamily", atval:"monospace", output:"tt", tex:null, ttype:am.UNARY},
+{input:"mathtt", tag:"mstyle", atname:"fontfamily", atval:"monospace", output:"mathtt", tex:null, ttype:am.UNARY},
+{input:"fr",  tag:"mstyle", atname:"mathvariant", atval:"fraktur", output:"fr", tex:null, ttype:am.UNARY, codes:am.frk},
+{input:"mathfrak",  tag:"mstyle", atname:"mathvariant", atval:"fraktur", output:"mathfrak", tex:null, ttype:am.UNARY, codes:am.frk}
+];
+
+am.compareNames = function(s1,s2) {
+  if (s1.input > s2.input) return 1
+  else return -1;
+};
+
+am.names = []; //list of input symbols
+
+am.initSymbols =  function() {
+  var texsymbols = [], i;
+  for (i=0; i<am.symbols.length; i++)
+    if (am.symbols[i].tex) 
+      texsymbols[texsymbols.length] = {input:am.symbols[i].tex, 
+        tag:am.symbols[i].tag, output:am.symbols[i].output, ttype:am.symbols[i].ttype};
+  am.symbols = am.symbols.concat(texsymbols);
+  am.symbols.sort(am.compareNames);
+  for (i=0; i<am.symbols.length; i++) am.names[i] = am.symbols[i].input;
+};
+
+am.mathml = "http://www.w3.org/1998/Math/MathML";
+
+am.createElementMathML= function(t) {
+  if (ascii.isIE) return document.createElement("m:"+t);
+  else return document.createElementNS(am.mathml,t);
+};
+
+am.createMmlNode= function(t,frag) {
+//  var node = am.createElementMathML(name);
+  if (ascii.isIE) var node = document.createElement("m:"+t);
+  else var node = document.createElementNS(am.mathml,t);
+  node.appendChild(frag);
+  return node;
+};
+
+function newcommand(oldstr,newstr,texstr) {  //modified to also put in a tex str; if omitted, no harm
+    if (!texstr) texstr = NULL;
+  am.symbols = am.symbols.concat([{input:oldstr, tag:"mo", output:newstr, 
+                                 tex:texstr, ttype:am.DEFINITION}]);
+};
+
+am.removeCharsAndBlanks = function(str,n) {
+//remove n characters and any following blanks
+  var st;
+  if (str.charAt(n)=="\\" && str.charAt(n+1)!="\\" && str.charAt(n+1)!=" ") 
+    st = str.slice(n+1);
+  else st = str.slice(n);
+  for (var i=0; i<st.length && st.charCodeAt(i)<=32; i=i+1);
+  return st.slice(i);
+};
+
+am.position = function(arr, str, n) { 
+// return position >=n where str appears or would be inserted
+// assumes arr is sorted
+  if (n==0) {
+    var h,m;
+    n = -1;
+    h = arr.length;
+    while (n+1<h) {
+      m = (n+h) >> 1;
+      if (arr[m]<str) n = m; else h = m;
+    }
+    return h;
+  } else
+    for (var i=n; i<arr.length && arr[i]<str; i++);
+  return i; // i=arr.length || arr[i]>=str
+};
+
+am.getSymbol = function(str) {
+//return maximal initial substring of str that appears in names
+//return null if there is none
+  var k = 0; //new pos
+  var j = 0; //old pos
+  var mk; //match pos
+  var st;
+  var tagst;
+  var match = "";
+  var more = true;
+  for (var i=1; i<=str.length && more; i++) {
+    st = str.slice(0,i); //initial substring of length i
+    j = k;
+    k = am.position(am.names, st, j);
+    if (k<am.names.length && str.slice(0,am.names[k].length)==am.names[k]){
+      match = am.names[k];
+      mk = k;
+      i = match.length;
+    }
+    more = k<am.names.length && str.slice(0,am.names[k].length)>=am.names[k];
+    
+  }
+  am.previousSymbol=am.currentSymbol;
+  if (match!=""){
+    am.currentSymbol=am.symbols[mk].ttype;
+    return am.symbols[mk]; 
+  }
+// if str[0] is a digit or - return maxsubstring of digits.digits
+  am.currentSymbol=am.CONST;
+  k = 1;
+  st = str.slice(0,1);
+  var integ = true;
+  while ("0"<=st && st<="9" && k<=str.length) {
+    st = str.slice(k,k+1);
+    k++;
+  }
+  if (st == amep.decimalsign) {
+    st = str.slice(k,k+1);
+    if ("0"<=st && st<="9") {
+      integ = false;
+      k++;
+      while ("0"<=st && st<="9" && k<=str.length) {
+        st = str.slice(k,k+1);
+        k++;
+      }
+    }
+  }
+  if ((integ && k>1) || k>2) {
+    st = str.slice(0,k-1);
+    tagst = "mn";
+  } else {
+    k = 2;
+    st = str.slice(0,1); //take 1 character
+    tagst = (("A">st || st>"Z") && ("a">st || st>"z")?"mo":"mi");
+  }
+  if (st=="-" && am.previousSymbol==am.INFIX) {
+      am.currentSymbol = am.INFIX;  //trick "/" into recognizing "-" on second parse
+      return {input:st, tag:tagst, output:st, ttype:am.UNARY, func:true};
+  }
+  return {input:st, tag:tagst, output:st, ttype:am.CONST};
+};
+
+am.removeBrackets = function(node) {
+  var st;
+  if (node.nodeName=="mrow") {
+    st = node.firstChild.firstChild.nodeValue;
+    if (st=="(" || st=="[" || st=="{") node.removeChild(node.firstChild);
+  }
+  if (node.nodeName=="mrow") {
+    st = node.lastChild.firstChild.nodeValue;
+    if (st==")" || st=="]" || st=="}") node.removeChild(node.lastChild);
+  }
+};
+
+/*Parsing ASCII math expressions with the following grammar
+v ::= [A-Za-z] | greek letters | numbers | other constant symbols
+u ::= sqrt | text | bb | other unary symbols for font commands
+b ::= frac | root | stackrel         binary symbols
+l ::= ( | [ | { | (: | {:            left brackets
+r ::= ) | ] | } | :) | :}            right brackets
+S ::= v | lEr | uS | bSS             Simple expression
+I ::= S_S | S^S | S_S^S | S          Intermediate expression
+E ::= IE | I/I                       Expression
+Each terminal symbol is translated into a corresponding mathml node.*/
+
+/*am.nestingDepth,am.previousSymbol,am.currentSymbol;*/
+
+am.parseSexpr =function(str) { //parses str and returns [node,tailstr]
+  var symbol, node, result, i, st,// rightvert = false,
+    newFrag = document.createDocumentFragment();
+  str = am.removeCharsAndBlanks(str,0);
+  symbol = am.getSymbol(str);             //either a token or a bracket or empty
+ 
+  if (symbol == null || symbol.ttype == am.RIGHTBRACKET && am.nestingDepth > 0) {
+    return [null,str];
+  }
+  if (symbol.ttype == am.DEFINITION) {
+    str = symbol.output+am.removeCharsAndBlanks(str,symbol.input.length); 
+    symbol = am.getSymbol(str);
+  }
+  switch (symbol.ttype) {
+  case am.UNDEROVER:
+  case am.CONST:
+    str = am.removeCharsAndBlanks(str,symbol.input.length); 
+    return [am.createMmlNode(symbol.tag,        //its a constant
+                             document.createTextNode(symbol.output)),str];
+  case am.LEFTBRACKET:   //read (expr+)
+    am.nestingDepth++;
+    str = am.removeCharsAndBlanks(str,symbol.input.length); 
+    result = am.parseExpr(str,true);
+    am.nestingDepth--;
+    if (typeof symbol.invisible == "boolean" && symbol.invisible) 
+      node = am.createMmlNode("mrow",result[0]);
+    else {
+      node = am.createMmlNode("mo",document.createTextNode(symbol.output));
+      node = am.createMmlNode("mrow",node);
+      node.appendChild(result[0]);
+    }
+    return [node,result[1]];
+  case am.TEXT:
+      if (symbol!=am.quote) str = am.removeCharsAndBlanks(str,symbol.input.length);
+      if (str.charAt(0)=="{") i=str.indexOf("}");
+      else if (str.charAt(0)=="(") i=str.indexOf(")");
+      else if (str.charAt(0)=="[") i=str.indexOf("]");
+      else if (symbol==am.quote) i=str.slice(1).indexOf("\"")+1;
+      else i = 0;
+      if (i==-1) i = str.length;
+      st = str.slice(1,i);
+      if (st.charAt(0) == " ") {
+        node = am.createElementMathML("mspace");
+        node.setAttribute("width","1ex");
+        newFrag.appendChild(node);
+      }
+      newFrag.appendChild(
+        am.createMmlNode(symbol.tag,document.createTextNode(st)));
+      if (st.charAt(st.length-1) == " ") {
+        node = am.createElementMathML("mspace");
+        node.setAttribute("width","1ex");
+        newFrag.appendChild(node);
+      }
+      str = am.removeCharsAndBlanks(str,i+1);
+      return [am.createMmlNode("mrow",newFrag),str];
+  case am.UNARY:
+      str = am.removeCharsAndBlanks(str,symbol.input.length); 
+      result = am.parseSexpr(str);
+      if (result[0]==null) return [am.createMmlNode(symbol.tag,
+                             document.createTextNode(symbol.output)),str];
+      if (typeof symbol.func == "boolean" && symbol.func) { // functions hack
+        st = str.charAt(0);
+        if (st=="^" || st=="_" || st=="/" || st=="|" || st==",") {
+          return [am.createMmlNode(symbol.tag,
+                    document.createTextNode(symbol.output)),str];
+        } else {
+          node = am.createMmlNode("mrow",
+           am.createMmlNode(symbol.tag,document.createTextNode(symbol.output)));
+          node.appendChild(result[0]);
+          return [node,result[1]];
+        }
+      }
+      am.removeBrackets(result[0]);
+      if (symbol.input == "sqrt") {           // sqrt
+        return [am.createMmlNode(symbol.tag,result[0]),result[1]];
+      } else if (typeof symbol.acc == "boolean" && symbol.acc) {   // accent
+        node = am.createMmlNode(symbol.tag,result[0]);
+        node.appendChild(am.createMmlNode("mo",document.createTextNode(symbol.output)));
+        return [node,result[1]];
+      } else {                        // font change command
+        if (!ascii.isIE && typeof symbol.codes != "undefined") {
+          for (i=0; i<result[0].childNodes.length; i++)
+            if (result[0].childNodes[i].nodeName=="mi" || result[0].nodeName=="mi") {
+              st = (result[0].nodeName=="mi"?result[0].firstChild.nodeValue:
+                              result[0].childNodes[i].firstChild.nodeValue);
+              var newst = [];
+              for (var j=0; j<st.length; j++)
+
+           /*  //old not full range    
+             if (st.charCodeAt(j)>64 && st.charCodeAt(j)<91) newst = newst +
+                  String.fromCharCode(symbol.codes[st.charCodeAt(j)-65]);
+                else newst = newst + st.charAt(j);
+           */
+                        if (st.charCodeAt(j)>64 && st.charCodeAt(j)<91) 
+                            newst = newst + symbol.codes[st.charCodeAt(j)-65];
+                else if (st.charCodeAt(j)>96 && st.charCodeAt(j)<123)
+                   newst = newst + symbol.codes[st.charCodeAt(j)-71]; 
+               else newst = newst + st.charAt(j);
+
+              if (result[0].nodeName=="mi")
+                result[0]=am.createElementMathML("mo").
+                          appendChild(document.createTextNode(newst));
+              else result[0].replaceChild(am.createElementMathML("mo").
+          appendChild(document.createTextNode(newst)),result[0].childNodes[i]);
+            }
+        }
+        node = am.createMmlNode(symbol.tag,result[0]);
+        node.setAttribute(symbol.atname,symbol.atval);
+        return [node,result[1]];
+      }
+  case am.BINARY:
+    str = am.removeCharsAndBlanks(str,symbol.input.length); 
+    result = am.parseSexpr(str);
+    if (result[0]==null) return [am.createMmlNode("mo",
+                           document.createTextNode(symbol.input)),str];
+    am.removeBrackets(result[0]);
+    var result2 = am.parseSexpr(result[1]);
+    if (result2[0]==null) return [am.createMmlNode("mo",
+                           document.createTextNode(symbol.input)),str];
+    am.removeBrackets(result2[0]);
+    if (symbol.input=="root" || symbol.input=="stackrel") 
+      newFrag.appendChild(result2[0]);
+    newFrag.appendChild(result[0]);
+    if (symbol.input=="frac") newFrag.appendChild(result2[0]);
+    return [am.createMmlNode(symbol.tag,newFrag),result2[1]];
+  case am.INFIX:
+    str = am.removeCharsAndBlanks(str,symbol.input.length); 
+    return [am.createMmlNode("mo",document.createTextNode(symbol.output)),str];
+  case am.SPACE:
+    str = am.removeCharsAndBlanks(str,symbol.input.length); 
+    node = am.createElementMathML("mspace");
+    node.setAttribute("width","1ex");
+    newFrag.appendChild(node);
+    newFrag.appendChild(
+      am.createMmlNode(symbol.tag,document.createTextNode(symbol.output)));
+    node = am.createElementMathML("mspace");
+    node.setAttribute("width","1ex");
+    newFrag.appendChild(node);
+    return [am.createMmlNode("mrow",newFrag),str];
+  case am.LEFTRIGHT:
+//    if (rightvert) return [null,str]; else rightvert = true;
+    am.nestingDepth++;
+    str = am.removeCharsAndBlanks(str,symbol.input.length); 
+    result = am.parseExpr(str,false);
+    am.nestingDepth--;
+    var st = "";
+    if (result[0].lastChild!=null)
+      st = result[0].lastChild.firstChild.nodeValue;
+    if (st == "|") { // its an absolute value subterm
+      node = am.createMmlNode("mo",document.createTextNode(symbol.output));
+      node = am.createMmlNode("mrow",node);
+      node.appendChild(result[0]);
+      return [node,result[1]];
+    } else { // the "|" is a \mid
+      node = am.createMmlNode("mo",document.createTextNode(symbol.output));
+      node = am.createMmlNode("mrow",node);
+      return [node,str];
+    }
+  default:
+//alert("default");
+    str = am.removeCharsAndBlanks(str,symbol.input.length); 
+    return [am.createMmlNode(symbol.tag,        //its a constant
+                             document.createTextNode(symbol.output)),str];
+  }
+};
+
+am.parseIexpr= function(str) {
+  var symbol, sym1, sym2, node, result, underover;
+  str = am.removeCharsAndBlanks(str,0);
+  sym1 = am.getSymbol(str);
+  result = am.parseSexpr(str);
+  node = result[0];
+  str = result[1];
+  symbol = am.getSymbol(str);
+  if (symbol.ttype == am.INFIX && symbol.input != "/") {
+    str = am.removeCharsAndBlanks(str,symbol.input.length);
+//    if (symbol.input == "/") result = am.parseIexpr(str); else ...
+    result = am.parseSexpr(str);
+    if (result[0] == null) // show box in place of missing argument
+      result[0] = am.createMmlNode("mo",document.createTextNode("\u25A1"));
+    else am.removeBrackets(result[0]);
+    str = result[1];
+//    if (symbol.input == "/") am.removeBrackets(node);
+    if (symbol.input == "_") {
+      sym2 = am.getSymbol(str);
+      underover = (sym1.ttype == am.UNDEROVER);
+      if (sym2.input == "^") {
+        str = am.removeCharsAndBlanks(str,sym2.input.length);
+        var res2 = am.parseSexpr(str);
+        am.removeBrackets(res2[0]);
+        str = res2[1];
+        node = am.createMmlNode((underover?"munderover":"msubsup"),node);
+        node.appendChild(result[0]);
+        node.appendChild(res2[0]);
+        node = am.createMmlNode("mrow",node); // so sum does not stretch
+      } else {
+        node = am.createMmlNode((underover?"munder":"msub"),node);
+        node.appendChild(result[0]);
+      }
+    } else {
+      node = am.createMmlNode(symbol.tag,node);
+      node.appendChild(result[0]);
+    }
+  }
+  return [node,str];
+};
+
+am.parseExpr = function(str,rightbracket) {
+  var symbol, node, result, i, nodeList = [],
+  newFrag = document.createDocumentFragment();
+  do {
+    str = am.removeCharsAndBlanks(str,0);
+    result = am.parseIexpr(str);
+    node = result[0];
+    str = result[1];
+    symbol = am.getSymbol(str);
+    if (symbol.ttype == am.INFIX && symbol.input == "/") {
+      str = am.removeCharsAndBlanks(str,symbol.input.length);
+      result = am.parseIexpr(str);
+      if (result[0] == null) // show box in place of missing argument
+        result[0] = am.createMmlNode("mo",document.createTextNode("\u25A1"));
+      else am.removeBrackets(result[0]);
+      str = result[1];
+      am.removeBrackets(node);
+      node = am.createMmlNode(symbol.tag,node);
+      node.appendChild(result[0]);
+      newFrag.appendChild(node);
+      symbol = am.getSymbol(str);
+    } 
+    else if (node!=undefined) newFrag.appendChild(node);
+  } while ((symbol.ttype != am.RIGHTBRACKET && 
+           (symbol.ttype != am.LEFTRIGHT || rightbracket)
+           || am.nestingDepth == 0) && symbol!=null && symbol.output!="");
+  if (symbol.ttype == am.RIGHTBRACKET || symbol.ttype == am.LEFTRIGHT) {
+//    if (am.nestingDepth > 0) am.nestingDepth--;
+    var len = newFrag.childNodes.length;
+    if (len>0 && newFrag.childNodes[len-1].nodeName == "mrow" && len>1 &&
+      newFrag.childNodes[len-2].nodeName == "mo" &&
+      newFrag.childNodes[len-2].firstChild.nodeValue == ",") { //matrix
+      var right = newFrag.childNodes[len-1].lastChild.firstChild.nodeValue;
+      if (right==")" || right=="]") {
+        var left = newFrag.childNodes[len-1].firstChild.firstChild.nodeValue;
+        if (left=="(" && right==")" && symbol.output != "}" || 
+            left=="[" && right=="]") {
+        var pos = []; // positions of commas
+        var matrix = true;
+        var m = newFrag.childNodes.length;
+        for (i=0; matrix && i<m; i=i+2) {
+          pos[i] = [];
+          node = newFrag.childNodes[i];
+          if (matrix) matrix = node.nodeName=="mrow" && 
+            (i==m-1 || node.nextSibling.nodeName=="mo" && 
+            node.nextSibling.firstChild.nodeValue==",")&&
+            node.firstChild.firstChild.nodeValue==left &&
+            node.lastChild.firstChild.nodeValue==right;
+          if (matrix) 
+            for (var j=0; j<node.childNodes.length; j++)
+              if (node.childNodes[j].firstChild.nodeValue==",")
+                pos[i][pos[i].length]=j;
+          if (matrix && i>1) matrix = pos[i].length == pos[i-2].length;
+        }
+        if (matrix) {
+          var row, frag, n, k, table = document.createDocumentFragment();
+          for (i=0; i<m; i=i+2) {
+            row = document.createDocumentFragment();
+            frag = document.createDocumentFragment();
+            node = newFrag.firstChild; // <mrow>(-,-,...,-,-)</mrow>
+            n = node.childNodes.length;
+            k = 0;
+            node.removeChild(node.firstChild); //remove (
+            for (j=1; j<n-1; j++) {
+              if (typeof pos[i][k] != "undefined" && j==pos[i][k]){
+                node.removeChild(node.firstChild); //remove ,
+                row.appendChild(am.createMmlNode("mtd",frag));
+                k++;
+              } else frag.appendChild(node.firstChild);
+            }
+            row.appendChild(am.createMmlNode("mtd",frag));
+            if (newFrag.childNodes.length>2) {
+              newFrag.removeChild(newFrag.firstChild); //remove <mrow>)</mrow>
+              newFrag.removeChild(newFrag.firstChild); //remove <mo>,</mo>
+            }
+            table.appendChild(am.createMmlNode("mtr",row));
+          }
+          node = am.createMmlNode("mtable",table);
+          if (typeof symbol.invisible == "boolean" && symbol.invisible) node.setAttribute("columnalign","left");
+          newFrag.replaceChild(node,newFrag.firstChild);
+        }
+       }
+      }
+    }
+    str = am.removeCharsAndBlanks(str,symbol.input.length);
+    if (typeof symbol.invisible != "boolean" || !symbol.invisible) {
+      node = am.createMmlNode("mo",document.createTextNode(symbol.output));
+      newFrag.appendChild(node);
+    }
+  }
+  return [newFrag,str];
+};
+
+am.parseMath  = function(str) { //this might be the magic function-jt
+  var result, node = am.createElementMathML("mstyle");
+  if (amep.mathcolor != "") node.setAttribute("mathcolor",amep.mathcolor);
+  if (amep.displaystyle) node.setAttribute("displaystyle","true");
+  if (amep.mathfontfamily != "") node.setAttribute("fontfamily",amep.mathfontfamily);
+  am.nestingDepth = 0;
+  node.appendChild(am.parseExpr(str.replace(/^\s+/g,""),false)[0]);
+  node = am.createMmlNode("math",node);
+  if (amep.showasciiformulaonhover)                      //fixed by djhsu so newline
+    node.setAttribute("title",str.replace(/\s+/g," "));//does not show in Gecko
+  if (amep.mathfontfamily != "" && (ascii.isIE || amep.mathfontfamily != "serif")) {
+    var fnode = ascii.myCreateElementXHTML("font");
+    fnode.setAttribute("face",amep.mathfontfamily);
+    fnode.appendChild(node);
+    return fnode;
+  }
+  return node;
+};
+
+am.strarr2docFrag = function(arr, linebreaks) {
+  var newFrag=document.createDocumentFragment();
+  var expr = false;
+  for (var i=0; i<arr.length; i++) {
+    if (expr) newFrag.appendChild(am.parseMath(arr[i]));
+    else {
+      var arri = (linebreaks ? arr[i].split("\n\n") : [arr[i]]);
+      newFrag.appendChild(ascii.myCreateElementXHTML("span").
+      appendChild(document.createTextNode(arri[0])));
+      for (var j=1; j<arri.length; j++) {
+        newFrag.appendChild(ascii.myCreateElementXHTML("p"));
+        newFrag.appendChild(ascii.myCreateElementXHTML("span").
+        appendChild(document.createTextNode(arri[j])));
+      }
+    }
+    expr = !expr;
+  }
+  return newFrag;
+};
+
+am.processNodeR = function(n, linebreaks) {
+  var mtch, str, arr, frg, i;
+  if (n.childNodes.length == 0) {
+   if ((n.nodeType!=8 || linebreaks) &&
+    n.parentNode.nodeName!="form" && n.parentNode.nodeName!="FORM" &&
+    n.parentNode.nodeName!="textarea" && n.parentNode.nodeName!="TEXTAREA" &&
+    n.parentNode.nodeName!="pre" && n.parentNode.nodeName!="PRE") {
+    str = n.nodeValue;
+    if (!(str == null)) {
+      str = str.replace(/\r\n\r\n/g,"\n\n");
+      if (amep.doubleblankmathdelimiter) {
+        str = str.replace(/\x20\x20\./g," "+am.delimiter1+".");
+        str = str.replace(/\x20\x20,/g," "+am.delimiter1+",");
+        str = str.replace(/\x20\x20/g," "+am.delimiter1+" ");
+      }
+      str = str.replace(/\x20+/g," ");
+      str = str.replace(/\s*\r\n/g," ");
+      mtch = false;
+      str = str.replace(new RegExp(amep.escape2, "g"),
+              function(st){mtch=true;return "am.escape2"});
+      str = str.replace(new RegExp(amep.escape1, "g"),
+              function(st){mtch=true;return "am.escape1"});
+      str = str.replace(new RegExp(amep.delimiter2regexp, "g"),amep.delimiter1);
+      arr = str.split(amep.delimiter1);
+      for (i=0; i<arr.length; i++)
+        arr[i]=arr[i].replace(/amep.escape2/g,amep.delimiter2).
+                      replace(/amep.escape1/g,amep.delimiter1);
+      if (arr.length>1 || mtch) {
+        if (am.checkForMathML) {
+          am.checkForMathML = false;
+          var nd = am.isMathMLavailable();
+          am.noMathML = nd != null;
+          if (am.noMathML && am.notifyIfNoMathML) 
+            if (am.alertIfNoMathML)
+              alert("To view the ASCIIMathML notation use Internet Explorer 6 +\nMathPlayer (free from www.dessci.com)\n\
+                or Firefox/Mozilla/Netscape");
+            else am.body.insertBefore(nd,am.body.childNodes[0]);
+        }
+        if (!am.noMathML) {
+          frg = am.strarr2docFrag(arr,n.nodeType==8);
+          var len = frg.childNodes.length;
+          n.parentNode.replaceChild(frg,n);
+          return len-1;
+        } else return 0;
+      }
+    }
+   } else return 0;
+  } else if (n.nodeName!="math") {
+    for (i=0; i<n.childNodes.length; i++)
+      i += am.processNodeR(n.childNodes[i], linebreaks);
+  }
+  return 0;
+};
+
+am.processNode = function(n, linebreaks, spanclassAM) {
+  var frag,st;
+  if (spanclassAM!=null) {
+    frag = document.getElementsByTagName("span")
+    for (var i=0;i<frag.length;i++)
+      if (frag[i].className == "AM")
+        am.processNodeR(frag[i],linebreaks);
+  } else {
+    try {
+      st = n.innerHTML;
+    } catch(err) {}
+    if (st==null || 
+        st.indexOf(amep.delimiter1)!=-1 || st.indexOf(amep.delimiter2)!=-1) 
+      am.processNodeR(n,linebreaks);
+  }
+  if (ascii.isIE) { //needed to match size and font of formula to surrounding text
+    frag = document.getElementsByTagName('math');
+    for (var i=0;i<frag.length;i++) frag[i].update()
+  }
+};
+
+/*ambody;*/
+am.noMathML = false;
+am.translated = false;
+
+am.translate = function(spanclassAM) {
+  if (!am.translated) { // run this only once
+    am.translated = true;
+    am.initSymbols();
+    am.body = document.getElementsByTagName("body")[0];
+    am.processNode(AMbody, false, spanclassAM);
+  }
+};
+
+    
+//if (isIE) { // avoid adding MathPlayer info explicitly to each webpage
+//  document.write("<object id=\"mathplayer\"                           \
+//  classid=\"clsid:32F66A20-7614-11D4-BD11-00104BD3F987\"></object>");
+//  document.write("<?import namespace=\"m\" implementation=\"#mathplayer\"?>");
+//}
+
+
+
+
+
+
+/* ASCIIsvg.js
+==============
+JavaScript routines to dynamically generate Scalable Vector Graphics
+using a mathematical xy-coordinate system (y increases upwards) and
+very intuitive JavaScript commands (no programming experience required).
+ASCIIsvg.js is good for learning math and illustrating online math texts.
+Works with Internet Explorer+Adobe SVGviewer and SVG enabled Mozilla/Firefox.
+
+Based on:
+Ver 1.2.7 Oct 13, 2005 (c) Peter Jipsen http://www.chapman.edu/~jipsen
+Latest version at http://www.chapman.edu/~jipsen/svg/ASCIIsvg.js
+If you use it on a webpage, please send the URL to jipsen@chapman.edu
+
+Modified by James Taylor at http://www.jostylr.com  for TiddlyWiki matters.
+
+This program is free software; you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation; either version 2 of the License, or (at
+your option) any later version.
+
+This program is distributed in the hope that it will be useful, 
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+General Public License (at http://www.gnu.org/copyleft/gpl.html) 
+for more details.*/
+
+
+ascii.svg = {};
+
+
+//store all pictures here
+//while an array, also add to it associative properties
+ascii.svg.pictures = new Array();
+
+//store all enviornments here
+ascii.svg.environments = new Array ();
+
+ascii.svg.currentpicture = {};
+
+ascii.svg.currentenvironment ={};
+
+var as = ascii.svg;
+
+
+
+
+//Picture constructor
+ascii.svg.Picture = function (id, height, width) {
+    // this.rootnode is svg object
+    //create embedded object?
+    this.id = id;
+    this.height = height;
+    this.width = width;    
+    this.embedded = document.createElement("embed");
+    var obj = this.embedded;
+    //obj.setAttribute("script", ase.src);
+    obj.setAttribute("width", width);
+    obj.setAttribute("height", height);
+    obj.setAttribute("id", "emb"+id);
+    // obj.setAttribute("src", "/d.svg");
+    //obj.width = width;
+    //obj.height = height;
+    //obj.src = "d.svg";
+    //obj.script = ase.src;
+    //   obj.data =  "/d.svg";
+    //    obj.type = "image/svg+xml";
+    if (ascii.isIE) { 
+        this.rootnode = obj.getSVGDocument().getElementById("root");
+        //no clue what this is for
+        while (this.rootnode.childNodes.length()>5) {
+            this.rootnode.removeChild(this.rootnode.lastChild);
+        };
+        this.rootnode.setAttribute("width",width);
+        this.rootnode.setAttribute("height",height);
+        this.doc = obj.getSVGDocument();
+    } else { //not IE
+        this.rootnode = document.createElementNS("http://www.w3.org/2000/svg","svg");
+        var qnode = this.rootnode;
+        qnode.setAttribute("id",id);
+        qnode.setAttribute("style","display:inline");
+        qnode.setAttribute("width",width);
+        qnode.setAttribute("height",height);
+        //    if (picture.parentNode!=null)
+        // picture.parentNode.replaceChild(qnode,picture);
+        //else
+        // this.rootnode.parentNode.replaceChild(qnode,this.rootnode);
+        //this.rootnode = qnode;
+        this.doc = document;
+    }
+    //appending object to child
+    obj.appendChild(this.rootnode);
+    //callback for mouseover to switch to this picture, hope id is id, you know
+    //test for event handling
+        if (document.implementation.hasFeature("MouseEvents","2.0")) {
+            obj.addEventListener("mouseover", as.mousehand, true); };
+};
+
+
+
+var app = ascii.svg.Picture.prototype;
+var asp = ascii.svg.currentpicture; //default picture reference, instance of as.Picture
+var ase = ascii.svg.currentenvironment;
+
+as.checkIfSVGavailable = true;
+as.notifyIfNoSVG = true;
+as.alertIfNoSVG = false;
+
+app.xunitlength = 20;  // pixels
+app.yunitlength = 20;  // pixels
+app.origin = [0,0];   // in pixels (default is bottom left corner)
+app.width = 500; 
+app.height = 500; 
+app.border = 0;
+app.strokewidth = "1"; // pixel
+app.strokedasharray = null;
+app.stroke = "green"; // default line color
+app.fill = "none";    // default fill color
+app.fontstyle = "italic"; // default shape for text labels
+app.fontfamily = "times"; // default font
+app.fontsize = "16";      // default size
+app.fontweight = "normal";
+app.fontstroke = "none";  // default font outline color
+app.fontfill = "none";    // default font color
+app.marker = "none";
+app.initialized = true;
+app.markerstrokewidth = "1";
+app.markerstroke = "black";
+app.markerfill = "yellow";
+app.marker = "none";
+app.arrowfill = app.stroke;
+app.dotradius = 4;
+app.ticklength = 4;
+app.axesstroke = "black";
+app.gridstroke = "grey";
+app.pointerpos = null;
+app.coordinates = null;
+app.above = "above";
+app.below = "below";
+app.left = "left";
+app.right = "right";
+app.aboveleft = "aboveleft";
+app.aboveright = "aboveright";
+app.belowleft = "belowleft";
+app.belowright = "belowright";
+//new defaults
+app.xmin = -10;
+app.xmax = 10;
+app.ymin = -10;
+app.ymax = 10;
+app.xscl= 1;
+app.yscl= 1;
+app.xgrid = 1;
+app.ygrid = 1;
+app.xtick = 1;
+app.ytick = 1;
+app.initialized = true;
+app.onmousemove="function () {}";//ascii.svg.updateCoords";
+
+
+
+//var picture, currentpicture, doc, width, height, a, b, c, d, i, n, p, t, x, y;
+
+
+
+//compatibility with Jipsen initPicture
+as.jsPict= function (width, height, xmin, xmax, ymin, ymax, border) {
+   var obj = {};
+   if (width) {obj.width = width};
+   if (height) {obj.height = height};
+   if (height) {obj.border=border};
+   if (xmin) {obj.xmin = xmin};
+   if (ymin) {obj.ymin = ymin};
+   if (xmax) {obj.xmax = xmax};
+   if (ymax) {obj.ymax = ymax};
+   as.initPicture(obj);
+};
+
+//compatibility with Jipsen initPicture; does graphing
+as.jsGraph = function (width, height, xmin, xmax, ymin, ymax, border) {
+    var obj = {};
+    if (width) {obj.width = width};
+    if (height) {obj.height = height};
+    if (height) {obj.border=border};
+    if (xmin) {obj.xmin = xmin};
+    if (xmax) {obj.xmax = xmax};
+    if (ymin) {obj.ymin = ymin};
+    if (ymax) {obj.ymax = ymax};
+    as.setGraph(obj);
+};
+
+
+//jt function, puts recognized commands into namespace
+as.funreplace = function (st) {
+    //parse for replacements, letter followed by identifiers and periods until weird stuff
+    var regfun = /([a-zA-Z][\w\.]*)\W*/;
+    var indexfun = 0;
+    var match_arr, com;
+    var len = st.length;
+    //while loop to go through string and parse out commands
+    while (indexfun < st.length) {
+    //  for (var i = 0; i<st.length; i++){
+        match_arr  = st.slice(indexfun).match(regfun);
+        len -= 1; if (len <0) {break};
+        //        if (match_arr) {alert(st+"\n"+indexfun+"\n"+match_arr[0]+"\n"+match_arr[1]+"\n"+match_arr.index);}
+        
+        if (!match_arr) {break};
+        com = match_arr[1];
+        indexfun += match_arr.index;
+        //before pictures so asp will not be defined initially
+        if (st.slice(indexfun+com.length).match(/^\s*:/)) { //colon found due to passing object ininitializer,...
+            indexfun += match_arr[0].length;   //do nothing
+        } else if (asp[com]) {
+            st= st.slice(0,indexfun)+st.slice(indexfun).replace(com, 'ascii.svg.currentpicture.'+com);
+            indexfun += 25+ match_arr[0].length;    
+        } else if (app[com]) {
+            st= st.slice(0,indexfun)+st.slice(indexfun).replace(com, 'ascii.svg.currentpicture.'+com);
+            indexfun += 25+ match_arr[0].length;    
+        } else if (as[com]) {
+           st= st.slice(0,indexfun)+st.slice(indexfun).replace(com, 'ascii.svg.'+com);
+            indexfun += 10+ match_arr[0].length;    ;
+ 
+        } else if (af[com]) {
+           st= st.slice(0,indexfun)+st.slice(indexfun).replace(com, 'ascii.func.'+com);
+            indexfun += 11+ match_arr[0].length;    ;
+ 
+        } else if (am[com]) {
+            st= st.slice(0,indexfun)+st.slice(indexfun).replace(com, 'ascii.math.'+com);
+            indexfun += 11+ match_arr[0].length;    ;
+        } else if (ascii[com]) {
+            st= st.slice(0,indexfun)+st.slice(indexfun).replace(com, 'ascii.'+com);
+            indexfun += 6+ match_arr[0].length;    ;           
+ 
+        } else {
+            indexfun += match_arr[0].length;
+        };
+    };
+    return st; 
+};
+
+
+
+as.isSVGavailable =  function () {
+  var nd = a.myCreateElementXHTML("center");
+  nd.appendChild(document.createTextNode("To view the "));
+  var an = a.myCreateElementXHTML("a");
+  an.appendChild(document.createTextNode("ASCIIsvg"));
+  an.setAttribute("href","http://www.chapman.edu/~jipsen/asciisvg.html");
+  nd.appendChild(an);
+  nd.appendChild(document.createTextNode(" images use Internet Explorer 6+"));
+  an = a.myCreateElementXHTML("a");
+  an.appendChild(document.createTextNode("Adobe SVGviewer 3.02"));
+  an.setAttribute("href","http://www.adobe.com/svg");
+  nd.appendChild(an);
+  nd.appendChild(document.createTextNode(" or "));
+  an = a.myCreateElementXHTML("a");
+  an.appendChild(document.createTextNode("SVG enabled Mozilla/Firefox"));
+  an.setAttribute("href",
+    "http://www.chapman.edu/~jipsen/svg/svgenabledmozillafirefox.html");
+  nd.appendChild(an);
+  if (navigator.appName.slice(0,8)=="Netscape") 
+    if (window['SVGElement']) return null;
+    else return nd;
+  else if (navigator.appName.slice(0,9)=="Microsoft")
+    try	{
+      var oSVG=eval("new ActiveXObject('Adobe.SVGCtl.3');");
+        return null;
+    } catch (e) {
+        return nd;
+    }
+  else return nd;
+};
+
+
+//assigns text to first child of node id. internal?
+as.setText = function (st,id) { 
+  var node = document.getElementById(id);
+  if (node!=null){
+      if (node.childNodes.length!=0) { node.childNodes[0].nodeValue = st;
+      } else {
+         node.appendChild(document.createTextNode(st));
+      };
+  }
+};
+
+//new svg. internal
+as.myCreateElementSVG = function (t) {
+  if (ascii.isIE) return asp.doc.createElement(t);
+  else return asp.doc.createElementNS("http://www.w3.org/2000/svg",t);
+};
+
+//these deal with the mouse movements. perhaps make them part of constructor family 
+as.getX = function() {
+  return (asp.doc.getElementById("pointerpos").getAttribute("cx")-asp.origin[0])/asp.xunitlength;
+};
+
+as.getY = function () {
+  return (asp.height-asp.origin[1]-asp.doc.getElementById("pointerpos").getAttribute("cy"))/asp.yunitlength;
+};
+
+as.mousemove_listener = function (evt) {
+  if (asp.rootnode.getAttribute("xbase")!=null)
+    as.pointerpos.cx.baseVal.value = evt.clientX-asp.rootnode.getAttribute("xbase");
+  if (asp.rootnode.getAttribute("ybase")!=null)
+    as.pointerpos.cy.baseVal.value = evt.clientY-asp.rootnode.getAttribute("ybase");
+  //  alert("mousemove");
+};
+
+as.top_listener = function (evt) {
+  asp.rootnode.setAttribute("ybase",evt.clientY);
+  //alert("top");
+};
+
+as.bottom_listener = function (evt) { 
+  asp.rootnode.setAttribute("ybase",evt.clientY-asp.height+1);
+  // alert("bottom");
+};
+
+as.left_listener = function (evt) {
+  asp.rootnode.setAttribute("xbase",evt.clientX);
+  //alert("left");
+};
+
+as.right_listener = function (evt) {
+  asp.rootnode.setAttribute("xbase",evt.clientX-asp.width+1);
+  //alert("right");
+};
+
+//// Main initialization routines. 
+
+as.parse = function(src, e) {
+    ase.node = e;
+    ase.src = src;
+
+    //allows ability to get environment given the node
+    as.environments.push(e);
+    //prepare for evaluating source
+    src = src.replace(/plot\(\x20*([^\"f\[][^\n\r]+?)\,/g,"plot\(\"$1\",");
+    src = src.replace(/plot\(\x20*([^\"f\[][^\n\r]+)\)/g,"plot(\"$1\")");
+    src = src.replace(/([0-9])([a-zA-Z])/g,"$1*$2");
+    src = src.replace(/\)([\(0-9a-zA-Z])/g,"\)*$1");
+    src = as.funreplace(src);
+    try {
+        eval(src);
+    } catch(err) {alert(err+"\n SVG Evaluation: \n"+src)};
+    //alert(asp.rootnode.lastChild.nodeName);
+    //alert(src);
+};
+
+
+
+as.updatePicture = function (obj) {
+    try{
+        ascii.svg.currentpicture = as.pictures[obj];
+        asp = ascii.svg.currentpicture;
+    } catch(err) {
+        alert(err+"\n"+obj);
+        return null;
+    };
+    src = src.replace(/plot\(\x20*([^\"f\[][^\n\r]+?)\,/g,"plot\(\"$1\",");
+    src = src.replace(/plot\(\x20*([^\"f\[][^\n\r]+)\)/g,"plot(\"$1\")");
+    src = src.replace(/([0-9])([a-zA-Z])/g,"$1*$2");
+    src = src.replace(/\)([\(0-9a-zA-Z])/g,"\)*$1");
+    try {
+        with (Math) eval(src);
+    } catch(err) {alert(err+"\n"+src)}
+};
+
+//!!!prints out with wikify, need TW
+as.print = function (txt) {
+    txt = txt.toString();
+    var node = document.createElement("span");
+    ase.node.appendChild(node);
+    wikify(txt, node);
+
+};
+
+//get id of current picture
+as.getPicId = function () {
+    return asp.rootnode.getAttribute("id");
+};
+
+//get embedding node's id
+as.getEmbId = function () {
+    return asp.embed.getAttribute("id");
+};
+
+//remove element from picture
+as.rem = function (id) {
+    if (id) {
+        var node = document.getElementById(id);
+        if (node.parentNode) {
+            node.parentNode.removeChild(node);
+        }
+    }
+};
+
+
+
+//activates tracking, draws automatic grid
+as.setGraph = function (initializer) {
+    if ((!(initializer)) || (!(typeof initializer =="object"))) {initializer = {};};
+    if (!initializer.onmousemove) {initializer.onmousemove = "ascii.svg.updateCoords"};
+    as.initPicture(initializer);
+    as.axes(true);
+};
+
+//creates a picture, requires object syntax for passing parameters, ignores other formats silently
+as.initPicture = function (initializer) {
+    //create initializer if it is empty
+    //alert("hi");
+    var id = as.pictures.length;
+    var width = app.width;
+    var height = app.height;
+    //  alert(initializer.width);
+    if ((!(initializer)) || (!(typeof initializer =="object"))) {initializer = {};};
+    if (initializer.id) {id = initializer.id; delete initializer.id;};
+    if (initializer.width) {width = initializer.width; delete initializer.width;};
+    if (initializer.height) {height = initializer.height; delete initializer.height;};
+    // Picture creates svg node as picture, does not link it to current environment
+    as.pictures[id] = new as.Picture(id, width, height);
+    ascii.svg.currentpicture = as.pictures[id];
+    asp = ascii.svg.currentpicture;
+    // alert("aw"+asp.width+"wi"+asp.width);
+    asp.width = width;
+    asp.height = height;
+    asp.id = id;
+    //alert("asp width: "+asp.width+"asp stroke: "+asp.stroke+"pict id: "+asp.id);
+    //asp.embedded is the html embedding object, contained within that is the svg object
+    ase.node.appendChild(asp.embedded);
+    //have picture, now look through initializer object and figure out attributes.
+    for (var prop in initializer) {
+        if (initializer[prop] != null) {asp[prop] = initializer[prop];};
+    };
+    //alert("asp width: "+asp.width+"asp stroke: "+asp.stroke+"pict id: "+asp.id);
+    //max, mins,
+    if (typeof asp.xmin != "number" || typeof asp.xmax != "number" || asp.xmin >= asp.xmax) {
+        alert("Requires two numbers xmin < xmax but has "+asp.xmin+asp.xmax);
+        return null;
+    } else if (asp.ymax != null && (typeof asp.ymin != "number" || 
+                                 typeof asp.ymax != "number" || asp.ymin >= asp.ymax)) {
+        alert("Requires numbers ymin < ymax has "+asp.ymin+asp.ymax);
+        return null;
+    }
+    //maxs, mins fine
+    asp.xunitlength = (width-2*asp.border)/(asp.xmax-asp.xmin);
+    asp.yunitlength = asp.xunitlength;
+    if (asp.ymin==null) {
+            asp.origin = [-asp.xmin*asp.xunitlength+asp.border,asp.height/2];
+            asp.ymin = -(asp.height-2*asp.border)/(2*asp.yunitlength);
+            asp.ymax = -asp.ymin;
+    } else {
+        if (asp.ymax!=null) asp.yunitlength = (asp.height-2*asp.border)/(asp.ymax-asp.ymin);
+        else asp.ymax = (asp.height-2*asp.border)/asp.yunitlength + asp.ymin;
+        asp.origin = [-asp.xmin*asp.xunitlength+asp.border,-asp.ymin*asp.yunitlength+asp.border];
+    };
+    
+
+
+  //non IE?, not sure about this function
+  as.pointerpos = asp.doc.getElementById("pointerpos");
+  if (as.pointerpos==null) {
+      as.pointerpos = as.myCreateElementSVG("circle");
+      as.pointerpos.setAttribute("id","pointerpos");
+      as.pointerpos.setAttribute("cx",0);
+      as.pointerpos.setAttribute("cy",0);
+      as.pointerpos.setAttribute("r",0.5);
+      as.pointerpos.setAttribute("fill","red");
+      asp.rootnode.appendChild(as.pointerpos);
+  };
+  //setting attribute of pictures. 
+  asp.rootnode.setAttribute("xunitlength",asp.xunitlength);
+  asp.rootnode.setAttribute("yunitlength",asp.yunitlength);
+  asp.rootnode.setAttribute("xmin",asp.xmin);
+  asp.rootnode.setAttribute("xmax",asp.xmax);
+  asp.rootnode.setAttribute("ymin",asp.ymin);
+  asp.rootnode.setAttribute("ymax",asp.ymax);
+  asp.rootnode.setAttribute("ox",asp.origin[0]);
+  asp.rootnode.setAttribute("oy",asp.origin[1]);
+  var node = as.myCreateElementSVG("rect");
+  node.setAttribute("x","0");
+  node.setAttribute("y","0");
+  node.setAttribute("width",asp.width);
+  node.setAttribute("height",asp.height);
+  node.setAttribute("style","stroke-width:1;fill:white");
+  asp.rootnode.appendChild(node);
+    if (document.implementation.hasFeature("MouseEvents","2.0")) {
+    asp.embedded.addEventListener("mousemove", as.mousemove_listener, true);
+    //var st = picture.getAttribute("onmousemove");
+    if (typeof asp.onmousemove == "string" ){
+        asp.rootnode.addEventListener("mousemove", eval(asp.onmousemove), true);
+    };
+    node = as.myCreateElementSVG("polyline");
+    node.setAttribute("points","0,0 "+width+",0");
+    node.setAttribute("style","stroke:white; stroke-width:3");
+    node.addEventListener("mousemove", as.top_listener, true);
+    asp.rootnode.appendChild(node);
+    node = as.myCreateElementSVG("polyline");
+    node.setAttribute("points","0,"+height+" "+width+","+height);
+    node.setAttribute("style","stroke:white; stroke-width:3");
+    node.addEventListener("mousemove", as.bottom_listener, true);
+    asp.rootnode.appendChild(node);
+    node = as.myCreateElementSVG("polyline");
+    node.setAttribute("points","0,0 0,"+height);
+    node.setAttribute("style","stroke:white; stroke-width:3");
+    node.addEventListener("mousemove", as.left_listener, true);
+    asp.rootnode.appendChild(node);
+    node = as.myCreateElementSVG("polyline");
+    node.setAttribute("points",(width-1)+",0 "+(width-1)+","+height);
+    node.setAttribute("style","stroke:white; stroke-width:3");
+    node.addEventListener("mousemove", as.right_listener, true);
+    asp.rootnode.appendChild(node);
+    
+  }
+};
+
+
+as.mousehand = function (e) {
+     targetenquiry:
+    if (e.currentTarget != asp.embedded) {
+        for (var pict in as.pictures) {
+            if (as.pictures[pict].embedded == e.currentTarget) {
+                ascii.svg.currentpicture = as.pictures[pict];
+                asp = ascii.svg.currentpicture;
+                break targetenquiry;
+            }
+            //alert("Can't find element in list; MouseEvent triggered is messed");   
+        }
+    }
+    
+
+};
+  
+
+//expect to remove or simplify this
+as.updateCoords = function () {
+  var gx=as.getX(), gy=as.getY();
+  if ((asp.xmax-gx)*asp.xunitlength > 6*asp.fontsize || (gy-asp.ymin)*asp.yunitlength > 2*asp.fontsize)
+    as.text([asp.xmax,asp.ymin],"("+gx.toFixed(2)+", "+gy.toFixed(2)+")",
+         "aboveleft","AScoord"+asp.id,"");
+  else as.text([asp.xmax,asp.ymin]," ","aboveleft","AScoord"+asp.id,"");
+};
+
+
+as.showHideCode = function (obj) {
+  var node = obj.nextSibling;
+  while (node != null && node.nodeName != "BUTTON" && 
+    node.nodeName != "button") node = node.nextSibling;
+  if (node.style.display == "none") node.style.display = "";
+  else node.style.display = "none";
+  while (node != null && node.nodeName != "TEXTAREA" && 
+    node.nodeName != "textarea") node = node.previousSibling;
+  if (node.style.display == "none") node.style.display = "";
+  else node.style.display = "none";
+//  updatePicture(node.getAttribute("id"));
+};
+
+as.hideCode = function () { //do nothing
+};
+
+as.showcode = function () { //do nothing
+};
+
+as.nobutton = function () { //do nothing
+};
+
+as.setBorder = function (x) { asp.border = x }
+
+
+//drawing commands below
+
+
+as.line = function (p,q,id) { // segment connecting points p,q (coordinates in units)
+  var node;
+  if (id!=null) node = asp.doc.getElementById(id);
+  if (node==null) {
+    node = as.myCreateElementSVG("path");
+    node.setAttribute("id", id);
+    asp.rootnode.appendChild(node);
+  }
+  node.setAttribute("d","M"+(p[0]*asp.xunitlength+asp.origin[0])+","+
+    (asp.height-p[1]*asp.yunitlength-asp.origin[1])+" "+
+    (q[0]*asp.xunitlength+asp.origin[0])+","+(asp.height-q[1]*asp.yunitlength-asp.origin[1]));
+  node.setAttribute("stroke-width", asp.strokewidth);
+  if (asp.strokedasharray!=null) 
+    node.setAttribute("stroke-dasharray", asp.strokedasharray);
+  node.setAttribute("stroke", asp.stroke);
+  node.setAttribute("fill", asp.fill);
+  if (asp.marker=="dot" || asp.marker=="arrowdot") {
+    as.ASdot(p,4,asp.markerstroke,asp.markerfill);
+    if (asp.marker=="arrowdot") as.arrowhead(p,q);
+    as.ASdot(q,4,asp.markerstroke,asp.markerfill);
+  } else if (asp.marker=="arrow") as.arrowhead(p,q);
+};
+
+as.path = function (plist,id,c) {
+  if (c==null) c="";
+  var node, st, i;
+  if (id!=null) node = asp.doc.getElementById(id);
+  if (node==null) {
+    node = as.myCreateElementSVG("path");
+    node.setAttribute("id", id);
+    asp.rootnode.appendChild(node);
+  }
+  if (typeof plist == "string") st = plist;
+  else {
+    st = "M";
+    st += (plist[0][0]*asp.xunitlength+asp.origin[0])+","+
+          (asp.height-plist[0][1]*asp.yunitlength-asp.origin[1])+" "+c;
+    for (i=1; i<plist.length; i++)
+      st += (plist[i][0]*asp.xunitlength+asp.origin[0])+","+
+            (asp.height-plist[i][1]*asp.yunitlength-asp.origin[1])+" ";
+  }
+  node.setAttribute("d", st);
+  node.setAttribute("stroke-width", asp.strokewidth);
+  if (asp.strokedasharray!=null) 
+    node.setAttribute("stroke-dasharray", asp.strokedasharray);
+  node.setAttribute("stroke", asp.stroke);
+  node.setAttribute("fill", asp.fill);
+  if (asp.marker=="dot" || asp.marker=="arrowdot")
+    for (i=0; i<plist.length; i++)
+      if (c!="C" && c!="T" || i!=1 && i!=2)
+        as.ASdot(plist[i],4,asp.markerstroke,asp.markerfill);
+};
+
+as.curve = function (plist,id) {
+  as.path(plist,id,"T");
+};
+
+as.circle = function (center,radius,id) { // coordinates in units
+  var node;
+  if (id!=null) node = asp.doc.getElementById(id);
+  if (node==null) {
+    node = as.myCreateElementSVG("circle");
+    node.setAttribute("id", id);
+    asp.rootnode.appendChild(node);
+  }
+  node.setAttribute("cx",center[0]*asp.xunitlength+asp.origin[0]);
+  node.setAttribute("cy",asp.height-center[1]*asp.yunitlength-asp.origin[1]);
+  node.setAttribute("r",radius*asp.xunitlength);
+  node.setAttribute("stroke-width", asp.strokewidth);
+  node.setAttribute("stroke", asp.stroke);
+  node.setAttribute("fill", asp.fill);
+};
+
+as.loop = function (p,d,id) { 
+// d is a direction vector e.g. [1,0] means loop starts in that direction
+  if (d==null) d=[1,0];
+  as.path([p,[p[0]+d[0],p[1]+d[1]],[p[0]-d[1],p[1]+d[0]],p],id,"C");
+  if (asp.marker=="arrow" || asp.marker=="arrowdot") 
+    as.arrowhead([p[0]+Math.cos(1.4)*d[0]-Math.sin(1.4)*d[1],
+                            p[1]+Math.sin(1.4)*d[0]+Math.cos(1.4)*d[1]],p);
+};
+
+as.arc = function (start,end,radius,id) { // coordinates in units
+  var node, v;
+//alert([fill, stroke, origin, xunitlength, yunitlength, height])
+  if (id!=null) node = asp.doc.getElementById(id);
+  if (radius==null) {
+    v=[end[0]-start[0],end[1]-start[1]];
+    radius = Math.sqrt(v[0]*v[0]+v[1]*v[1]);
+  }
+  if (node==null) {
+    node = as.myCreateElementSVG("path");
+    node.setAttribute("id", id);
+    asp.rootnode.appendChild(node);
+  }
+  node.setAttribute("d","M"+(start[0]*asp.xunitlength+asp.origin[0])+","+
+    (asp.height-start[1]*asp.yunitlength-asp.origin[1])+" A"+radius*asp.xunitlength+","+
+     radius*asp.yunitlength+" 0 0,0 "+(end[0]*asp.xunitlength+asp.origin[0])+","+
+    (asp.height-end[1]*asp.yunitlength-asp.origin[1]));
+  node.setAttribute("stroke-width", asp.strokewidth);
+  node.setAttribute("stroke", asp.stroke);
+  node.setAttribute("fill", asp.fill);
+  if (asp.marker=="arrow" || asp.marker=="arrowdot") {
+    u = [(end[1]-start[1])/4,(start[0]-end[0])/4];
+    v = [(end[0]-start[0])/2,(end[1]-start[1])/2];
+//alert([u,v])
+    v = [start[0]+v[0]+u[0],start[1]+v[1]+u[1]];
+  } else v=[start[0],start[1]];
+  if (asp.marker=="dot" || asp.marker=="arrowdot") {
+    as.ASdot(start,4,asp.markerstroke,asp.markerfill);
+    if (asp.marker=="arrowdot") as.arrowhead(v,end);
+    as.ASdot(end,4,asp.markerstroke,asp.markerfill);
+  } else if (asp.marker=="arrow") as.arrowhead(v,end);
+};
+
+as.ellipse = function (center,rx,ry,id) { // coordinates in units
+  var node;
+  if (id!=null) node = asp.doc.getElementById(id);
+  if (node==null) {
+    node = as.myCreateElementSVG("ellipse");
+    node.setAttribute("id", id);
+    asp.rootnode.appendChild(node);
+  }
+  node.setAttribute("cx",center[0]*asp.xunitlength+asp.origin[0]);
+  node.setAttribute("cy",asp.height-center[1]*asp.yunitlength-asp.origin[1]);
+  node.setAttribute("rx",rx*asp.xunitlength);
+  node.setAttribute("ry",ry*asp.yunitlength);
+  node.setAttribute("stroke-width", asp.strokewidth);
+  node.setAttribute("stroke", asp.stroke);
+  node.setAttribute("fill", asp.fill);
+};
+
+as.rect = function (p,q,id,rx,ry) { // opposite corners in units, rounded by radii
+  var node;
+  if (id!=null) node = asp.doc.getElementById(id);
+  if (node==null) {
+    node = as.myCreateElementSVG("rect");
+    node.setAttribute("id", id);
+    asp.rootnode.appendChild(node);
+  }
+  node.setAttribute("x",p[0]*asp.xunitlength+asp.origin[0]);
+  node.setAttribute("y",asp.height-q[1]*asp.yunitlength-asp.origin[1]);
+  node.setAttribute("width",(q[0]-p[0])*asp.xunitlength);
+  node.setAttribute("height",(q[1]-p[1])*asp.yunitlength);
+  if (rx!=null) node.setAttribute("rx",rx*asp.xunitlength);
+  if (ry!=null) node.setAttribute("ry",ry*asp.yunitlength);
+  node.setAttribute("stroke-width", asp.strokewidth);
+  node.setAttribute("stroke", asp.stroke);
+  node.setAttribute("fill", asp.fill);
+};
+
+as.text = function (p,st,pos,id,fontsty) {
+  var textanchor = "middle";
+  var dx = 0; var dy = asp.fontsize/3;
+  if (pos!=null) {
+    if (pos.slice(0,5)=="above") dy = -asp.fontsize/2;
+    if (pos.slice(0,5)=="below") dy = asp.fontsize-0;
+    if (pos.slice(0,5)=="right" || pos.slice(5,10)=="right") {
+      textanchor = "start";
+      dx = asp.fontsize/2;
+    }
+    if (pos.slice(0,4)=="left" || pos.slice(5,9)=="left") {
+      textanchor = "end";
+      dx = -asp.fontsize/2;
+    }
+  }
+  var node;
+  if (id!=null) node = asp.doc.getElementById(id);
+  if (node==null) {
+    node = as.myCreateElementSVG("text");
+    node.setAttribute("id", id);
+    asp.rootnode.appendChild(node);
+    node.appendChild(asp.doc.createTextNode(st));
+  }
+  node.lastChild.nodeValue = st;
+  node.setAttribute("x",p[0]*asp.xunitlength+asp.origin[0]+dx);
+  node.setAttribute("y",asp.height-p[1]*asp.yunitlength-asp.origin[1]+dy);
+  node.setAttribute("font-style",(fontsty!=null?fontsty:asp.fontstyle));
+  node.setAttribute("font-family",asp.fontfamily);
+  node.setAttribute("font-size",asp.fontsize);
+  node.setAttribute("font-weight",asp.fontweight);
+  node.setAttribute("text-anchor",textanchor);
+  if (asp.fontstroke!="none") node.setAttribute("stroke",asp.fontstroke);
+  if (asp.fontfill!="none") node.setAttribute("fill",asp.fontfill);
+  return p;
+};
+
+as.ASdot = function (center,radius,s,f) { // coordinates in units, radius in pixel
+  if (s==null) s = asp.stroke; if (f==null) f = asp.fill;
+  var node = as.myCreateElementSVG("circle");
+  node.setAttribute("cx",center[0]*asp.xunitlength+asp.origin[0]);
+  node.setAttribute("cy",asp.height-center[1]*asp.yunitlength-asp.origin[1]);
+  node.setAttribute("r",radius);
+  node.setAttribute("stroke-width", asp.strokewidth);
+  node.setAttribute("stroke", s);
+  node.setAttribute("fill", f);
+  asp.rootnode.appendChild(node);
+};
+
+as.dot = function (center, typ, label, pos, id) {
+  var node;
+  var cx = center[0]*asp.xunitlength+asp.origin[0];
+  var cy = asp.height-center[1]*asp.yunitlength-asp.origin[1];
+  if (id!=null) node = asp.doc.getElementById(id);
+  if (typ=="+" || typ=="-" || typ=="|") {
+    if (node==null) {
+      node = as.myCreateElementSVG("path");
+      node.setAttribute("id", id);
+      asp.rootnode.appendChild(node);
+    }
+    if (typ=="+") {
+      node.setAttribute("d",
+        " M "+(cx-asp.ticklength)+" "+cy+" L "+(cx+asp.ticklength)+" "+cy+
+        " M "+cx+" "+(cy-asp.ticklength)+" L "+cx+" "+(cy+asp.ticklength));
+      node.setAttribute("stroke-width", .5);
+      node.setAttribute("stroke", asp.axesstroke);
+    } else {
+      if (typ=="-") node.setAttribute("d",
+        " M "+(cx-asp.ticklength)+" "+cy+" L "+(cx+asp.ticklength)+" "+cy);
+      else node.setAttribute("d",
+        " M "+cx+" "+(cy-asp.ticklength)+" L "+cx+" "+(cy+asp.ticklength));
+      node.setAttribute("stroke-width", asp.strokewidth);
+      node.setAttribute("stroke", asp.stroke);
+    }
+  } else {
+    if (node==null) {
+      node = as.myCreateElementSVG("circle");
+      node.setAttribute("id", id);
+      asp.rootnode.appendChild(node);
+    }
+    node.setAttribute("cx",cx);
+    node.setAttribute("cy",cy);
+    node.setAttribute("r",asp.dotradius);
+    node.setAttribute("stroke-width", asp.strokewidth);
+    node.setAttribute("stroke", asp.stroke);
+    node.setAttribute("fill", (typ=="open"?"white":asp.stroke));
+  }
+  if (label!=null) 
+      as.text(center,label,(pos==null?"below":pos),(id==null?id:id+"label"));
+};
+
+as.arrowhead = function (p,q) { // draw arrowhead at q (in units)
+  var up;
+  var v = [p[0]*asp.xunitlength+asp.origin[0],asp.height-p[1]*asp.yunitlength-asp.origin[1]];
+  var w = [q[0]*asp.xunitlength+asp.origin[0],asp.height-q[1]*asp.yunitlength-asp.origin[1]];
+  var u = [w[0]-v[0],w[1]-v[1]];
+  var d = Math.sqrt(u[0]*u[0]+u[1]*u[1]);
+  if (d > 0.00000001) {
+    u = [u[0]/d, u[1]/d];
+    up = [-u[1],u[0]];
+    var node = as.myCreateElementSVG("path");
+    node.setAttribute("d","M "+(w[0]-15*u[0]-4*up[0])+" "+
+      (w[1]-15*u[1]-4*up[1])+" L "+(w[0]-3*u[0])+" "+(w[1]-3*u[1])+" L "+
+      (w[0]-15*u[0]+4*up[0])+" "+(w[1]-15*u[1]+4*up[1])+" z");
+    node.setAttribute("stroke-width", asp.markerstrokewidth);
+    node.setAttribute("stroke", asp.stroke); /*was markerstroke*/
+    node.setAttribute("fill", asp.stroke); /*was arrowfill*/
+    asp.rootnode.appendChild(node);    
+  }
+};
+
+as.chopZ = function (st) {
+  var k = st.indexOf(".");
+  if (k==-1) return st;
+  for (var i=st.length-1; i>k && st.charAt(i)=="0"; i--);
+  if (i==k) i--;
+  return st.slice(0,i+1);
+};
+
+as.grid = function (dx,dy) { // for backward compatibility
+  as.axes(dx,dy,null,dx,dy)
+};
+
+as.noaxes = function () {
+    if (!(asp)  || !(asp.initialized)) as.initPicture();
+};
+
+//I think the parameters are useless since values defined
+//just set xscl, yscl, xtick, ytick. labels is needed now to indicate labelling. 
+as.axes = function (labels, dx,dy,labels,gdx,gdy) {
+//xscl=x is equivalent to xtick=x; xgrid=x; labels=true;
+  var x, y, ldx, ldy, lx, ly, lxp, lyp, pnode, st;
+  if (!(asp)  || !(asp.initialized)) as.initPicture();
+  if (typeof dx=="string") { asp.labels = dx; dx = null; }
+  if (typeof dy=="string") { gdx = dy; dy = null; }
+  if (asp.xscl!=null) {dx = asp.xscl; gdx = asp.xscl}//; labels = dx}
+  if (asp.yscl!=null) {dy = asp.yscl; gdy = asp.yscl}
+  if (asp.xtick!=null) {dx = asp.xtick}
+  if (asp.ytick!=null) {dy = asp.ytick}
+//alert(null)
+  dx = (dx==null?asp.xunitlength:dx*asp.xunitlength);
+  dy = (dy==null?dx:dy*asp.yunitlength);
+  asp.fontsize = Math.min(dx/2,dy/2,16);//alert(fontsize)
+  asp.ticklength = asp.fontsize/4;
+  if (asp.xgrid!=null) gdx = asp.xgrid;
+  if (asp.ygrid!=null) gdy = asp.ygrid;
+  if (gdx!=null) {
+    gdx = (typeof gdx=="string"?dx:gdx*asp.xunitlength);
+    gdy = (gdy==null?dy:gdy*asp.yunitlength);
+    pnode = as.myCreateElementSVG("path");
+    st="";
+    for (x = asp.origin[0]; x<asp.width; x = x+gdx)
+      st += " M"+x+",0"+" "+x+","+asp.height;
+    for (x = asp.origin[0]-gdx; x>0; x = x-gdx)
+      st += " M"+x+",0"+" "+x+","+asp.height;
+    for (y = asp.height-asp.origin[1]; y<asp.height; y = y+gdy)
+      st += " M0,"+y+" "+asp.width+","+y;
+    for (y = asp.height-asp.origin[1]-gdy; y>0; y = y-gdy)
+      st += " M0,"+y+" "+asp.width+","+y;
+    pnode.setAttribute("d",st);
+    pnode.setAttribute("stroke-width", .5);
+    pnode.setAttribute("stroke", asp.gridstroke);
+    pnode.setAttribute("fill", asp.fill);
+    asp.rootnode.appendChild(pnode);
+  }
+  pnode = as.myCreateElementSVG("path");
+  st="M0,"+(asp.height-asp.origin[1])+" "+asp.width+","+
+    (asp.height-asp.origin[1])+" M"+asp.origin[0]+",0 "+asp.origin[0]+","+asp.height;
+  for (x = asp.origin[0]+dx; x<asp.width; x = x+dx)
+    st += " M"+x+","+(asp.height-asp.origin[1]+asp.ticklength)+" "+x+","+
+           (asp.height-asp.origin[1]-asp.ticklength);
+  for (x = asp.origin[0]-dx; x>0; x = x-dx)
+    st += " M"+x+","+(asp.height-asp.origin[1]+asp.ticklength)+" "+x+","+
+           (asp.height-asp.origin[1]-asp.ticklength);
+  for (y = asp.height-asp.origin[1]+dy; y<asp.height; y = y+dy)
+    st += " M"+(asp.origin[0]+asp.ticklength)+","+y+" "+(asp.origin[0]-asp.ticklength)+","+y;
+  for (y = asp.height-asp.origin[1]-dy; y>0; y = y-dy)
+    st += " M"+(asp.origin[0]+asp.ticklength)+","+y+" "+(asp.origin[0]-asp.ticklength)+","+y;
+  if (labels!=null) with (Math) {
+    ldx = dx/asp.xunitlength;
+    ldy = dy/asp.yunitlength;
+    lx = (asp.xmin>0 || asp.xmax<0?asp.xmin:0);
+    ly = (asp.ymin>0 || asp.ymax<0?asp.ymin:0);
+    lxp = (ly==0?"below":"above");
+    lyp = (lx==0?"left":"right");
+    var ddx = floor(1.1-log(ldx)/log(10))+1;
+    var ddy = floor(1.1-log(ldy)/log(10))+1;
+    for (x = ldx; x<=asp.xmax; x = x+ldx)
+      as.text([x,ly],as.chopZ(x.toFixed(ddx)),lxp);
+    for (x = -ldx; asp.xmin<=x; x = x-ldx)
+      as.text([x,ly],as.chopZ(x.toFixed(ddx)),lxp);
+    for (y = ldy; y<=asp.ymax; y = y+ldy)
+      as.text([lx,y],as.chopZ(y.toFixed(ddy)),lyp);
+    for (y = -ldy; asp.ymin<=y; y = y-ldy)
+      as.text([lx,y],as.chopZ(y.toFixed(ddy)),lyp);
+  }
+  pnode.setAttribute("d",st);
+  pnode.setAttribute("stroke-width", .5);
+  pnode.setAttribute("stroke", asp.axesstroke);
+  pnode.setAttribute("fill", asp.fill);
+  asp.rootnode.appendChild(pnode);
+};
+
+as.mathjs = function (st) {
+  //translate a math formula to js function notation
+  // a^b --> pow(a,b)
+  // na --> n*a
+  // (...)d --> (...)*d
+  // n! --> factorial(n)
+  // sin^-1 --> arcsin etc.
+  //while ^ in string, find term on left and right
+  //slice and concat new formula string
+  st = st.replace(/\s/g,"");
+  if (st.indexOf("^-1")!=-1) {
+    st = st.replace(/sin\^-1/g,"arcsin");
+    st = st.replace(/cos\^-1/g,"arccos");
+    st = st.replace(/tan\^-1/g,"arctan");
+    st = st.replace(/sec\^-1/g,"arcsec");
+    st = st.replace(/csc\^-1/g,"arccsc");
+    st = st.replace(/cot\^-1/g,"arccot");
+    st = st.replace(/sinh\^-1/g,"arcsinh");
+    st = st.replace(/cosh\^-1/g,"arccosh");
+    st = st.replace(/tanh\^-1/g,"arctanh");
+    st = st.replace(/sech\^-1/g,"arcsech");
+    st = st.replace(/csch\^-1/g,"arccsch");
+    st = st.replace(/coth\^-1/g,"arccoth");
+  }
+  st = st.replace(/^e$/g,"(E)");
+  st = st.replace(/^e([^a-zA-Z])/g,"(E)$1");
+  st = st.replace(/([^a-zA-Z])e([^a-zA-Z])/g,"$1(E)$2");
+  st = st.replace(/([0-9])([\(a-zA-Z])/g,"$1*$2");
+  st = st.replace(/\)([\(0-9a-zA-Z])/g,"\)*$1");
+  var i,j,k, ch, nested;
+  while ((i=st.indexOf("^"))!=-1) {
+    //find left argument
+    if (i==0) return "Error: missing argument";
+    j = i-1;
+    ch = st.charAt(j);
+    if (ch>="0" && ch<="9") {// look for (decimal) number
+      j--;
+      while (j>=0 && (ch=st.charAt(j))>="0" && ch<="9") j--;
+      if (ch==".") {
+        j--;
+        while (j>=0 && (ch=st.charAt(j))>="0" && ch<="9") j--;
+      }
+    } else if (ch==")") {// look for matching opening bracket and function name
+      nested = 1;
+      j--;
+      while (j>=0 && nested>0) {
+        ch = st.charAt(j);
+        if (ch=="(") nested--;
+        else if (ch==")") nested++;
+        j--;
+      }
+      while (j>=0 && (ch=st.charAt(j))>="a" && ch<="z" || ch>="A" && ch<="Z")
+        j--;
+    } else if (ch>="a" && ch<="z" || ch>="A" && ch<="Z") {// look for variable
+      j--;
+      while (j>=0 && (ch=st.charAt(j))>="a" && ch<="z" || ch>="A" && ch<="Z")
+        j--;
+    } else { 
+      return "Error: incorrect syntax in "+st+" at position "+j;
+    }
+    //find right argument
+    if (i==st.length-1) return "Error: missing argument";
+    k = i+1;
+    ch = st.charAt(k);
+    if (ch>="0" && ch<="9" || ch=="-") {// look for signed (decimal) number
+      k++;
+      while (k<st.length && (ch=st.charAt(k))>="0" && ch<="9") k++;
+      if (ch==".") {
+        k++;
+        while (k<st.length && (ch=st.charAt(k))>="0" && ch<="9") k++;
+      }
+    } else if (ch=="(") {// look for matching closing bracket and function name
+      nested = 1;
+      k++;
+      while (k<st.length && nested>0) {
+        ch = st.charAt(k);
+        if (ch=="(") nested++;
+        else if (ch==")") nested--;
+        k++;
+      }
+    } else if (ch>="a" && ch<="z" || ch>="A" && ch<="Z") {// look for variable
+      k++;
+      while (k<st.length && (ch=st.charAt(k))>="a" && ch<="z" ||
+               ch>="A" && ch<="Z") k++;
+    } else { 
+      return "Error: incorrect syntax in "+st+" at position "+k;
+    }
+    st = st.slice(0,j+1)+"pow("+st.slice(j+1,i)+","+st.slice(i+1,k)+")"+
+           st.slice(k);
+  }
+  while ((i=st.indexOf("!"))!=-1) {
+    //find left argument
+    if (i==0) return "Error: missing argument";
+    j = i-1;
+    ch = st.charAt(j);
+    if (ch>="0" && ch<="9") {// look for (decimal) number
+      j--;
+      while (j>=0 && (ch=st.charAt(j))>="0" && ch<="9") j--;
+      if (ch==".") {
+        j--;
+        while (j>=0 && (ch=st.charAt(j))>="0" && ch<="9") j--;
+      }
+    } else if (ch==")") {// look for matching opening bracket and function name
+      nested = 1;
+      j--;
+      while (j>=0 && nested>0) {
+        ch = st.charAt(j);
+        if (ch=="(") nested--;
+        else if (ch==")") nested++;
+        j--;
+      }
+      while (j>=0 && (ch=st.charAt(j))>="a" && ch<="z" || ch>="A" && ch<="Z")
+        j--;
+    } else if (ch>="a" && ch<="z" || ch>="A" && ch<="Z") {// look for variable
+      j--;
+      while (j>=0 && (ch=st.charAt(j))>="a" && ch<="z" || ch>="A" && ch<="Z")
+        j--;
+    } else { 
+      return "Error: incorrect syntax in "+st+" at position "+j;
+    }
+    st = st.slice(0,j+1)+"factorial("+st.slice(j+1,i)+")"+st.slice(i+1);
+  }
+  st = as.funreplace(st);
+  return st;
+};
+
+
+//plots functions, either (x,g(x)) or (f(x),g(x), x ranges, id of graph,
+as.plot = function (fun,x_min,x_max,points,id) {
+  var pth = [];
+  var f = function(x) { return x }, g = fun;
+  var name = null;
+  if (typeof fun=="string") {
+    eval("g = function(x){ with(Math) return "+as.mathjs(fun)+" }");
+  } else if (typeof fun=="object") {
+    eval("f = function(t){ with(Math) return "+as.mathjs(fun[0])+" }");
+    eval("g = function(t){ with(Math) return "+as.mathjs(fun[1])+" }");
+  }
+  // user did not provide x_min so it defaults and name is that value
+  if (typeof x_min=="string") {
+      name = x_min;
+      x_min = asp.xmin;
+  } else {
+      name = id;
+  };
+  var min = (x_min==null?asp.xmin:x_min);
+  var max = (x_max==null?asp.xmax:x_max);
+  var inc = max-min-0.000001*(max-min);
+  inc = (points==null?inc/200:inc/points);
+  var gt;
+//alert(typeof g(min))
+  for (var t = min; t <= max; t += inc) {
+    gt = g(t);
+    if (!(isNaN(gt)||Math.abs(gt)=="Infinity")) pth[pth.length] = [f(t), gt];
+  }
+  as.path(pth,name)
+  // return p;
+};
+
+//expects fun is the slope, guess the values below are chosen to make it look nice
+as.slopefield = function (fun,dx,dy) {
+  var g = fun;
+  if (typeof fun=="string") 
+    eval("g = function(x,y){ with(Math) return "+as.mathjs(fun)+" }");
+  var gxy,x,y,u,v,dz;
+  if (dx==null) dx=1;
+  if (dy==null) dy=1;
+  dz = Math.sqrt(dx*dx+dy*dy)/6;
+  var x_min = Math.ceil(asp.xmin/dx);
+  var y_min = Math.ceil(asp.ymin/dy);
+  for (x = x_min; x <= asp.xmax; x += dx)
+    for (y = y_min; y <= asp.ymax; y += dy) {
+      gxy = g(x,y);
+      if (!isNaN(gxy)) {
+        if (Math.abs(gxy)=="Infinity") {u = 0; v = dz;}
+        else {u = dz/Math.sqrt(1+gxy*gxy); v = gxy*u;}
+        line([x-u,y-v],[x+u,y+v]);
+      }
+    }
+};
+
+//} ();
+
+};
+ascii.initializer();
+
+//remove silly function
+delete ascii.initializer;
+
+doubleblankmathdelimiter = false;
+//mathcolor ="black";
+ascii.math.initSymbols();
+
+ascii.svg.printId = function (txt, id) {
+    var node = document.createElement("div");
+    var target = document.getElementById(id);
+       while (target.firstChild) {
+        target.removeChild(target.firstChild);}
+    target.appendChild(node);
+    wikify(txt, node);
+};
+
+
+//}}}
+    

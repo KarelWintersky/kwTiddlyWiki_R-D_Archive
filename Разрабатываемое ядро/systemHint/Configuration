@@ -1,0 +1,15 @@
+﻿PageTemplate | ViewTemplate | EditTemplate |
+
+|>|>|SiteTitle - SiteSubtitle|
+|MainMenu|DefaultTiddlers<<br>>ViewTemplate<<br>>EditTemplate|SideBarOptions|
+|~|~|OptionsPanel|
+|~|~|AdvancedOptions|
+|~|~|<<tiddler Configuration.SideBarTabs>>|
+
+''StyleSheet:'' StyleSheetColors - StyleSheetLayout - StyleSheetPrint
+SiteUrl
+
+[[Configuration.SideBarTabs]]
+[[DefaultTiddlers]]
+
+[[ToolbarCommands]]

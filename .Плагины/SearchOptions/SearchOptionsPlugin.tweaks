@@ -1,0 +1,34 @@
+﻿//{{{
+window.reportSearchResults=function(text,matches)
+{
+	var title=config.macros.search.reportTitle
+	var q = config.options.chkRegExpSearch ? "/" : "'";
+	var body="\n";
+
+	// numbered list of links to matching tiddlers
+	body+="\n<<<";
+	for(var t=0;t<matches.length;t++) {
+		var date=config.options.chkSearchByDate?(matches[t].modified.formatString('YYYY.0MM.0DD 0hh:0mm')+" "):"";
+		body+="\n# "+date+"[["+matches[t].title+"]]";
+	}
+	body+="\n<<<\n";
+
+	// create/update the tiddler
+	var tiddler=store.getTiddler(title); if (!tiddler) tiddler=new Tiddler();
+	tiddler.set(title,body,config.options.txtUserName,(new Date()),"excludeLists excludeSearch");
+	store.addTiddler(tiddler); story.closeTiddler(title);
+
+	// use alternate "search again" label in <<search>> macro
+	var oldprompt=config.macros.search.label;
+	config.macros.search.label="search again";
+
+	// render/refresh tiddler
+	story.displayTiddler(null,title,1);
+	store.notify(title,true);
+
+	// restore standard search label
+	config.macros.search.label=oldprompt;
+
+}
+
+//}}}

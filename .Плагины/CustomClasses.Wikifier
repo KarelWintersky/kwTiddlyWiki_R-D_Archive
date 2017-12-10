@@ -1,0 +1,41 @@
+﻿/***
+''Plugin:'' Custom classes wikifier
+''Version:'' 1.0 (Feb 24, 2006)
+''Author:'' Clint Checketts
+''Credit:'' Thanks to Paul Petterson, Bradley Meck, and Simon Baird for tips and tricks
+
+!Usage
+This wikifier allows the user to grab any text and wrap it in a span with a custom class. The allows cutom CSS stylingin a nice, modular way.  By placing a rule in you StyleSheet tiddler like {{{.wrappingClass{color: #666; background: #eee} }}} you can markup a small piece of text in the tiddler using this code:
+{{{
+{{wrappingClass{Text that is now accentuated}}}
+}}}
+!Example
+{{wrappingClass{Text that has custom styling}}}
+
+{{Urgent Task{Save the whales}}}
+{{Task{Pay bills}}}
+{{Urgent Project{Begin whale recycling program}}}
+{{Stupid Project{Travel to Atlantis}}}
+
+!Code
+***/
+
+//{{{
+version.extensions.CustomClassPlugin = {major: 1, minor: 0, revision: 0 , date: new Date(2006,2,24)};
+//}}}
+
+//{{{
+config.formatters.push( {
+	name: "customClasses",
+	match: "{{",
+	lookahead: "{{[\\s]*([\\w]+[\\s\\w]*)[\\s]*{((?:[^}]|(?:}(?!}))|(?:}}(?!})))*)}}}",
+	handler: function(w){
+		var lookaheadRegExp = new RegExp(this.lookahead,"mg");
+		lookaheadRegExp.lastIndex = w.matchStart;
+		var lookaheadMatch = lookaheadRegExp.exec(w.source);
+		var p = createTiddlyElement(w.output,"span",null,lookaheadMatch[1]);
+		wikify( lookaheadMatch[2], p, null, w.tiddler);
+		w.nextMatch = lookaheadMatch.index + lookaheadMatch[0].length;
+	}
+});
+//}}}

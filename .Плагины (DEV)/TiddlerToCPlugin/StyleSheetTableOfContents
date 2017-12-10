@@ -1,0 +1,17 @@
+/*{{{*/
+.ToC {
+	float: left; /* auto-width */
+	margin: 0 2em 2em 0;
+	border: 1px solid #aaa;
+	padding: 5px;
+	background-color: #eee;
+}
+
+.ToC ol {
+	margin: 0 1em;
+}
+
+h1 {
+	clear: left;
+}
+/*}}}*/

@@ -1,0 +1,32 @@
+﻿/***
+|Name|CyrillicWikiLinks|
+|Created by|Petr Andreeev|
+|Location|http://www.sherwood.ru/TiddlyWiki/petr.html#CyrillicWikiLinks|
+|Summary|Makes TiddlyWiki recognize cyrillic letters in CamelCase wiki links|
+|Current version|1.0 (18 July 2007)|
+!Description
+плагин заставляет TiddlyWiki распознавать русские буквы в ВикиСсылках
+
+***/
+//{{{
+config.textPrimitives.upperLetter = "[A-Z\u00c0-\u00de\u0150\u0170\u0410-\u042f]";
+config.textPrimitives.lowerLetter = "[a-z0-9_\\-\u00df-\u00ff\u0151\u0171\u0430-\u0451]";
+config.textPrimitives.anyLetter =   "[A-Za-z0-9_\\-\u00c0-\u00de\u00df-\u00ff\u0150\u0170\u0151\u0171\u0410-\u0451]";
+config.textPrimitives.anyLetterStrict =   "[A-Za-z0-9\u00c0-\u00de\u00df-\u00ff\u0150\u0170\u0151\u0171\u0410-\u0451]";
+config.textPrimitives.wikiLink = "(?:(?:" + config.textPrimitives.upperLetter + "+" +
+	config.textPrimitives.lowerLetter + "+" +
+	config.textPrimitives.upperLetter +
+	config.textPrimitives.anyLetter + "*)|(?:" +
+	config.textPrimitives.upperLetter + "{2,}" +
+	config.textPrimitives.lowerLetter + "+))";
+config.textPrimitives.tiddlerAnyLinkRegExp = new RegExp("("+ config.textPrimitives.wikiLink + ")|(?:" +
+	config.textPrimitives.titledBrackettedLink + ")|(?:" +
+	config.textPrimitives.brackettedLink + ")|(?:" +
+	config.textPrimitives.urlPattern + ")","mg");
+for ( var f in config.formatters ) {
+   if ( config.formatters[ f ].name == "wikiLink")
+	config.formatters[f].match = config.textPrimitives.wikiLink;
+   else if ( config.formatters[ f ].name == "unWikiLink" )
+	config.formatters[f].match = config.textPrimitives.unWikiLink + config.textPrimitives.wikiLink;
+}
+//}}}

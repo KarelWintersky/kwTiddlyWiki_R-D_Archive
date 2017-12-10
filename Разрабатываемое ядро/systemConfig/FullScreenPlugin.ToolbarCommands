@@ -1,0 +1,2 @@
+﻿|~ViewToolbar|closeTiddler closeOthers +editTiddler > fields permalink references jump fullscreen|
+|~EditToolbar|+saveTiddler -cancelTiddler deleteTiddler|

@@ -1,0 +1,316 @@
+tiddlyspace
+
+
+  TWMacro </#%5B%5BTWMacro%5D%5D>
+
+revision </bags/dgsd_public/tiddlers/TWMacro/revisions> 36844
+</bags/dgsd_public/tiddlers/TWMacro/revisions/36844> in this collection
+of tiddlers </recipes/dgsd_public/tiddlers>
+*Name:*	TWMacro
+*Version:*	
+*Source:*	AiddlyWiki <http://aiddlywiki.sourceforge.net>
+*Author:*	Arphen Lin
+</recipes/dgsd_public/tiddlers/mailto%3Aarphenlin%40gmail.com>
+*Type:*	WikiBar </recipes/dgsd_public/tiddlers/WikiBar> addon
+*Required:*	WikiBar </recipes/dgsd_public/tiddlers/WikiBar> 2.0.0+
+
+
+  Description
+
+
+support TiddlyWiki </recipes/dgsd_public/tiddlers/TiddlyWiki> macro syntaxes
+
+
+  Installation
+
+
+ 1. install WikiBar </recipes/dgsd_public/tiddlers/WikiBar> at first
+ 2. create your addon as a tiddler with tag 'wikibarAddons'
+
+
+  Code
+
+
+
+//----------------------------------------------------------------------------
+// addon install function: this is a must
+//----------------------------------------------------------------------------
+function wikibar_addonInstall(unused){
+
+  // register tools
+  wikibarStore.macro = {
+    TYPE: 'MENU',
+    TOOLTIP: 'system macros',
+    systemInfo:{
+      TYPE: 'MENU',
+      CAPTION:'system information',
+      allTags:{
+              TOOLTIP:'display all TiddlyWiki tags',
+              syntax: '<<allTags>>',
+              HANDLER: wikibar_editFormatByWord
+          },
+          tag:{
+              TOOLTIP:'display specified tag',
+              syntax: '<<tag %1>>',
+              HANDLER: wikibar_getMacroParam,
+              doMore: wikibar_editFormatByWord,
+              param:     'tagName(ex: systemConfig)'
+          },
+          message:{
+            TOOLTIP:'get system message',
+            syntax:'<<message %1>>',
+              HANDLER: wikibar_getMacroParam,
+              doMore: wikibar_editFormatByWord,
+              param:     'customConfigError'
+          },
+          option:{
+              TOOLTIP:'display specified option',
+              syntax: '<<option %1>>[%2]\n',
+              HANDLER: wikibar_getMacroParam,
+              doMore: wikibar_editFormatByWord,
+              param:     'chkOpenInNewWindow \"Open link in new window\"'
+          },
+          saveChanges:{
+              TOOLTIP:'save changes',
+              syntax: '<<saveChanges>>',
+              HANDLER: wikibar_editFormatByWord
+          },
+          search:{
+              TOOLTIP:'display search button and input box',
+              syntax: '<<search>>',
+              HANDLER: wikibar_editFormatByWord
+          },
+          timeline:{
+            TYPE:'MENU',
+            TOOLTIP:'list tiddlers in date order',
+            modified:{
+                TOOLTIP:'list tiddlers in modified date order',
+                syntax: '<<timeline>>',
+                HANDLER: wikibar_editFormatByWord
+            },
+            created:{
+                TOOLTIP:'list tiddlers in created date order',
+                syntax: '<<timeline created>>',
+                HANDLER: wikibar_editFormatByWord
+            }
+          },
+          version:{
+              TOOLTIP:'display TiddlyWiki version',
+              syntax: '<<version>>',
+              HANDLER: wikibar_editFormatByWord
+          },
+      list:{
+        TYPE: 'MENU',
+            list:{
+                TOOLTIP:'list all tiddlers in alphabetical order',
+                syntax: '<<list>>',
+                HANDLER: wikibar_editFormatByWord
+            },
+            listMissing:{
+              CAPTION:'list missing',
+                TOOLTIP:'list all undefined tiddlers',
+                syntax: '<<list missing>>',
+                HANDLER: wikibar_editFormatByWord
+            },
+            listOrphans:{
+                CAPTION:'list orphans',
+              TOOLTIP:'tiddlers that are not linked to from any other tiddlers',
+                syntax: '<<list orphans>>',
+                HANDLER: wikibar_editFormatByWord
+            }
+      }
+    },  // systemInfo
+    tiddlerOperate:{
+      TYPE: 'MENU',
+      CAPTION:'tiddler operation',
+          newJournal:{
+              TOOLTIP:'create a new tiddler from current date and time',
+              syntax: '<<newJournal %1>>',
+              HANDLER:   wikibar_getMacroParam,
+              doMore: wikibar_editFormatByWord,
+              param:     '\"journal title\"'
+          },
+          newTiddler:{
+              TOOLTIP:'create new tiddler',
+              syntax: '<<newTiddler>>',
+              HANDLER: wikibar_editFormatByWord
+          },
+          closeAll:{
+              TOOLTIP:'close all tiddlers',
+              syntax: '<<closeAll>>',
+              HANDLER: wikibar_editFormatByWord
+          }
+    },  // tiddlerOperate
+    tiddlerInfo:{
+      TYPE: 'MENU',
+      CAPTION:'tiddler information',
+          tiddler:{
+              TOOLTIP:'display specified tiddler text',
+              syntax: '<<tiddler %1>>',
+              HANDLER: wikibar_getMacroParam,
+              doMore: wikibar_editFormatByWord,
+              param:     'tiddlerTitle'
+          }
+    },  // tiddlerInfo
+    template:{
+      TYPE:'MENU',
+      CAPTION:'template only',
+      toolbar:{
+        TYPE:'MENU',
+        TOOLTIP:'toolbar macro command',
+            closeTiddler:{
+                TOOLTIP:    'close current tiddler',
+                syntax: 'closeTiddler',
+                HANDLER: wikibar_editFormatByWord
+            },
+            closeOthers:{
+                TOOLTIP:    'close other opened tiddlers',
+                syntax: 'closeOthers',
+                HANDLER: wikibar_editFormatByWord
+            },
+            editTiddler:{
+                TOOLTIP:    'edit current tiddler',
+                syntax: 'editTiddler',
+                HANDLER: wikibar_editFormatByWord
+            },
+            saveTiddler:{
+                TOOLTIP:    'save current tiddler',
+                syntax: 'saveTiddler',
+                HANDLER: wikibar_editFormatByWord
+            },
+            cancelTiddler:{
+                TOOLTIP:    'cancel current tiddler',
+                syntax: 'cancelTiddler',
+                HANDLER: wikibar_editFormatByWord
+            },
+            deleteTiddler:{
+                TOOLTIP:    'delete current tiddler',
+                syntax: 'deleteTiddler',
+                HANDLER: wikibar_editFormatByWord
+            },
+            permalink:{
+                TOOLTIP:'display current tiddler link',
+                syntax: 'permalink',
+                HANDLER: wikibar_editFormatByWord
+            },
+            references:{
+                TOOLTIP:'current tiddler references',
+                syntax: 'references',
+                HANDLER: wikibar_editFormatByWord
+            },
+            jump:{
+                TOOLTIP:'jump to other opened tiddler',
+                syntax: 'jump',
+                HANDLER: wikibar_editFormatByWord
+            },
+            tagChooser:{
+                TOOLTIP:'add tag(s) to current tiddler',
+                syntax: 'tagChooser',
+                HANDLER: wikibar_editFormatByWord
+            }
+      },
+      edit:{
+        TYPE:'MENU',
+        editTitle:{
+          CAPTION:'edit title',
+                TOOLTIP:'display title input box',
+                syntax: "macro='edit title'",
+                HANDLER: wikibar_editFormatByWord
+        },
+        editTags:{
+          CAPTION:'edit tags',
+                TOOLTIP:'display tags input box',
+                syntax: "macro='edit tags'",
+                HANDLER: wikibar_editFormatByWord
+        },
+        editText:{
+          CAPTION:'edit text',
+                TOOLTIP:'display tiddler text edit box',
+                syntax: "macro='edit text'",
+                HANDLER: wikibar_editFormatByWord
+        }
+      },
+      view:{
+        TYPE:'MENU',
+        viewTitle:{
+          CAPTION:'view title',
+                TOOLTIP:'display title',
+                syntax: "macro='view title'",
+                HANDLER: wikibar_editFormatByWord
+        },
+        viewTags:{
+          CAPTION:'view tags',
+                TOOLTIP:'display tags',
+                syntax: "macro='view tags'",
+                HANDLER: wikibar_editFormatByWord
+        },
+        viewText:{
+          CAPTION:'view text',
+                TOOLTIP:'display tiddler text',
+                syntax: "macro='view text'",
+                HANDLER: wikibar_editFormatByWord
+        }
+      }
+    },
+    misc:{
+      TYPE: 'MENU',
+          gradient:{
+              TOOLTIP:    'gradient',
+              syntax: '<<gradient vert %1 #ffffff %1>>user_text\n>>',
+              HANDLER: wikibar_getColorCode,
+              doMore: wikibar_editFormatByWord
+          },
+          slider:{
+              TOOLTIP:    'slider',
+              syntax: '<<slider %1 %2 %3>>',
+              HANDLER:   wikibar_getMacroParam,
+              doMore: wikibar_editFormatByWord,
+              param:     'sliderID sliderTiddler sliderLabel'
+          },
+          sparkline:{
+              TOOLTIP:    'sparkline',
+              syntax: '<<sparkline %N>>',
+              HANDLER:   wikibar_getMacroParam,
+              doMore: wikibar_editFormatByWord,
+              param:    'number_list(ex: 100 123 ...)'
+          },
+          tabs:{
+              TOOLTIP:    'tabs',
+              syntax: '<<tabs [%N]>>',
+              HANDLER:   wikibar_getMacroParam,
+              doMore: wikibar_editFormatByWord,
+              param:     'indentifier tabLabel tabName Tiddler'
+          },
+          today:{
+              TOOLTIP:    'today',
+              syntax: '<<today [%1]>>',
+              HANDLER:   wikibar_getMacroParam,
+              doMore: wikibar_editFormatByWord,
+              param:  '"YYYY/MM/DD hh:mm:ss"'
+          }
+    } // misc
+  };  // macro
+
+}
+
+// for debugging: you can turn it off in final release ----------------------
+wikibar_addonInstall();
+
+bag
+    dgsd_public 
+created
+    Tue, 01 Jan 2013 19:39:26 GMT
+creator
+    mama <http://mama.tiddlyspace.gir.dk/>
+modified
+    Tue, 01 Jan 2013 19:39:26 GMT
+modifier
+    mama <http://mama.tiddlyspace.gir.dk/>
+tags
+    wikibarAddons </search?q=tag:"wikibarAddons"> 
+uuid
+    f889120b-5610-40e5-964a-3d7c8bef7783
+_hash
+    d85f75dd16074f1ca0804859f8466a0b1983b7d3
+
+Brought to you by TiddlySpace <http://tiddlyspace.gir.dk>.

@@ -1,0 +1,99 @@
+﻿!Documentation for TiddlyLightBoxPlugin
+''Credits:''
+This lightbox implementation is a derivative of Bob Denny's [[DC3.LightBox|http://solo.dc3.com/tw/index.html]] library optimized for a ~TiddlyWiki environment, with an emphasis on ease of use. It also uses some code and ideas from [[LightBox Gone Wild|http://particletree.com/features/lightbox-gone-wild/]] and [[Ibox|http://www.ibegin.com/ibox/]]. For a more feature rich and versatile option, you can't beat the ~DC3 library.
+
+
+''Concept:''
+I needed a light weight lightbox implementation for [[TiddlyThemes|http://tiddlythemes.googlepages.com/index.html]] but none of the existing options fit the bill. The ~DC3 library came closest, so I set out to rewrite it. I believe the result is a quite versatile ~TW plugin. Some of the bells and whistles have been removed though since I find them annoying (animations), and there are some features yet to be implemented, as you can read further on this document. Almost the entire library has been rewritten.
+
+
+''Installation:''
+Copy the TiddlyLightBoxPlugin tiddler to your TW, tag it with systemConfig, save and reload your TW file. You will also need to save [[this|indicator.gif]] 'loading' image to the same folder as your TW. Or you can choose one of many [[here|http://www.ajaxload.info/]]. That's it, you are ready to create some lightboxes!
+
+
+''Usage:''
+There are 3 macros provide to facilitate setting up macros.
+1. ''{{{<<imagebox>>}}}''
+The imagebox macro is designed to display images in the lightbox. The usage is very easy. Simply create a text or image link to an image using standard TW syntax, and follow it with {{{<<imagebox>>}}}.
+Eg: {{{[img[cactus-thumb.jpg]cactus.jpg]]}}}
+
+[img[cactus-thumb.jpg][cactus.jpg]]<<imagebox>>
+
+Let's try a text link: {{{[[Litar|http://skylark.moy.su/photos/litar/litar_1.jpg]]<<imagebox>>}}}
+
+[[Litar|http://skylark.moy.su/photos/litar/litar_1.jpg]]<<imagebox>>
+
+This macro also accepts some optional parameters in this order:
+2. description text
+3. width ( as a number, like 500)
+4. height (as a number, like 300)
+Also, if width is passed as a word, like "bananas", then it is treated as a css class and the container for the image is given the class "bananas".
+
+Let's try one more, with a title and a custom size:
+{{{[img[cubicles-thumb.jpg][cubicles.jpg]]<<imagebox 'Office space' 300 300>>}}}
+
+[img[cubicles-thumb.jpg][cubicles.jpg]]<<imagebox 'Office space' 300 300>>
+
+----
+
+2. ''{{{<<divbox>>}}}''
+The divbox macro lets you put the html content of any inline div into a lightbox, you just need the id of the div in question. The idea being to create a hidden div using "display:none" and then displaying it on the click of a link/button.
+You can create such a div in any tiddler by wrapping it in html tags, but using the MarkupPostBody tiddler might be the better option.
+
+The macro can create the button for you, or you can use an existing element to launch the lightbox. To create a button, pass the label for the button as the first parameter. To use an existing element, pass the first parameter as ' ' and place the macro immediately after the element. Eg: {{{<<tiddlerbox label>> or <<tiddlerbox ''>>}}}
+
+The next parameter is the id of the div to display: {{{<<tiddlerbox label theID>>}}}
+These two parameters are a must for the divbox macro. There are also 3 more optional parameters, just like the imagebox macro:
+3. description text
+4. width ( as a number, like 500) OR className
+5. height (as a number, like 300)
+As an example, lets display this hidden div which I have written inline:
+{{{<html><div id="testDiv" style="display:none;"><div style="text-align:center;"> Lightboxes have become very cliche, but they can still be useful!</div></div></html><<divbox "Click to see it" "testDiv" "This is a test div">>}}}
+<html><div id="testDiv" style="display:none;"><div style="text-align:center"><br><br><br><br> Lightboxes have become very cliche, but they can still be useful!</div></div></html><<divbox "Click to see it" "testDiv" "This is a test div">>
+
+----
+
+3.''{{{<<tiddlerbox>>}}}''
+This macro lets you put the wikified contents of any tiddler into a lightbox! So you can put your MainMenu and Sidebar into a lightbox for example, and have handy links to bring them up whenever you need them. (like in say the hovering menu provided by HoverMenuPlugin). It's also very useful for when you are working on something and want to refer to some reference material without having to loose your place in your work.
+The parameters for this macro are the same as for the divbox macro, except instead of the id for the div, you use the title of the tiddler.
+Let's give it a go:
+{{{<<tiddlerbox "menu" "MainMenu" "Thats my main menu, and the links work!">>}}}
+<<tiddlerbox "menu" "MainMenu" "Thats my main menu, and the links work!">>
+or
+{{{<<tiddlerbox "menu" "Sidebar" "Thats my sidebar!" 300 500>>}}}
+<<tiddlerbox "sidebar" "Sidebar" "Thats my sidebar!" 300 500>>
+
+-----
+
+''CSS Styling:''
+The css rules for the lightbox and its contents are in the TiddlyLightBoxStyles folder. You can edit them to your liking, but I recommend not changing the rules for ~lightBoxOverlay and lightboxprogress. But don't worry, if you break anything, just delete the tiddler. It's a shadow tiddler!
+
+I'll post a diagram showing the structure of the lightbox later, to faciliate css styling.
+
+----
+
+''Features comparison with ~DC3Lightbox:''
+Missing:
+* IE transparency filters
+* ability to create own lightbox containers
+*call back functions on closing lightbox
+
+Added:
+*macros for TW usage
+*optimized for TW environment
+*ability to display Tiddlers in lightboxes
+*preloading of images, to avoid layout problems
+*removed need for manually creating styles tiddler and adding html markup.
+*fixed bug with regards to selects displaying over the lightbox!
+
+----
+
+''To Do''
+* fixed positioning of lightbox so it scrolls with the page!
+*possible light weight animation for images
+* optional preloading of images
+* resizing of images to fit the viewport when larger.
+* optional automatic lightboxing of all links to images.
+*grabbing description from image alt text.
+* improved support for inline html content.
+

@@ -1,0 +1,134 @@
+﻿/***
+|Name|CoreTweaks|
+|Source|http://www.TiddlyTools.com/#CoreTweaks|
+|Version|none|
+|Author|Eric Shulman - ELS Design Studios|
+|License|http://www.TiddlyTools.com/#LegalStatements <<br>>and [[Creative Commons Attribution-ShareAlike 2.5 License|http://creativecommons.org/licenses/by-sa/2.5/]]|
+|~CoreVersion|2.1|
+|Type|plugin|
+|Requires||
+|Overrides|Story.prototype.closeTiddler, Story.prototype.closeAllTiddlers, window.wikify, confirmExit, Slider.prototype.tick|
+|Description|a small collection of overrides to TW core functions|
+
+This tiddler contains some quick tweaks and modifications to TW core functions to provide minor changes in standard features or behavior.  It is hoped that some of these tweaks may be incorporated into later versions of the TW core, so that these adjustements will be available without needing these add-on definitions.
+----
+***/
+
+// // {{groupbox small{
+// // fix for bug#301, in which FireFox doesn't properly re-display textarea contents when other elements are removed from the DOM, causing the textarea to shift position but leave the textarea contents behind (overlapping other content)
+
+// // This fix adds an optional 'allowAsync' param to closeAll() and closeAllTiddlers().   When TRUE, asynch redisplay handling is used after closing one or more tiddlers, permitting FireFox the opportunity to properly re-render contents of textareas.  Various core handlers are also revised so they can use the #301 fix, while still allowing existing plugins functions that require on synchronous handling  (e.g., BreadcrumbsPlugin restartHome()) to operate correctly.
+
+// // This fix also includes a small tweak to ensure that when a tiddler in the story column is closed, the previous tiddler is scrolled into view, as suggested by DaveGifford (http://www.giffmex.org)
+//{{{
+Story.prototype.coreTweaks_closeTiddler = Story.prototype.closeTiddler;
+Story.prototype.closeTiddler = function(title,animate,slowly,allowAsync)
+{
+	var tiddlerElem = document.getElementById(this.idPrefix + title);
+	if(tiddlerElem != null) {
+		// make sure previous tiddler is in view
+		if (tiddlerElem.previousSibling) window.scrollTo(0,ensureVisible(tiddlerElem.previousSibling));
+		clearMessage();
+		this.scrubTiddler(tiddlerElem);
+		if(anim && config.options.chkAnimate && animate)
+			anim.startAnimating(new Slider(tiddlerElem,false,slowly,"all"));
+		else {
+			// bug #301 fix... set overflow=hidden and use asynch redraw (if allowed)
+			tiddlerElem.style.overflow = "hidden";
+			if (allowAsync)
+				setTimeout(function(){tiddlerElem.parentNode.removeChild(tiddlerElem)},0);
+			else
+				tiddlerElem.parentNode.removeChild(tiddlerElem);
+		}
+	}
+}
+// bug #301 fix...  optional param, allowAsync, for pass-thru to closeTiddlers()
+Story.prototype.closeAllTiddlers = function(exclude,allowAsync)
+{
+	clearMessage();
+	this.forEachTiddler(function(title,element) {
+		if((title != exclude) && element.getAttribute("dirty") != "true")
+			this.closeTiddler(title,false,false,allowAsync); // no animation
+		});
+	window.scrollTo(0,0);
+}
+config.commands.closeTiddler.handler = function(event,src,title)
+{
+	story.closeTiddler(title,true,event.shiftKey || event.altKey,true); // bug #301 fix...  "close" uses allowAsync
+	return false;
+}
+config.commands.closeOthers.handler = function(event,src,title)
+{
+	story.closeAllTiddlers(title,true); // bug #301 fix...  "close others" uses allowAsync
+	return false;
+}
+config.macros.closeAll.onClick = function(e)
+{
+	story.closeAllTiddlers(null,true); // bug #301 fix... "close all" uses allowAsync
+	return false;
+}
+//}}}
+// // }}}
+// // {{groupbox small{
+// // This tweak adds URL paramifier handlers for "hide:elementID" and "show:elementID".  This is useful for forcing the display state of specific TW page elements, without requiring StyleSheet changes.  For example, if your customized StyleSheet hides the sidebar (useful for 'read only' published documents), you can force it to display when you need to edit the document by adding {{{#show:sidebar}}} to the document URL.  Alternatively, you might want to supress non-tiddler content when printing by hiding the sidebars and header (e.g., {{{#hide:mainMenu hide:sidebar hide:header}}})
+//{{{
+if (config.paramifiers) { // check for backward-compatibility
+	config.paramifiers.hide = { onstart: function(id) { var e=document.getElementById(id); if (e) e.style.display="none"; } };
+	config.paramifiers.show = { onstart: function(id) { var e=document.getElementById(id); if (e) e.style.display="block"; } };
+}
+//}}}
+// // }}}
+// // {{groupbox small{
+// // This HIJACK tweak pre-processes source content to convert "backslash-newline" into {{{<<br>>>}}} before wikify(), so that literal newlines can be embedded in line-mode wiki syntax (e.g., tables, bullets, etc.).  Based on a suggestion from Sitaram Chamarty.
+//{{{
+window.coreWikify = wikify;
+window.wikify = function(source,output,highlightRegExp,tiddler)
+{
+	if (source) source=source.replace(/\\\n\s*/mg,"<<br>>");
+	coreWikify(source,output,highlightRegExp,tiddler)
+}
+//}}}
+// // }}}
+// // {{groupbox small{
+// // This tweak adds a check for any tiddlers that are being actively edited, so that accidental page transitions don't discard tiddler content that has been entered but not yet saved to the 'store' (i.e., by pressing 'done').
+//{{{
+config.messages.editing_confirmExit ="There are currently open tiddler editors that may contain unsaved changes.\nIf you continue you will lose those changes";
+function confirmExit()
+{
+	hadConfirmExit = true;
+	if(store && store.isDirty && store.isDirty())
+		return config.messages.confirmExit;
+	// added by ELS
+	var editing=false;
+	story.forEachTiddler(function(title,element) { if(element.getAttribute("dirty")=="true") editing=true; });
+	if (editing) return config.messages.editing_confirmExit;
+}
+//}}}
+// // }}}
+// // {{groupbox small{
+// // When a slider is opened/closed with animation enabled, the opacity/alphafilter styles are incrementally adjusted to create a "fade-in/fade-out" effect.  However, this effect seems to render incredibly slowly on FireFox, and even slower when the background image is a complex JPG photo image, making animation impractical to use.  This tweak provides an option to disable the opacity/alphafilter handling, while leaving the 'incremental height' animation intact.  The resulting increase in performance makes it possible to leave the animation enabled so that you can benefit from the visual cues it provides.
+//{{{
+if (!config.options.chkEnableFade) config.options.chkEnableFade=false; // ELS: added conditional option for fade-in/fade-out
+Slider.prototype.tick = function()
+{
+	this.progress += this.step;
+	if(this.progress < 0 || this.progress > 1)
+		{
+		this.stop();
+		return false;
+		}
+	else
+		{
+		var f = Animator.slowInSlowOut(this.progress);
+		var h = this.realHeight * f;
+		this.element.style.height = h + "px";
+		if (config.options.chkEnableFade) // ELS: added conditional option for fade-in/fade-out
+			{
+			this.element.style.opacity = f;
+			this.element.style.filter = "alpha(opacity:" + f * 100 +")";
+			}
+		return true;
+		}
+}
+//}}}
+// // }}}

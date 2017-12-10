@@ -1,0 +1,73 @@
+﻿/***
+|''Name''|IndexMacro|
+|''Author''|Tobias Beer|
+|''Version''|0.6 BETA|
+|''Description''|will create an {{{<<index>>}}} (toc) and {{{<<scroll>>}}} to elements|
+@@color:red; Experimental! Will change at will!@@
+!Usage
+Heading: <<scroll "##Code">>
+{{{
+<<scroll "##Code">>
+}}}
+Definition Term: <<scroll ";;term">>
+{{{
+<<scroll ";;term">>
+}}}
+;term
+:definition
+!Code
+***/
+//{{{
+(function($){
+
+config.macros.scroll = {
+  handler: function(place, macroName, params, wikifier, paramString, tiddler) {
+    var what = params[0],
+      tid = story.findContainingTiddler( place );
+      type =
+        what.indexOf('##') == 0 ? ':header' : (
+        what.indexOf(';;') == 0 ? 'dt' : 'tiddler' );
+
+    what = type == 'tiddler' ? what : what.substr(2);
+    tid = type == 'tiddler' ? what : (
+      tid ? tid.getAttribute( 'tiddler' ) : ''
+    );
+
+    if( tid ) $(createTiddlyElement(
+      place,
+      'a',
+      null,
+      'scrollTo tiddlyLink tiddlyLinkExisting',
+      what,
+      {
+        tiddler:tid,
+        type:type,
+        contains:what
+      }
+    )).click(this.scroll).attr('href','#');
+  },
+
+  top : 20,
+  scroll: function(){
+    var $el = $(this),
+      tid = story.tiddlerId($el.attr('tiddler')),
+      type = $el.attr('type'),
+      contains = $el.attr('contains'),
+      $tid = $('#' + tid);
+    (
+      type == 'tiddler' ?
+      $tid :
+      $(type, $tid)
+    ).each(function(){
+      var $el = $(this),
+      txt = $el.text();
+      if(txt.indexOf(contains) >= 0){
+        $('html,body').animate({scrollTop: $el.offset().top - config.macros.scroll.top});
+        return false;
+      }
+    });
+  }
+};
+
+})(jQuery);
+//}}}

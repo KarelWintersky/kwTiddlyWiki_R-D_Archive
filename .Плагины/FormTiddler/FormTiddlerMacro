@@ -1,0 +1,3 @@
+﻿The {{{<<formTiddler ...>>}}} macro defined by the FormTiddlerPlugin. 
+
+When a tiddler T1 references the (FormTemplate) tiddler T2 in the FormTiddlerMacro, the data of T1 can be edited through the INPUT elements defined by T2.

@@ -1,0 +1,3 @@
+config.shadowTiddlers.ToolbarCommands = config.shadowTiddlers.ToolbarCommands.replace(
+	/jump/m,
+	"revisions jump");

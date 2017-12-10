@@ -1,0 +1,93 @@
+<html>
+<head>
+<title>Example of AsciiMath and AsciiSVG Plugins</title>
+
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+
+<!-- Configure the path to the editor.  We make it relative now, so that the
+     example ZIP file will work anywhere, but please NOTE THAT it's better to
+     have it an absolute path, such as '/HTMLArea/'. -->
+<script type="text/javascript" src="../plugins/AsciiMath/ASCIIMathML.js"></script>
+<script type="text/javascript" src="../plugins/AsciiSvg/ASCIIsvg.js"></script>
+<script type="text/javascript" src="../plugins/AsciiSvg/ASCIIsvgAddon.js"></script>
+<script type="text/javascript">
+  _editor_url = "../";
+  _editor_lang = "en";
+</script>
+<script type="text/javascript" src="../htmlarea.js"></script>
+<script>
+HTMLArea.loadPlugin("AsciiMath");
+HTMLArea.loadPlugin("AsciiSvg");
+</script>
+<style type="text/css">
+html, body {
+  font-family: Verdana,sans-serif;
+  background-color: #6cc;
+  color: #000;
+}
+a:link, a:visited { color: #00f; }
+a:hover { color: #048; }
+a:active { color: #f00; }
+
+textarea { background-color: #fff; border: 1px solid #00f; }
+</style>
+
+<script type="text/javascript">
+var editor = null;
+function initEditor() {
+  editor = new HTMLArea("ta");
+  var line = editor.config.toolbar[1] ? 1 : 0;
+  editor.config.toolbar[line].push("separator","insertnewmath",
+                            "insertmath","swapmathmode");
+  editor.config.toolbar[line].push("separator","insertsvg");
+  editor.registerPlugin(AsciiMath);
+  editor.registerPlugin(AsciiSvg);
+  editor.config.hideSomeButtons(" popupeditor lefttoright righttoleft ");
+  //surrounds AsciiMath in red box while editting.  Change to your liking
+  editor.config.pageStyle = "span.AMedit {border:solid 1px #ff0000}";
+  editor.generate();
+  return false;
+};
+
+</script>
+
+</head>
+
+<!-- use <body onload="HTMLArea.replaceAll()" if you don't care about
+     customizing the editor.  It's the easiest way! :) -->
+<body onload="initEditor()">
+
+<h1>HTMLArea 3.0</h1>
+<h3>With AsciiMath and AsciiSvg plugins</h3>
+
+<form action="test.cgi" method="post" id="edit" name="edit">
+
+<textarea id="ta" name="ta" style="width:100%" rows="20" cols="80">
+  &lt;embed id="mygraph2" style="FLOAT: right; VERTICAL-ALIGN: middle; WIDTH: 200px; HEIGHT: 200px" src="../plugins/AsciiSvg/d.svg" script=" " sscr="-5,5,-5,5,1,1,1,1,1,200,200,polar,t,null,0,0,0,6,black,1,none" alt="Graphs: r=t; " /&gt;
+  
+  &lt;p&gt;Include text along with math equations like &lt;span class="AM"&gt;`x=(-b+-sqrt(b^2-4ac))/(2a)`&lt;/span&gt; in your documents   &lt;/p&gt;
+  &lt;p&gt;Click on the math formula to edit the AsciiMath expression used to generate it.&lt;/p&gt;
+  &lt;p&gt;Double-click on the graph (in Internet Explorer), or click on the graph then the SVG button on the toolbar (in FireFox)
+     to edit the graph and add equations to graph&lt;/p&gt;
+  
+</textarea>
+
+<p />
+
+<script type="text/javascript">
+function mySubmit() {
+// document.edit.save.value = "yes";
+document.edit.onsubmit(); // workaround browser bugs.
+document.edit.submit();
+};
+</script>
+<p>This page requires Internet Explorer 6 + <a href="http://www.adobe.com/svg">Adobe SVGviewer 3.01 or higher</a> or 
+SVG enabled <a href="http://www.mozilla.org">Mozilla/FireFox browser</a>.</p>
+<p>The plugins used here were written by
+<a href="http://www.pierce.ctc.edu/dlippman/" target="new">David Lippman</a>
+(<a href="http://www.pierce.ctc.edu/" target="new">Pierce College</a>) and
+<a href="http://www.chapman.edu/~jipsen/" target="new">Peter Jipsen</a>
+(<a href="http://www.chapman.edu" target="new">Chapman University</a>).</p>
+<p>HTMLArea was originally released by interactivetools.com, now maintained and updated by Mihai Bazon at dynarch.com</p>
+</body>
+</html>

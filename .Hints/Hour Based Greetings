@@ -1,0 +1,10 @@
+his script allows you to create hour based greetings.
+
+<script>
+      var hour=new Date().getHours();
+      var out="Good evening";
+      if (hour<18) out="Good afternoon";
+      if (hour<12) out="Good morning";
+      if (hour<6) out="Why aren't you asleep?";
+      return out;
+   </script> 

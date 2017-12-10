@@ -1,0 +1,742 @@
+﻿|''Name''|SharedTiddlersPluginInfo|
+|''Source''|http://yakovl.bplaced.net/TW/STP/STP.html#SharedTiddlersPluginInfo|
+|''Description''|Documentation for ~SharedTiddlersPlugin|
+|''Plugin source''|http://yakovl.bplaced.net/TW/STP/STP.html#SharedTiddlersPlugin|
+|''Version''|2.4.0|
+|''Author''|Yakov Litvin|
+|''License''|[[BSD-like open source license|http://yakovl.bplaced.net/TW/STP/STP.html#%5B%5BYakov%20Litvin%20Public%20Licence%5D%5D]]|
+|''Contact''|Yakov.A.Litvin at gmail dot com (please read docs, esp. "Installation, configuring and troubleshooting" section before sending an email)|
+<<tabs txtSharedTiddlersPluginInfoTab
+	"Installation, configuring and troubleshooting" "" [[SharedTiddlersPluginInfo##Installation, configuring and troubleshooting]]
+	"Functionality and examples" "" [[SharedTiddlersPluginInfo##Functionality and examples]]
+	"Detailed reference" "" [[SharedTiddlersPluginInfo##Detailed reference]]
+	"More details on possible applications" "" [[SharedTiddlersPluginInfo##More details on possible applications]]
+	"API changes and coding with SharedTiddlersPlugin" "" [[SharedTiddlersPluginInfo##API changes and coding with SharedTiddlersPlugin]]
+	{{"Making other plugins \"include-aware\""}} "" [[SharedTiddlersPluginInfo##Making other plugins include-aware]]
+	"Versions history and quality issues" "" [[SharedTiddlersPluginInfo##Versions history and quality issues]]
+>>/%
+!Functionality and examples
+<html><h1>Including and include macro</h1>
+<h2>Simple including</h2>
+</html>Including is done via the {{{include}}} macro. For instance, a ~TiddlyWiki you'd like to include from is named {{{references.html}}} and is put in the same folder that another one, {{{main.html}}}, you'd like to include to. To include all the tiddlers from {{{references.html}}}, put the following macro in {{{main.html}}}:
+{{{
+<<include "./references.html">>
+}}}
+Where exactly should you write the macro? Usually, {{{include}}} macros are written in IncludeList: all the macros in there are wikified at startup, so the secondary TW is included each time the main one is opened. Alternatively, you can put {{{include}}} macro in an arbitrary tiddler, in that case including will be done when the tiddler is displayed (wikified). If you want to avoid it being visible, write it as
+{{{
+<<include "./references.html" hide>>
+}}}
+
+<html><h2>Partial including</h2>
+</html>There are various reasons why you may prefer to include only a subset of tiddlers from another TW. For instance, you want to include only tiddlers tagged {{{ToDo}}} to your GTD thing and don't want the timeline to get crowded by other tiddlers from outside. For that case {{{include}}} macro supports core filter engine:
+{{{
+<<include "./projects/myProject.html" filters:"[tag[ToDo]] [[Summary]]">>
+}}}
+For more details about filters, see the "Detailed reference" part of the docs.
+
+<html><h2>Substituting tiddlers in main TiddlyWiki</h2>
+</html>By default, if the including and an included TW both have a tiddler named "A", the tiddler from the main ~TiddlyWiki will be displayed/fetched in all the situations; even if in the main TW only a shadowed tiddler "A" is present. As sometimes this is not a desirable behaviour, there's {{{substitute}}} and {{{substituteShadows}}} options in the {{{include}}} macro:
+{{{
+<<include "./commons.html" filters:"[[PageTemplate]] [[ViewTemplate]]" substituteShadows>>
+}}}
+will bring PageTemplate and ViewTemplate instead of the shadowed ones; and
+{{{
+<<include "./commons.html" filters:"[[PageTemplate]] [[ViewTemplate]]" substituteShadows substitute>>
+}}}
+will do so even if custom PageTemplate or ViewTemplate are created. Note: included tiddlers are not saved in the including TW, unless the {{{import}}} option is used (see below).
+
+<html><h2>Import and autoimport of included tiddlers</h2>
+</html>For some tiddlers, you'd probably prefer importing instead of just including -- for this case a "manual" tool ImportIncluded and autoimport via the {{{include}}} macro are present:
+{{{
+<<include "./local_repositories/STP.html" filters:"[[SharedTiddlersPlugin]]" import:4>>
+}}}
+where {{{4}}} is a number of the import mode. For details, see the "Detailed reference" part.
+
+<html><h2>Launching (wikifying) macros from included tiddlers</h2>
+</html>This feature was designed primarily for centralized system of customization of ~TiddlyWikis. Imagine a TW called "commons.html" which has different parts of interface (like PageTemplate or ToolbarCommands), some evaluated transclusions etc. The idea is do changes to that TW so that they are applied in all your ~TWs. You can include all the elements in other ~TWs but the problem is you still have to make changes in all the ~IncludeLists. The solution is brought by introducing the {{{wikify}}} parameter to the {{{include}}} macro. Consider this: IncludeList in each of your ~TWs contains just
+{{{
+<<include "./commons.html" filters:"[[IncludeHub]]" wikify>>
+}}}
+and all the changes are done in the {{{IncludeHub}}} tiddler in your commons.html like these:
+{{{
+<<include "./commons.html" filters:"[[PageTemplate]]" substituteShadows>>
+<<include "./local_repositories/STP.html" filters:"[[SharedTiddlersPlugin]]" import:4>>
+ // you can remove, change or add macros in here so that they are applied in each of your TWs
+}}}
+The only issue is as long as you use relative addresses, you have to place all your ~TWs in the same folder as "commons.html" (how to pass around this limitation, see below).
+
+<html><h2>Launching plugins from included TiddlyWikis</h2>
+</html>Plugin launching is done on startup, so just including external plugins is "too late" and they won't actually work. To launch a plugin from an included tiddler, use {{{eval}}} parameter of the {{{include}}} macro:
+{{{
+<<include "./commons.html" filters:"[[RearrangeTiddlersPlugin]]" eval>>
+}}}
+For many plugins, most likely, you will use both {{{improt:4}}} and {{{eval}}} parameters.
+
+<html><h2>Reloading included stuff</h2>
+</html>Sometimes it's desirable to reload included tiddlers without reloading the whole TW document. For this case, the {{{reloadIncluded}}} macro is introduced. It generates a link/button which reloads tiddlers from certain ~TWs on click:
+{{{
+<<reloadIncluded urls:'["node: node1", "included test nodes/node 2.html"]' reloadParams:'{"import":false}'>>
+}}}
+Also, this link can be found in the toolbar of included tiddlers (in the edit mode).
+
+<html><h2>Avoiding excessive refreshing</h2>
+</html>After including, the {{{include}}} macro refreshes your TW -- this is done for things like ~StyleSheets or ~ViewTemplate to get applied. However, multiple refreshing on startup can take a second or more, so it can be desirable to avoid refreshing. It is recommended to use the corresponding {{{noRefresh}}} parameter with all {{{include}}} macros that don't need it (usually those including content tiddlers, but not elements of themes, like ~ViewTemplate):
+{{{
+<<include "./references/holy writ.html" filters:"[[contents]] [tag[chapter]] [tag[verse]]" noRefresh>>
+<<include "./references/Feuerbach.html" filters:"[[list of publications]] [tag[publication]]" noRefresh>>
+<<include "./commons.html" filters:"[tag[theme parts]]" substitute substituteShadows>>
+}}}
+
+<html><h1>TwWeb</h1>
+</html>Sometimes it is desirable to rename or move ~TiddlyWikis, and such changes can break many links/includes. Also, using relative paths in {{{include}}} macros can cause errors in the path calculation when the macro itself is contained in an tiddler included from "path/A.html", where "path" is not ".". To avoid these pesky issues and to enable further "merging" of ~TWs, ~TwWeb system was introduced.
+
+<html><h2>Describing a node</h2>
+</html>The idea is to describe "nodes" -- ~TWs with certain addresses and then use node names instead of addresses. The {{{describeNode}}} does the first part of the job:
+{{{
+<<describeNode "commons" "./commons.html">>
+}}}
+where the first argument is the name of the node and the second one is its address. It is recommended to give your nodes names without spaces (for compability with future features). Note that you can use {{{include}}} macro with {{{wikify}}} parameter to take node descriptions from another TW. This means that you can create a central TW with all node descriptions, include it, and use in all other ~TWs node names instead of addresses. After that, renaming a TW should be backed up by only changing the description in the central node.
+
+<html><h2>Support of node names</h2>
+</html>Node names are supported in the following mechanisms:
+# {{{include}}} macro can get a special form of the url parameter:{{jD{
+{{{
+<<include "node: node_name" ...>>
+<<include "node: commons" filters:"[tag[theme parts]]" substitute substituteShadows>>
+}}}
+}}} If the macro is wikified before the node was described, it "waits" for the description to appear.
+# ImportIncluded allows this "form of url" too
+# the {{{includedFrom}}} filter supports the {{{[includedFrom[node: nodeName]]}}} notation
+# extended prettyLinks now work in the following syntaxes:
+## {{{[[link text|target tiddler]]@nodeName}}} -- which includes the {{{target tiddler}}} and creates an ordinary {{{[[link text|target tiddler]]}}} prettyLink
+## {{{[[link text|target tiddler]]@nodeName@options line@}}} which does the same but uses options from the {{{options line}}} as well: for instance, to substitute an existing tiddler {{{target tiddler}}}, just add the options line {{{substitute}}}.
+** if the included TW is large so you're delayed waiting when the link get enabled, it can be an option to include the node with an empty filter ({{{filters:""}}}) using IncludeList (may be with the delay option, too)
+* @@font-size:smaller;In the future versions of STP, some other engines may be supported: for instance, {{{<<tiddler [[tiddler name]]@nodeName>>}}}.@@
+
+<html><h2>Describing self</h2>
+</html>To avoid different side effects of transitive inclusion (like including a tiddler by TW "A" from the same TW "A" with substituting which makes it impossible to edit the tiddler) you can mark one nodeName as "self":
+{{{
+<<describeNode nodeName self>>
+}}}
+This prevents from including from {{{nodeName}}} at all; such self-description should be put into the IncludeList.
+
+<html><h2>Propagation</h2>
+</html>As included tiddlers can contain links, images, transclusions etc, STP takes care of those so that they are not broken (to some extent). See details in the "Detailed reference" section.
+
+<html><h2>Inline management of included tiddlers</h2>
+</html>In the edit mode an included (but not imported) tiddler has an additional panel with a link to its "original" in the included TW, a link which imports it and a refresh link that reloads the included TW. This is added by default, no changes to EditTemplate are needed.
+
+!Detailed reference
+<html><h2>IncludeList tiddler</h2>
+</html>Special tiddler IncludeList is used to wikify macros within it on the startup of ~TiddlyWiki: it's implied that you write {{{<<include>>}}} and {{{<<describeNode>>}}} macros that you need to lauch (each time) there. For instance, if you write
+{{{
+<<include "./common TW elements.html" filters:"[[PageTemplate]]" substituteShadows>>
+}}}
+in there, the including will be done each time the TW is opened.
+
+<html><h2>The "include" macro</h2>
+</html>The {{{<<include>>}}} macro has the following syntax (@@font-size:smaller;[...] parts are optional@@):
+{{{
+<<include [url:]url [filters:filterLine] [substitute] [substituteShadows]
+  [import:importMode] [eval] [wikify] [noRefresh] [hide[:hideFlag]] [delay:delayDuration]>>
+}}}
+|The parameters of the {{{<<include>>}}} macro|c
+| name			 | demanded?	 | value | effect | comments |h
+| ''url''			 | demanded	 | a url line in quotes | defines the path to the ~TiddlyWiki from which stuff is included | by "url line" a relative path, an absolute local file path, or a "file:" URL is meant |
+| ''filters''		 | optional	 | a line of TW filters in quotes | defines the set of tiddlers included from the TW;<br>if omitted, means "include all" | see "Filters" below |
+| ''substitute''		 | optional	 | none | adds "substitute" priority to the included tiddlers | see "Name conflicts and priorities" below |
+| ''substituteShadows''	 | optional	 | none | adds "substituteShadows" priority to the included tiddlers |~|
+| ''import''		 | optional	 | an id of an import mode to use | tiddlers are imported instead of including | see "Import tools" below |
+| ''eval''			 | optional	 | none | treats tiddlers as plugins | see "Evaluating tiddlers" below |
+| ''wikify''		 | optional	 | none | wikifies tiddlers after loading/importing | can be used to wikify {{{include}}} and other macros;<br>may also be useful with evaluated transclusions |
+| ''noRefresh''		 | optional	 | none | prevents refreshing of TW after tiddlers are loaded | refreshing is used to apply included style sheets, elements of interface etc, but multiple refreshing can slow down the startup time; to avoid such effects, this option is to be used in macros that include only content (not parts of the interface) |
+| ''hide''			 | optional	 | boulean | by default the macro is displayed as written; when {{{hideFlag}}} is {{{true}}}, it's hidden | can be useful when the macro is used outside ~IncludeList |
+| ''delay''		 | optional	 | number (integer) | defines the number of milliseconds (thousands of a second) to wait before actually including the ~TiddlyWiki ||
+Some examples of how the ''url'' line can be written:
+{{{
+<<include "C:\TiddlyWiki\shared\TiddlyWikiHelp.html" hide:true>>
+<<include "file://C:/Private/journals/2006-12.html" delay:8000>>
+<<include "../tests/STP/sample33.html" hide>>
+<<include "tests/main_sample.html">>
+}}}
+__Note__: some browsers forbid including from outside the folder where the including TW is placed. See details in the "Installation, configuring and troubleshooting" section.
+
+<html><h2>Filters</h2>
+</html>See main documentation [[at tiddlywiki.org|http://tiddlywiki.org/#Filters]]. Note: when the {{{tiddler}}} filter is used, if tiddler with {{{tiddlerName}}} doesn't exist, the filter creates a new empty tiddler and adds it to the set. To avoid problems like blank ~PageTemplate etc, tiddlers which don't exist are not included (or imported) even if the {{{tiddler}}} filter would cause otherwise.
+
+STP introduces 3 new filters:
+* {{{all}}} (mostly for inner purposes) which brings all the tiddlers of a store. Usage:
+** {{{[all[with included]]}}} fetches ordinary and included tiddlers (with regard to "substituting")
+** {{{[all[-]]}}} (with any non-empty argument other than "with included") fetches only ordinary tiddlers (without regard to "substituting")
+** Example: {{{[all[-]] [sort[modified]]}}}.
+* {{{includedFrom}}} which retains only tiddlers from a certain included store. Examples: {{{[tag[ToDo]] [includedFrom[project.html]], [tag[ToDo]] [includedFrom[node: project]]}}}.
+* {{{internal}}} which filters out included tiddlers. Example: {{{[tag[ToDo]] [internal[-]]}}}.
+* {{{external}}} which leaves only included tiddlers. Example: {{{[all[with included]] [external[-]]}}}.
+
+Example of usage with the {{{include}}} macro:
+{{{
+<<include "./biology.html" filters:"[tag[Mammals]] [[Mammals]]">>
+}}}
+
+<html><h2>Name conflicts and priorities</h2>
+</html>Sometimes there are tiddlers with a common name in the main and an included or multiple included ~TiddlyWikis -- this may occur "accidentally" or because one needs to substitute a tiddler in the main ~TiddlyWiki by an included one (like shared ~PageTemplate). In such cases the following rules work:
+
+* each tiddler in each store has or doesn't have some priorities which is defined when the tiddler is included
+* shadowed tiddlers are substituted only by tiddlers with the "substituteShadows" priority
+* tiddlers inside the main ~TiddlyWiki substitute those in included ones, unless those have "substitute" priority, in which case it is otherwise
+* ({{{sh ambiguity}}}) if there are multiple tiddlers with "substituteShadows" and the shadow presents, there's no specific rule that defines which one would be fetched instead of the shadow; if the shadow with such name doesn't exist, those are treated as included tiddlers without "substituteShadows"
+* ({{{s ambiguity}}}) if there are multiple tiddlers with "substitute", the same thing applies: a "random" one is chosen (this actually depends on the order of the handling of {{{<<include>>}}} macros)
+* ({{{ambiguity}}}) the same is true for tiddlers included with no added priorities
+
+For tracking conflicts, a notification system is present:
+
+* notifications appear if at least one of these parameters is set to {{{true}}} (see the "tweak" panel in the sidebar):
+** {{{chkWarnOnSharedTiddlersConflicts}}} -- displays messages (this is usually interrupted by refreshing engines) and writes them to the browser console
+** {{{chkAlertOnSharedTiddlersConflicts}}} -- alerts (in contrast to displaying messages, you won't lose this ones, but you have to click "ok" after each one, so this is to be used when setting up)
+* for some reason (probably some page-refreshing called from out of the plugin) notifications are not displayed each time conflicts appear, or are removed too fast (when displaying fails logs and alerts can help)
+* notifications are displayed in each case: {{{sh ambiguity}}}, {{{s ambiguity}}}, {{{ambiguity}}} and when there's a tiddler T in the main store and one tiddler with the same name in an included store without the "substitute" priority (in the last two cases the tiddler in the main store is also described as "conflicting" for the ease of understanding what's going on, despite the fact it is fetched for sure, not any included one)
+* it is implied that shadows are not added after {{{<<include>>}}} macros are handled (otherwise some notifications will appear as in the {{{ambiguity}}} case while after a shadow is added it can become the {{{sh ambiguity}}})
+
+<html><h2>The "reloadIncluded" macro and reloading</h2>
+</html>The {{{reloadIncluded}}} macro creates a "link" which causes reloading of the corresponding ~TWs: the content is unloaded and then previously wikified {{{include}}} macros are handled again. Syntax:
+{{{
+<<reloadIncluded [urls:urlsJSON] [reloadParams:otherReloadParamsJSON]
+		[label:labelText] [tooltip:tooltipText] [class:className]>>
+}}}
+The {{{label}}}, {{{tooltip}}} and {{{class}}} parameters are sefl-explaining; it's worth mentioning the {{{button}}} class which is used in macros like {{{tag}}} and {{{slider}}}. The other two parameters should be in the JSON format, like this (note the double quotes, esp. around {{{import}}}):
+{{{
+urls:'["node: node1", "included test nodes/node 2.html"]' reloadParams:'{"import":false}'
+}}}
+The {{{urls}}} defines the ~TWs to reload (if not present, means "reload all"). The {{{reloadParams}}} part defines whether to wikify again {{{include}}} macros with the {{{import}}}/{{{wikify}}}/{{{eval}}} params, by default only {{{eval}}} is set to false to avoid repeated evaluation of shared plugins (and in this example {{{import}}} is set to {{{false}}} as well).
+
+<html><h2>The "includeState" macro</h2>
+</html>The {{{<<includeState>>}}} macro can be used to see the progress of inclusion of ~TiddlyWikis (e.g. "included" for those already loaded, or a text of an error for others etc). There's a shadow IncludeState where you can see it in work.
+
+<html><h2>Import tools</h2>
+</html>As some plugins and other things should present inside each tw-document rather than be "shared" (like [[NestedSlidersPlugin|http://www.TiddlyTools.com/#NestedSlidersPlugin]], without which some content will be "spoiled"), tools to import/autoimport tiddlers from other ~TiddlyWikis are introduced.
+
+Importing can be done in different __import modes__, currently the following are available:
+* {{{1}}} means "import anyway, even if a tiddler with such name is present" (useful, for instance, as "silent mode for plugins")
+* {{{2}}} means "skip import if a version of this tiddler in the main store has 'modified' date no less than that of importing one"
+* {{{3}}} means "import on confirm of the user"
+* {{{4}}} combines the requirements of the modes {{{2}}} and {{{3}}} for import to happen (useful as "totally controlled" import, say for autoupdating plugins from a central TW)
+The results of import are currently only logged in a browser's console.
+
+There are 2 ways to import:
+* autoimport via the {{{include}}} macro (with the {{{import:importMode}}} argument, import is done instead of including)
+* manual import via the tool in the ImportIncluded shadow (using a url, a filter and a mode; the default is the {{{1}}} mode)
+Don't forget to save your TW if this is needed (STP sets the usual TW reminder of unsaved changes, but only for browsers which support it)
+
+An example:
+{{{
+<<include "./commons/plugins.html" filter:"[tag[commonInPlacePlugins]]" import:4>>
+}}}
+
+<html><h2>Evaluating tiddlers</h2>
+</html>The {{{eval}}} parameter of the {{{<<include>>}}} macro allows to use plugins included from other ~TWs. For instance,
+{{{
+<<include "commonPlugins.html" filters:"[[CollapseTiddlersPlugin]] [[RearrangeTiddlersPlugin]]" eval>>
+}}}
+will load two plugins and evaluate them as ~JavaScript (they can be without {{{systemConfig}}} tag). In current implementation, some differences from the conventional way to launch plugins are present: plugins are not registered (no entries in the backstage), no dedicated reaction on errors; also, there's no check preventing some plugin to launch twice or more. Note: if evaluated, tiddlers still will be included or imported.
+
+<html><h2>"include" macros outside the IncludeList and transitive inclusion</h2>
+</html>While {{{<<include>>}}} macros inside the ~IncludeList tiddler are handled at the startup, one can also place them in other tiddlers so that new parts are included when the tiddlers are displayed (the ''hide'' option can be useful here). This can save some time at startup; {{{<<include>>}}} macros outside ~IncludeList also provide the possibility of transitive inclusion (see below). However, sometimes opening a tiddler with an {{{<<include>>}}} macro can take several (mili)seconds.
+
+When ~TiddlyWiki B is included to ~TiddlyWiki A, even if ~IncludeList is included with substitution, this won't bring tiddlers included to B in A, because the startup action is already done (see {{{wikifyIncluded}}} macro, though). However, it's possible to get "transitive inclusion" in the following meaning: add some tiddler with {{{<<include>>}}} in B (for instance, a tiddler "Fruits" with the follwing content:
+{{{
+All fruits: <<include "./food.html" filters:"[tag[Fruit]]" hide>>
+<<tag [[Fruit]]>>
+}}}
+where "./food.html" is a third ~TiddlyWiki), then if you include this tiddler to A, you will get all the "Fruit"-tagged tiddlers included in A and the tiddler "Fruits" will be displayed as in B (*if* A and B are in the same directory -- otherwise the "./food.html" path will be incorrect in A).
+
+<html><h2>Including remote TiddlyWikis</h2>
+</html>Although the documentation of the ~IncludePlugin sais that it's possible to include some remote ~TiddlyWikis into a local one, in modern browsers this seemingly no longer works (tested in IP 1.0.1 and STP 1.3 + Opera 12.0-16.0 and ~FireFox 13.0.1). On the other hand, when running a ~TiddlyWiki on a webserver, one can include ~TWs from the same domain, but can't include any TW from a different website (because of so-called "~Cross-Site Scripting" security issue). @@font-size:smaller;Including remote ~TiddlyWikis into a local one may be reintroduced in the future, but this requires changing the load engine which means some extensive search. Any feedback or ideas regarding this issue are particularly appreciated.@@
+
+<html><h2>Making secondary TiddlyWikis smaller</h2>
+</html>In some cases included ~TWs can be supposed not to get changed (like archived pieces of journal or news) and be desired to be smaller (especially when placed at a web-site) at the same time. In such cases included ~TiddlyWikis can be reduced to the [[PureStore|http://yakovl.bplaced.net/TW/STP/STP.html#PureStore]] format.
+
+<html><h2>The TwWeb and the describeNode macro</h2>
+</html>The {{{describeNode}}} macro addes a description of a node (a ~TiddlyWiki) to the ~TwWeb. Minimal description consists of the name of the node and its address:
+{{{
+<<describeNode "nodeName" "path to the node/file.html">>
+}}}
+Once a node is described, its name can be used instead of its url. This is supported in the {{{include}}} macro:
+{{{
+<<include "node: nodeName" ...>>
+}}}
+If such macro is wikified before the node was described, it "waits" for the description to appear. This syntax also can be used in the ImportIncluded.
+
+Also, this is supported in the extended form of prettyLinks:
+{{{
+[[link text|target tiddler]]@nodeName
+}}}
+where {{{nodeName}}} contains alphanumeric symbols (latin letters, numbers and {{{_}}} symbols), is equivalent to
+{{{
+<<include "node: nodeName" filters:"[[target tiddler]]" hide noRefresh>>
+[[link text|target tiddler]]
+}}}
+(except no linebreak is added) and
+{{{
+[[link text|target tiddler]]@nodeName@param string@
+}}}
+is equivalent to
+{{{
+<<include "node: nodeName" filters:"[[target tiddler]]" hide noRefresh param string>>
+[[link text|target tiddler]]
+}}}
+where {{{param string}}} is copied "as is" (to get {{{import:4}}} option of the macro, write param string {{{import:4}}} etc). There's a limitation: {{{param string}}} is only recognized when consists of alphanumeric symbols, space symbols and {{{:}}} (so evaluated parameters are not allowed).
+
+There's another function of the {{{describeNode}}} macro: when used like this
+{{{
+<<describeNode nodeName self>>
+}}}
+it sets the name {{{nodeName}}} as the name of the main ~TiddlyWiki. Any including from the node {{{nodeName}}} (which may be caused by an included tiddler) won't work. This only works once meaning that the following markup
+{{{
+<<describeNode nodeName1 self>>
+<<describeNode nodeName2 self>>
+}}}
+will result in setting {{{nodeName1}}} as the name of the main TW and the second macro will alert about itseft but do nothing else.
+----
+By ~TwWeb a system that handles all the nodes stuff is meant (not to confuse with ~TiddlyWeb). ~TwWeb is a part of STP.
+
+<html><h2>Propagation</h2>
+</html>STP prevents some parts of included tiddlers to get broken because they are in the context of the including TW, not the included one. What currently STP does:
+
+* pretty links without {{{@nodeName}}} in included tiddlers, when displayed, cause including of corresponding tiddlers (so links are not broken). This is another part of the hijacking the "prettyLink" formatter and is optional (see "Installation, configuring and troubleshooting" section)
+* image formatter ({{{[img[path][link]]}}} syntax) now takes care of relative links ({{{path}}} part is recalced from the including path). This is also optional, "Installation, configuring and troubleshooting" section.
+
+What is not currently implemented:
+
+* no macros are taken care of -- even a transclusion won't work if the corresponding tiddler is not explicitly included (and, of course, more complex macros like {{{tag}}} or {{{list}}})
+* name conflicts are not handled: pretty links just cause including, and if there's a tiddler with the same name inside including TW, the priority system applies (deciding which one will be displayed on click)
+* (auto)import doesn't account any of these things, including pretty links
+
+Within these docs, such mechanisms are called "propagation" (of links, images etc).
+
+<html><h2>Inline management of included tiddlers</h2>
+</html>In the edit mode an included tiddler has an additional panel to manage it. This is implemented by hijacking the {{{edit}}} macro, no changes to EditTemplate are needed. The panel has {{{manageIncludedPanel}}} that can be used for style settings.
+
+!Installation, configuring and troubleshooting
+<html><h2>Installation</h2>
+</html>First, put the plugin inside your ~TiddlyWiki. This is done as always: import the SharedTiddlersPlugin tiddler (using ImportTiddlers or another engine) or copy it (don't forget the {{{systemConfig}}} tag). You'll need to restart your ~TiddlyWiki (refresh the page) to get it working -- then you may check if it's installed properly in the PluginManager. You can also import or copy this documentation to have it at hand when needed.
+
+Second, add {{{<<include>>}}} macros to IncludeList and wherever you need them. As IncludeList is wikified when you view it, you don't need to restart the "main" ~TiddlyWiki, despite the fact that IncludeList is processed on startup. Add links, transclusions and other "connections" with included tiddlers, if necessary. Search, timeline, {{{<<tag>>}}} and other macros can be used as well.
+
+Now you're ready to go. Remember that included tiddlers are readonly in the "main" ~TiddlyWiki, so you have to go to "original" ~TiddlyWikis to edit them.
+
+<html><h2>Settings</h2>
+</html>You may need to change one of these settings:
+* <<option chkUseInclude>> {{{chkUseInclude}}} option -- uncheck this and reload your ~TiddlyWiki to stop all inclusions
+* <<option chkWarnOnSharedTiddlersConflicts>> {{{chkWarnOnSharedTiddlersConflicts}}} option -- defines whether notifications of conflicts should be displayed and logged
+* <<option chkAlertOnSharedTiddlersConflicts>> {{{chkAlertOnSharedTiddlersConflicts}}} option -- defines whether alerting shoud be used for notifying about conflicts
+* extending prettyLinks is optional, too; because the hijacking is done at startup, the option is hardcoded: to change it, go to SharedTiddlersPlugin and in the {{{config.options.STP_hijackPrettyLink = true;}}} set {{{false}}} instead
+* such is extending of the image formatter ({{{[img[path][link]]}}}): it's governed by the {{{config.options.STP_hijackImageFormatter = ...}}} line in SharedTiddlersPlugin
+These along with links to IncludeList, IncludeState and these documentation in the web can be found in AdvancedOptions.
+
+<html><h2>Troubleshooting</h2>
+</html>If something goes wrong, you should check:
+* core version of your TW: it must be no less than the ~CoreVersion value in the [[SharedTiddlersPlugin]]'s header. You can check it using the {{{<<version>>}}} macro. Also, if [[UpToDateFiltersPlugin|http://yakovl.bplaced.net/TW/ExtraFilters.html#UpToDateFiltersPlugin]] is not installed, it must be 2.6.2 or greater
+* the PluginManager -- ~SharedTiddlersPlugin should be present there, be not Disabled, have no error log (if all of these is true, than the plugin is installed correctly); also, only one copy of ~SharedTiddlersPlugin or ~IncludePlugin should be installed
+* if the plugin is installed correctly, inspect the {{{chkUseInclude}}} option -- should be checked for the plugin to work
+* if the problem is not because of {{{chkUseInclude}}}, go to the IncludeState and see if any problems are reported there
+** in some browsers there are additional security settings which can forbid loading other ~TWs, see [[Known Problems with Importing in TiddlyWiki|http://tiddlywiki.com/#%5B%5BTiddlyWiki%20Browser%20Compatibility%5D%5D]] section at tiddlywiki.com (it is about importing, but applies to "including" as well). Problems with ~FireFox seem to be solved by either updating to STP v1.5.0+ or TW v2.7.0+
+* some browsers forbid including from outside the folder where the including TW is placed. According to tests, addresses containing ".." (container folder) work in Opera (12.15), Safari (5.0.3), IE (10.0) and don't work in ~FireFox (20.0), Chrome (26.0). In ~FireFox, this can be "fixed" by changing a security option: to do this, in the address bar type {{{about:config}}}, press enter, search for the {{{security.fileuri.strict_origin_policy}}} option and set it to {{{false}}} (fortunately, this works even in Android).
+If the problem remains, you can search or post your issue in the [[community newsgroup|http://groups.google.com/group/tiddlywiki]] and if it's not solved, you can also notify the maintainer by email (don't forget to add the link to the thread).
+
+!More details on possible applications
+In general, ~SharedTiddlersPlugin can help with the following:
+* reducing sizes of ~TiddlyWikis which can speed up saving TW and loading from the web, when used as a web-page/site
+** examples: old journal/news tiddlers can "archived" into a separate TW monthly so that your diary/blog/site remains approximately the same size but old entries are easily accessible
+* using common content in several ~TiddlyWikis
+** like some glossary, or help texts about ~TiddlyWiki or some plugins (like ~SharedTiddlersPlugin which has this extensive documentation)
+** in this case it's usually easy to avoid name conflicts -- just try to make sure that in the shared document tiddler names are specific enough
+* using common interface
+** ~PageTemplate, style sheets and other parts of ~TiddlyWiki theme can be shared (don't forget "substitute"/"substituteShadows" priorities, depending on what is present in a document you include those into)
+*** all ~PageTemplate, ~StyleSheet, ~ViewTemplate, ~EditTemplate and ~ToolbarCommands are applied as expected; however, it is done by extra refreshing which causes already displayed messages to disappear (on handling of the {{{<<include>>}}} macro)
+** included elements can also be used as parts of a custom theme (instead of substituting the default ones); style sheets can be included in the StyleSheet tiddler as well (by adding lines like {{{[[IncludedStyleSheet]]}}} into it)
+** evaluated transclusions can be shared as well (and other stuff which is rendered as it shows, like {{{<html>}}}-insertions)
+** finally, included plugins can be evaluated (see the "Detailed reference" part of this docs)
+*** keep in mind that for some plugins it's more suitable to import them rather than include and evaluate
+* aggregating content from other ~TWs
+** ~SharedTiddlersPlugin can be used to get all tiddlers with "~ToDo" tag from all ~TiddlyWikis in a separate TW and other things like that
+** usually this wouldn't require extra efforts, but if you expect name conflicts and need to get access to all the tiddlers (including different ones with the same name), check "API changes and coding with ~SharedTiddlersPlugin" section for details
+** @@font-size:smaller;[currently unavailable, see "Detailed reference" section for details]@@ it's also can be useful to aggregate tiddlers from web (from online ~TiddlyWikis, like http://www.tiddlywiki.com/index.html), which can bring you news from tiddly world or just from people you know who use ~TiddlyWiki; but remember the cross-site restriction
+* finally, ~SharedTiddlersPlugin can be used to "merge" content of several ~TWs
+** for instance, if you have a TW dedicated to science you're doing and a TW created for learning (at university or anyhow else), there definitely can appear some topics that belong to both wikis; it's rather weird thing to create new ~TiddlyWikis for each such topic, so you can keep tiddlers in one of them and include them to another for smoother workflow
+** however, because included tiddlers are read-only, "default" workflow is not absolutely smooth as you'll need to go to the wiki containing tiddlers "originally" to change them
+
+!API changes and coding with SharedTiddlersPlugin
+<html><h2>Accessing stores</h2>
+</html>Each included ~TiddlyWiki is represented as a {{{TiddlyWiki}}} object, like the main one is. While for main ~TiddlyWiki it's the global {{{store}}} instance of {{{TiddlyWiki}}}, included ones can be accessed as following:
+{{{
+  var includedStore = window.sharedTiddlersAPI.getStore(tiddyWikiURL);
+}}}
+@@font-size:smaller;For backward compability, there's still {{{abego.TiddlyWikiIncluder.getStore(tiddyWikiURL)}}} method which is not recomended to use (see below).@@
+Those included stores have only those tiddlers which are included (taking account of the ''filter'' parameters of {{{<<include>>}}} macros). Each of them has an additional property,
+{{{
+  var fullStore = includedStore.orig_store;
+}}}
+which is another {{{TiddlyWiki}}} that contains ''all'' the tiddlers of the included TW document.
+
+The list of urls of all included ~TiddlyWikis can be accessed using the
+{{{
+  window.sharedTiddlersAPI.getIncludes()
+}}}
+method (it returns an array of strings – urls). Currently, this array contains urls exactly as they were written in {{{<<include>>}}} macros and, for instance, two macros with "example included.html" and "example%20included.html" urls create two different included stores.
+@@font-size:smaller;For backward compability, there's also {{{abego.TiddlyWikiIncluder.getIncludes()}}} method which is not recomended to use (see below).@@
+
+To get the state of a {{{store}}} (loaded, or some error occured when loading, etc), the
+{{{
+  window.sharedTiddlersAPI.getState(tiddyWikiURL)
+}}}
+method can be used. It returns {{{null}}} when the store is already loaded or a a state/error text otherwise.
+@@font-size:smaller;For backward compability, there's also {{{abego.TiddlyWikiIncluder.getState(tiddyWikiURL)}}} method which is not recomended to use (see below).@@
+
+<html><h2>Accessing tiddlers</h2>
+</html>As {{{TiddlyWiki}}} instances, both {{{includedStore}}} and {{{fullStore}}} in these examples have corresponding methods, like {{{fetchTiddler}}} etc.
+
+Normally, however, one wouldn't use these direct methods. Instead, there's hijacked
+{{{
+  store.fetchTiddler(title)
+}}}
+which fetches a tiddler from the set of "original" and "included" ones taking into account the "substituting". There's also
+{{{
+  window.sharedTiddlersAPI.forReallyEachTiddler(callback)
+}}}
+method which does the same thing as {{{store.forEachTiddler}}}, but "iterates" all the tiddlers taking into account the "substituting". Main {{{store}}} methods {{{reverseLookup}}}, {{{updateTiddlers}}}, {{{getTags}}}, {{{getMissingLinks}}}, {{{getOrphans}}} are hijacked in the same way. Finally, already existing functions that use {{{store.forEachTiddler}}} can be modified so that it works as {{{sharedTiddlersAPI.forReallyEachTiddler}}} (see the "Making other plugins "include-aware"" section of these docs).
+
+All original tiddlers from the main store can be accessed via the
+{{{
+  window.sharedTiddlersAPI.orig_fetchTiddler(title)
+}}}
+and the original (not hijacked)
+{{{
+  store.forEachTiddler(callback)
+}}}
+
+Notes:
+* normally, the {{{window.}}} prefix can be omitted
+* methods of {{{abego.TiddlyWikiIncluder}}} are retained so that users of ~IncludePlugin don't need to change their scripts if moving to ~SharedTiddlersPlugin. However, it is recomended that those methods are substituted with those from the {{{sharedTiddlersAPI}}} "namespace".
+
+<html><h2>Included tiddlers</h2>
+</html>With SharedTiddlersPlugin, tiddlers get a new property, the url of the store they were included from. It can be got by the {{{getIncludeURL()}}} method of the {{{Tiddler}}} object: it returns the url if the tiddler was included and {{{null}}} otherwise (if it's from the main {{{store}}}).
+
+<html><h2>Importing included tiddlers</h2>
+</html>To easily import included tiddlers, the following function can be used:
+{{{
+  window.sharedTiddlersAPI.importAndLog(tiddler,mode)
+}}}
+It strips {{{includeURL}}} from the {{{tiddler}}}, imports it in the corresponding {{{mode}}} and logs the results in the browser console. The {{{mode}}} argument is optional, mode numbers can be used either as {{{1}}} or {{{"1"}}}; for the list of modes see "Import tools" in "Detailed reference".
+
+<html><h2>Examples</h2>
+</html>(require "example included.html" ~TiddlyWiki included):
+<html><a href="javascript:;" onclick='
+	url = "example included.html";
+	var twStore = sharedTiddlersAPI.getStore(url);
+	if(!twStore) {
+		displayMessage("The store is not loaded");
+		return;
+	}
+
+	displayMessage("Tiddlers:");
+	twStore.forEachTiddler(function(title,tiddler) {
+		usedTiddler = store.fetchTiddler(title);
+		if(usedTiddler.getIncludeURL() == url)
+	        	displayMessage("- "+title);
+	});
+'>Show all tiddlers included from the "example included.html" store (with regard to priorities)</a></html>
+{{{
+<html><a href="javascript:;" onclick='
+	url = "example included.html";
+	var twStore = sharedTiddlersAPI.getStore(url);
+	if(!twStore) {
+		displayMessage("The store is not loaded");
+		return;
+	}
+
+	displayMessage("Tiddlers:");
+	twStore.forEachTiddler(function(title,tiddler) {
+		usedTiddler = store.fetchTiddler(title);
+		if(usedTiddler.getIncludeURL() == url)
+	        	displayMessage("- "+title);
+	});
+'>Show all tiddlers included from the "example included.html" store (with regard to priorities)</a></html>
+}}}
+
+<html><a href="javascript:;" onclick='
+	var twStore = sharedTiddlersAPI.getStore("example included.html");
+	if(!twStore) {
+		displayMessage("The store is not loaded");
+		return;
+	}
+	displayMessage("Tiddlers:");
+	twStore.forEachTiddler(function(title,tiddler) {
+		displayMessage("- "+title);
+	});
+'>Show all tiddlers included from the "example included.html" store, without regard to priorities</a></html>
+{{{
+<html><a href="javascript:;" onclick='
+	var twStore = sharedTiddlersAPI.getStore("example included.html");
+	if(!twStore) {
+		displayMessage("The store is not loaded");
+		return;
+	}
+	displayMessage("Tiddlers:");
+	twStore.forEachTiddler(function(title,tiddler) {
+		displayMessage("- "+title);
+	});
+'>Show all tiddlers included from the "example included.html" store, without regard to priorities</a></html>
+}}}
+
+<html><a href="javascript:;" onclick='
+	var includedStore = sharedTiddlersAPI.getStore("example included.html");
+	if(!includedStore) {
+		displayMessage("The store is not loaded");
+		return;
+	}
+	var realStore = includedStore.orig_store;
+	var list = [];
+	realStore.forEachTiddler(function(title,tiddler) {
+		if(tiddler.modified > new Date("July 1, 2007"))
+        		list.push(title);
+	});
+	if(list.length > 0) {
+		displayMessage("Tiddlers:");
+		for(var i = 0; i < list.length; i++)
+			displayMessage("- "+list[i]);
+	} else
+		displayMessage("No tiddlers changed after July 1st, 2007 were found");
+'>Show all tiddlers in the "example included.html" store changed after July 1st, 2007</a></html>
+{{{
+<html><a href="javascript:;" onclick='
+	var includedStore = sharedTiddlersAPI.getStore("example included.html");
+	if(!includedStore) {
+		displayMessage("The store is not loaded");
+		return;
+	}
+	var realStore = includedStore.orig_store;
+	var list = [];
+	realStore.forEachTiddler(function(title,tiddler) {
+		if(tiddler.modified > new Date("July 1, 2007"))
+        		list.push(title);
+	});
+	if(list.length > 0) {
+		displayMessage("Tiddlers:");
+		for(var i = 0; i < list.length; i++)
+			displayMessage("- "+list[i]);
+	} else
+		displayMessage("No tiddlers changed after July 1st, 2007 were found");
+'>Show all tiddlers in the "example included.html" store changed after July 1st, 2007</a></html>
+}}}
+
+<html><a href="javascript:;" onclick='
+	displayMessage("Tiddlers:");
+	store.forEachTiddler(function(title,tiddler) {
+		displayMessage("- "+title);
+	});
+'>Show all tiddlers in the main store (including substituted ones)</a></html>
+{{{
+<html><a href="javascript:;" onclick='
+	displayMessage("Tiddlers:");
+	store.forEachTiddler(function(title,tiddler) {
+		displayMessage("- "+title);
+	});
+'>Show all tiddlers in the main store (including substituted ones)</a></html>
+}}}
+
+[[Check an included tiddler|Example of a tiddler in the included tw-document]], <html><a href="javascript:;" onclick='
+	var mode = 4,
+	    tiddler = store.fetchTiddler("Example of a tiddler in the included tw-document");
+	// the tiddler is supposed to be included already
+	sharedTiddlersAPI.importAndLog(tiddler,mode);
+'>import it</a></html>, then check it again.
+{{{
+<html><a href="javascript:;" onclick='
+	var mode = 4,
+	    tiddler = store.fetchTiddler("Example of a tiddler in the included tw-document");
+	// the tiddler is supposed to be included already
+	sharedTiddlersAPI.importAndLog(tiddler,mode);
+'>import it</a></html>
+}}}
+See also ImportIncluded tiddler for another example of "importing" included tiddlers.
+
+!Making other plugins include-aware
+To make external tiddlers usable, ~SharedTiddlersPlugin basically does 3 things:
+
+* hijackes the {{{fetchTiddler}}} method of the main {{{store}}} object
+* "recalcs" slices by deleting them
+* makes some core functions see {{{store.forEachTiddler}}} as thought as it were hijacked (so that it iterates all the tiddlers that {{{fetchTiddler}}} gets)
+
+If you want a plugin to act with regard to including and it uses {{{store.forEachTiddler}}}, you need to do this "partial hijacking" of it. This can be done in several ways, but probably the best one is the following:
+
+* for ~SomePlugin using functions {{{func1}}}, {{{func2}}}, ..., {{{funcN}}} and objects with methods {{{obj1.met1}}}, ... {{{objM.metL}}} utilizing {{{store.forEachTiddler}}} form a piece of "hijacking code" that will make them "include-aware" – lines like:{{justDiv{
+{{{
+func1 = config.extensions.SharedTiddlersPlugin.getFunctionUsingForReallyEachTiddler(func1);
+}}}
+}}}For objects, there's an analogue which is used like this:{{justDiv{
+{{{
+config.extensions.SharedTiddlersPlugin.useForReallyEachTiddler(obj1,met1);
+}}}
+}}}
+** current implementation makes "double hijacking" to work as an ordinary one, so even if {{{func1}}} calls {{{func2}}} and both are hijacked, {{{func2}}} will work correctly; but in some such cases it's not necessary to hijack all the functions and methods
+** be careful with functions which modify ~TiddlyWiki store: by hijacking everything you can get external tiddlers saved in the main TW
+* make sure that ~SharedTiddlersPlugin tiddler contains the "Name" slice. In the end of ~SomePlugin add this code (put the "hijacking code" where pointed):{{justDiv{
+{{{
+var isSharedTiddlersPluginEnabled = function() {
+	for(var i = 0; i < installedPlugins.length; i++)
+		if(installedPlugins[i].Name == "SharedTiddlersPlugin" && isPluginEnabled(installedPlugins[i]))
+			return true;
+	return false;
+};
+var makeInclusionAware = function() {
+	var now = false;
+	if(config.extensions.SharedTiddlersPlugin)
+		if(config.extensions.SharedTiddlersPlugin.useForReallyEachTiddler)
+			now = true;
+	if(now) {
+		// "hijacking code" goes here
+	} else
+		setTimeout(makeInclusionAware,100);
+};
+if(isSharedTiddlersPluginEnabled())
+	makeInclusionAware();
+}}}
+}}}
+* restart to apply this "patch"
+
+<html><h2>Examples</h2>
+</html>Previously, other abego plugins were made "include-aware" right in the ~IncludePlugin/~SharedTiddlersPlugin code:
+{{{
+//================================================================================
+// Make IntelliTagger "Include-aware"
+
+var patchIntelliTagger = function() {
+	if (abego.IntelliTagger)
+		useForReallyEachTiddler(abego.IntelliTagger,"assistTagging");
+};
+
+//================================================================================
+// Make ForEachTiddler "Include-aware"
+
+var patchForEachTiddler = function() {
+	if (config.macros.forEachTiddler)
+		// Note: this will not patch the TiddlyWiki passed to findTiddlers but the "global" store
+		// This is by intent
+		useForReallyEachTiddler(config.macros.forEachTiddler,"findTiddlers");
+};
+
+...
+
+invokeLater(patchIntelliTagger,100);
+invokeLater(patchForEachTiddler,100);
+}}}
+This pieces of code are removed from ~SharedTiddlersPlugin; to make ~ForEachTiddler "see" included tiddlers, add the following to the end of the ~ForEachTiddlerPlugin code:
+{{{
+var isSharedTiddlersPluginEnabled = function() {
+	for(var i = 0; i < installedPlugins.length; i++)
+		if(installedPlugins[i].Name == "SharedTiddlersPlugin" && isPluginEnabled(installedPlugins[i]))
+			return true;
+	return false;
+};
+var makeInclusionAware = function() {
+	var now = false;
+	if(config.extensions.SharedTiddlersPlugin)
+		if(config.extensions.SharedTiddlersPlugin.useForReallyEachTiddler)
+			now = true;
+	if(now) {
+		// the place for hijacks
+		config.extensions.SharedTiddlersPlugin.useForReallyEachTiddler(config.macros.forEachTiddler,"findTiddlers");
+	} else
+		setTimeout(makeInclusionAware,100);
+};
+if(isSharedTiddlersPluginEnabled())
+	makeInclusionAware();
+}}}
+Then (after restarting), you can try its work by creating a table of included tiddlers:
+{{{
+<<forEachTiddler
+	where
+		'tiddler.includeURL'
+	write
+		'"|[[" +tiddler.title+"]]|"+tiddler.includeURL+"|\n"'
+	    begin
+		    '"| name | came from |h\n"'
+>>
+}}}
+
+!Versions history and quality issues
+<html><h2>Version history</h2></html>
+* 2.4.0 (10.09.2013)
+** introduced the {{{reloadIncluded}}} macro
+** filters: added {{{external}}}, added {{{node: nodeName}}} syntax support to {{{includedFrom}}}, fixed a bug in {{{includedFrom}}} and {{{internal}}}
+** fixed {{{hijackImageFormatter}}} for cases when the image is not inside a tiddler
+** some code refactoring, including "internal" interfaces
+** some minor quality issues in the conflict notification system are introduced (like doubling messages in rare cases), to be fixed in the next versions
+** {{{wikifyIncluded}}} macro is ''completely removed'' (no notifications are now provided)
+* 2.3.0 (15.06.2013)
+** implemented new modes of import (2, 3)
+** ImportIncluded now supports modes, "node: nodeName" syntax and got several fixes
+** propagation of including is introduced for pretty links and images
+** managing included tiddlers panel got the "import" button (link)
+* 2.2.0 (30.05.2013)
+** implemented the {{{<<describeNode nodeName self>>}}} syntax and ban of including from the node marked self
+** added a panel for managing inluded tiddlers inside their edit mode (now contains a link to the tiddler in its "source" ~TiddlyWiki)
+* 2.1.0 (13.05.2013)
+** introduced the support of {{{[[text|tiddler]]@node}}} links
+** removed functionality from the {{{wikifyIncluded}}} macro (only a notification remains)
+** extended the {{{all}}} filter so that {{{[all[with included]]}}} filter brings all tiddlers accounting included ones
+** fixed 'a.fetchTiddler is not a function' bug which appeared in FF, in TW 2.6.5, when a TW from outside the current folder (../some path) was tried to include (now {{{.getStore}}} method works correctly in such cases as well)
+* 2.0.0 (1.05.2013)
+** introduced ~TwWeb, {{{describeNode}}} macro, added support of node names to the {{{include}}} macro
+** added {{{wikify}}} parameter to the {{{include}}} macro; deprecated {{{wikifyIncluded}}} macro and added a notification that pops when it is used
+** some minor fixes and improvements
+** major documentation update, added simplified "Functionality and examples" section, changed the structure of sections
+* the 2.x.x series are dedicated to content managing and interaction, to ~TwWeb
+* 1.6.1 (8.03.2013)
+** added {{{noRefresh}}} parameter to the {{{include}}} macro
+** added {{{internal}}} filter
+** fixed a bug preventing ImportIncluded engine to work
+** documentation improvements, added description of the {{{window.sharedTiddlersAPI.importAndLog(tiddler,mode)}}} method
+* 1.6.0 (13.02.2013)
+** added evaluation of tiddlers via the {{{include}}} macro with the new {{{eval}}} parameter
+** added filters {{{all}}} and {{{includedFrom}}}; now in TW 2.6.1 or elder STP requires [[UpToDateFiltersPlugin|http://yakovl.bplaced.net/TW/ExtraFilters.html#UpToDateFiltersPlugin]]
+** {{{allTiddlersAreLoaded}}} parameter is no longer added to stores, no need to check it (but old {{{if(allTiddlersAreLoaded)}}} code pieces to get all tiddlers should work)
+** {{{hide}}} parameter of the {{{include}}} macro now can be used without trailing {{{:true}}}
+** some fixes and code improvements, better API documentation
+* 1.5.0 (11.01.2013)
+** solved problems in ~FireFox, now including works in TW 2.6.0
+** added autoimport via the {{{include}}} macro
+** added import modes and setting the {{{store}}} as {{{dirty}}} on import
+** added "protection" from including non-existing tiddlers (caused by the {{{tiddler}}} filter)
+** some fixes, code improvments
+* 1.4.4 (6.12.2012)
+** slices are now "recalced", substituted ~ToolbarCommands is now applied as expected
+** the {{{include}}} macro is now launched only once (per session) with each used exact "wording", so no loop because of refreshing is now possible
+** substituted ~ViewTemplate is now refreshed on including
+** {{{wikifyIncluded}}} now doesn't make infinite loops, control parameters are added
+** making some abego plugins "include-aware" is removed from the code; howTo make any plugin "include-aware" is added to docs
+** some minor fixes/enhancements, documentation improvments, added minified version of the plugin
+* 1.4.3 (21.11.2012)
+** alerting on conflicts controled by {{{chkAlertOnSharedTiddlersConflicts}}} parameter is introduced
+** many improvments of code and update of documentation (including corrections in the "Name conflicts and priorities" section) are done
+* 1.4.2 (wasn't published)
+** introduced the {{{wikifyIncluded}}} macro
+** introduced the "importing" engine (ImportIncluded)
+* 1.4.1 (wasn't published)
+** included ~PageTemplate is now applied
+** the issue with the "orphans" list is fixed, the issue with the "missing" list is partially fixed
+** {{{window.sharedTiddlersAPI.orig_forEachTiddler}}} is removed as the {{{store.forEachTiddler}}} is not actually hijacked
+** documentation is updated
+* 1.4.0 (29.09.2012)
+** removed the {{{abego}}} namespace where possible, added {{{window.sharedTiddlersAPI}}} object and moved all (but some deprecated) API there, reduced the scope of some internal functions
+* 1.3.0 (wasn't published)
+** notifications of conflicts were added
+** theme is refreshed when an inclusion is done so that included style sheets and templates are applied right away
+* 1.2.0 (wasn't published)
+** substitute and substituteShadows possibilities were added
+* 1.1.0 (wasn't published)
+** filtering was added
+* forked from [[IncludePlugin|http://tiddlywiki.abego-software.de/#IncludePlugin]] v1.0.1, by Udo Borkowski
+<html><h2>Current quality issues</h2></html>
+* some tiddlers in the main store, referenced in included tiddlers, appear in the "missing" list
+!%/<<tiddler {{setStylesheet('div[tiddler="SharedTiddlersPluginInfo"] .tabContents { background-color:'+store.getTiddlerText('ColorPalette::Background')+'; }', 'STPInfoCSS');'';}}>>

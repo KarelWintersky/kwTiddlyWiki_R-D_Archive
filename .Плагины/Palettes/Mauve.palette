@@ -1,0 +1,14 @@
+﻿Background: #ffeedd
+Foreground: #000
+PrimaryPale: #ddaa99
+PrimaryLight: #cc9999
+PrimaryMid: #552233
+PrimaryDark: #000
+SecondaryPale: #ffc
+SecondaryLight: #fe8
+SecondaryMid: #cccccc
+SecondaryDark: #552233
+TertiaryPale: #ddaa99
+TertiaryLight: #EEC591
+TertiaryMid: #552233
+TertiaryDark: #8B7355

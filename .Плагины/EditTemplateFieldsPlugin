@@ -1,0 +1,109 @@
+﻿/***
+|''Name''|EditTemplateFieldsPlugin|
+|''Version''|0.4.6|
+|''Status''|beta|
+|''Author''|Jon Robson|
+|''Description''|Provides editing of custom fields|
+|''Requires''||
+|''Source''||
+!Usage
+put {{{<div macro="editFields"></div>}}} into your EditTemplate.
+or {{{<div macro="viewFields"></div>}}} into your ViewTemplate.
+!Todo
+Support newlines in input boxes.
+!Code
+***/
+//{{{
+(function($) {
+var viewFields = config.macros.viewFields = {
+	handler: function(place, macroName, params, wikifier, paramString, tiddler) {
+		var fields = editFields.getFields(tiddler).concat(params);
+		var done = {};
+		for(var i = 0; i < fields.length; i++) {
+			var name = fields[i];
+			var val = tiddler.fields[name];
+			if(!done[name] && val) {
+				done[name] = true;
+				$("<div class='fieldValue' />").text("%0 : %1".format(name, val)).appendTo(place);
+			}
+		}
+	}
+};
+
+var editFields = config.macros.editFields = {
+	fieldType: {
+		images: ["image", "geo.marker"]
+	},
+	handler: function(place, macroName, params, wikifier, paramString, tiddler) {
+		var options = {
+			fields: params
+		};
+		this.createInterface(place, tiddler, options);
+	},
+	getFields: function(tiddler) {
+		var whitelisted = ["changecount"];
+		var fields = [];
+		for(var i in tiddler.fields) {
+			var val = tiddler.fields[i];
+			if(i.indexOf("server.") !== 0 && i.indexOf("_") !== 0 && typeof(val) == "string" && !whitelisted.contains(i) && val) {
+				fields.push(i);
+			}
+		}
+		return fields;
+	},
+	createInterface: function(place, tiddler, options) {
+		var fieldContainer = $("<div class='tiddlerCustomFields' />").appendTo(place);
+		var included = [];
+		if(tiddler) {
+			var fields = editFields.getFields(tiddler);
+			for(var i = 0; i < fields.length; i++) {
+				var name = fields[i];
+				var val = tiddler.fields[name];
+				this.addNewField(fieldContainer, name, val);
+				included.push(name);
+			}
+		}
+		for(var j = 0; j < options.fields.length; j++) {
+			var field = options.fields[j];
+			if(!included.contains(field)) {
+				this.addNewField(fieldContainer, field, "");
+			}
+		}
+		$("<button />").text("add new field").click(function() {
+			editFields.addNewField(fieldContainer, "", "");
+		}).appendTo(place);
+	},
+	addNewField: function(place, name, value) {
+		var container = $("<div />").appendTo(place);
+		if(editFields.fieldType.images.contains(name)) {
+			valueInput = $("<select />");
+			$("<option />").val("").text("").appendTo(valueInput);
+			$.each(store.filterTiddlers("[is[image]]"), function(i, tiddler) {
+				var opt = $("<option />").val(tiddler.title).text(tiddler.title).appendTo(valueInput)[0];
+				if(value === tiddler.title) {
+					$(opt).attr("selected", true);
+				}
+			});
+		} else {
+			type = value.indexOf("\n") > -1 ? "textarea" : "text";
+			var valueInput = type == "text" ? $("<input type='text' />") : $("<textarea />");
+		}
+		valueInput.attr("edit", name).val(value).appendTo(container);
+		$("<button class='delete' />").text("delete").click(function(ev) {
+			var answer = confirm("Are you sure you want to remove this field?");
+			if(answer) {
+				var attr = $(ev.target).attr("field");
+				var p = $(ev.target).parent();
+				$("[edit]", p).val("");
+				$(p).hide();
+			}
+		}).appendTo(container);
+		var nameInput = $("<input class='fieldName' type='text' />").val(name).
+			change(function(ev) {
+				var el = $(ev.target);
+				valueInput.attr("edit", el.val());
+			}).prependTo(container);
+	}
+}
+})(jQuery);
+//}}}

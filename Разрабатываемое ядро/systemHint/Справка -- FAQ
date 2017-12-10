@@ -1,0 +1,63 @@
+﻿+++[Как установить плагин?]>
+Находим нужный нам плагин (например, в сети).
+Создаем тиддл (new tiddler) с соответствующим именем. 
+Вставляем код плагина в записку. 
+Присваиваем теги systemConfig и exludeLists (если хотим скрыть плагин из таймлайна)
+Нажимаем ++'done'++, потом ++Save changes++, обновляем страницу и пользуемся. 
+Смотри также плагин [[saveAndReloadPlugin]]
+===
+----
++++[Создание нового тиддлера на основе шаблона]> 
+If you create tiddlers with the same information over and over (contacts, quotations, recipes, etc), you are probably going to want a template tiddler to save time. Then you are going to want a macro that creates a new tiddler that includes the information from the template. Here's how:
+
+#''Create the template tiddler.'' Put text and tables and formatting exactly the way you want your new tiddlers based on this template to appear.
+#''Create a macro that will open a new tiddler based on your template.''<br>Where I have listed YYYY, insert the words you want to appear in the label for your macro. Where I have listed ZZZZ, insert the exact title of the template tiddler that each new tiddler will be based on. Where I have XXXX insert any tags that you want to be appended to each tiddler that the macro creates.
+/*{{{*/
+<<newTiddler label:"YYYY" tag:"XXXX" text:{{store.getTiddlerText('ZZZZ')}}>>
+/*}}}*/
+
+3. ''Decide where you are going to store your macro.'' You can add it to the SideBarOptions menu under 'new tiddler' and 'new journal.' Or you can add it to a tiddler that you can access from your MainMenu. 
+
+===
+----
++++[Исключающие теги]> 
+* excludeLists - исключает записку из списка тегов по дате (обычно он справа)
+* excludeSearch - исключает из поиска ?
+
+Важно:
+Чтобы исключить определенные теги из доступного списка тегов (EditTemplate), нужно специально настраивать Delicous Tagging Plugin
+===
+----
++++[in work: Create forms with editable fields]> 
+I'm not going to show you how to do this. You will need to download the ~FormTiddlerPlugin and the ~DataTiddlerPlugin from Abego Extensions and consult the documentation for specific instructions. But if you would like to see a form in action, check out my ~NewBookTemplate in ~BibblyWiki, a ~TiddlyWiki I created to manage bibliographies, take book notes and organize personal libraries.
+
+The template is [[here|http://www.giffmex.org/bibblywiki.html#NewBookTemplate]]:
+A tiddler based on the template is [[here|http://www.giffmex.org/bibblywiki.html#%5B%5BWright%2C%20N.T.%2C%20Jesus%20and%20the%20Victory%20of%20God%5D%5D]]. 
+
+I recommend you doubleclick them both to see what they look like in edit mode.
+
+''To create a button'' which creates a new tiddler based on the template, here is the macro syntax:
+
+{{{<<newTiddler label:"XXXX" text:{{"<<formTiddler ZZZZ\>\>"}} tag:"OOOO">>}}}
+
+Replace XXXX with the name for your macro label. (ex: "Add a new book")
+Replace ZZZZ with the name of the template tiddler. (ex: ~NewBookTemplate)
+Replace OOOO with any tag you would like to have appended to every tiddler created by this macro (ex: "booknote")
+
+You can place your new macro in SideBarOptions or in a tiddler accessible from the ~MainMenu.
+
+===
+----
++++[Изображение в заголовке]>
+Открываем [[PageTemplate]] и заменяем {{{<div class='header'...> }}} на следущее:
+
+{{{ <div class='header' style='background: #A9CDEF url(path/image.extension) top left no-repeat'> }}}
+
+{{{ role='banner' }}} я думаю, можно оставить. Таким образом, для данного tw будет следущий вид:
+
+{{{<div class='header' role='banner' style='background: #A9CDEF url(path/image.extension) top left no-repeat'> }}}
+@@Важно:@@
+background: color стоит подбирать в тон картинке. 
+Может быть, можно использовать base64-encoded изображения.
+===
+----

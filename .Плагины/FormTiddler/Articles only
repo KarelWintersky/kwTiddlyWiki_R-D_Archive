@@ -1,0 +1,4 @@
+﻿<<forEachTiddler where 'tiddler.tags.contains("article")' sortBy 'tiddler.data("author")' 
+write 
+'"{{justfine{"+tiddler.data("author")+",  }}} {{justfine{"+tiddler.data("articletitle")+".}}} {{italic{"+tiddler.data("journalinfo")+".}}}  {{justfine{"+tiddler.data("pagenumbers")+".}}} [[here|"+tiddler.title+"]]<br>\n"' 
+>>

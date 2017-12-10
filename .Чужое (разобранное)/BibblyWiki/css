@@ -1,0 +1,29 @@
+﻿/* horizontal main menu */
+/*{{{*/
+
+#displayArea { 
+	margin: 1em 15.5em 0em 1em; 
+} /* use the full horizontal width */
+
+#topMenu { 
+	background: [[ColorPalette::PrimaryMid]]; 
+	color: [[ColorPalette::PrimaryPale]]; 
+	padding: 0.2em 0.2em 0.2em 0.5em;
+}
+
+#topMenu br { 
+	display: none; 
+}
+
+#topMenu .button, #topMenu .tiddlyLink, #topMenu a { 
+	margin-left: 0.25em; 
+	margin-right: 0.25em; 
+	padding-left: 0.5em; 
+	padding-right: 0.5em; 
+	color: [[ColorPalette::PrimaryPale]]; 
+font-size: 1em; 
+}
+
+#topMenu .button:hover, #topMenu .tiddlyLink:hover { 
+	background: [[ColorPalette::PrimaryDark]]; 
+}

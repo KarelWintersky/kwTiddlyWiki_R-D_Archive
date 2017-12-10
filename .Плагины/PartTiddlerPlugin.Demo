@@ -1,0 +1,3 @@
+Description
+With the <part aPartName> ... </part> feature you can structure your tiddler text into separate (named) parts.
+Each part can be referenced as a "normal" tiddler, using the "tiddlerName/partName" syntax (e.g. "About/Features"). E.g. you may create links to the parts (e.g. [[Quotes/BAX95]] or [[Hobbies|AboutMe/Hobbies]]), use it in <<tiddler...>> or <<tabs...>> macros etc.

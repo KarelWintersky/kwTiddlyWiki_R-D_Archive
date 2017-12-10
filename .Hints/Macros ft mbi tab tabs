@@ -1,0 +1,33 @@
+﻿!!!<<gradient horiz #fc3 #fff>>&nbsp;[[tabs]]^^<<tiddler CloseThisOpen with: "Macros Built-in"  '« back'>>|<<toolbar editTiddler>>» ^^>>
+Tabs are a way of displaying tiddlers in tabular form.  Each tab is a separate tiddler; here's how it's done.
+
+Anatomy of a tab: __{{{<<}}}@@color:#00e;tabs@@ @@color:#c06;"cookie"@@ @@color:#080;{{{[[}}}tab name {{{]]}}}@@ @@color:red;"tool tip" @@ @@color:blue; {{{[[}}}tiddler to be displayed{{{]]}}}@@{{{>>}}}__
+
+This is the code for two tabs:
+
+{{{<<tabs txtMyTabs [[tabname ]] "tool tip" [[tiddler to be displayed]] [[Here is another tab ]] "Another Tab" [[hr]] >>
+
+}}}
+
+!!!<<gradient horiz #abf   #fff>>&nbsp;Here are the tabs for the code above>>
+<<tabs txtMyTabs [[tab name ]] "tool tip" [[tiddler to be displayed]][[ Here is another tab ]] "Another Tab" [[hr]] >>
+!!!!<<gradient horiz #fcf  #fff>>&nbsp;@@color:#000;Note about wrapping tabs to viewer width@@>>
+|bgcolor:#fcf;Leave a space after the __tab name__ before the square brackets. e.g {{{[[tabname ]]}}}.  Wrapping requires white space for it to be accomplished properly.  Leaving a white space after the tab name should allow a large number of tabs to wrap properly even as the screen size is adjusted. As a further note keep in mind tab names with spaces may wrap unpredictably.|
+You can force tabs to wrap where you want them by adjusting the titles to have or not have white space; however, it could be unpredictable.
+
+!!!Another way
++++[Create Tabs with a Script]
+
+<<tiddler CreateTabsScript>>
+===
+
+
+!!!!How reference specific tab in a tiddler
+Source: [[How reference specific tab in a tiddler? - TiddlyWiki : Google Groups|http://groups.google.com/group/TiddlyWiki/browse_thread/thread/4f7b952f69b523a2]]
+{{{
+<html><a href='javascript:;' onclick='config.options.tabID="StayViewTabs";story.displayTiddler(story.findContainingTiddler(this),"Styling");story.refreshTiddler("Styling",null,true);'>Styling</a></html>
+}}}
+
+
+!!!<<gradient horiz #abf  #fff>>&nbsp;End of tabs>>
+

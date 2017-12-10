@@ -1,0 +1,216 @@
+﻿/***
+|''Name:''|DiceRollerMacro |
+|''Version:''|<<getversion roll>> |
+|''Date:''|<<getversiondate roll "DD MMM YYYY">> |
+|''Source:''|http://www.legolas.org/gmwiki/dev/gmwikidev.html#DiceRollerMacro |
+|''Author:''|[[DevonJones]] |
+|''Type:''|Macro |
+|''License:''|BSD |
+|''Requires:''|TiddlyWiki 1.2.32 or higher (tested only on 1.2.36, but should work on 1.2.32), TiddlyLib|
+!Description
+Allows the inline rolling of dice.
+
+!Syntax
+* {{{<<roll [Dice Expression] [Name]>>}}}
+* Dice Expression can be in 3 forms:
+** Die form: {{{<<roll 1d20>>}}} where the die can get fairly complicated 1d6, 3d4, 1d5+1d4-6, (1d6)d6+5, 3dF (Fudge dice), (1d6)dF all work
+** {{{<<roll +5>>}}} where the + or - is added to 1d20.  Used for the D20 system
+** {{{<<roll DC20>>}}} where DC# is considered to be a Roll to target on 1d20.  Returns how much it was made or missed by (-5 means it was missed by 5, +3 means it succeeded by 3)
+* Name is what is printed in the tiddler in place of the macro.  Defaults to the Dice Expression.
+
+!Sample Output
+''Example:''
+{{{<<roll 1d20>>}}}
+<<roll 1d20>>
+
+{{{<<roll 1dF >>}}}
+<<roll 1dF >>
+
+{{{<<roll (1d6)dF >>}}}
+<<roll (1d6)dF >>
+
+!Known issues
+
+!Notes
+
+!Revision history
+v0.9.0 October 19th 2005 - initial release
+v0.9.1 October 20th 2005 - changed name to DiceRollerMacro to better reflect purpose.
+v0.9.2 October 25th 2005 - Added Fudge dice.
+
+!Code
+***/
+//{{{
+
+version.extensions.roll = { major: 0, minor: 9, revision: 2, date: new Date(2005, 09, 20) };
+
+config.macros.roll = {};
+
+config.macros.roll.onClick = function(e) {
+	if (!e) {
+		var e = window.event;
+	}
+	var button = this;
+	var title = button.title;
+	exp = title.substr(6);
+	result = rollExpression(exp);
+	
+	var rollbox = button.parentNode.lastChild;
+	rollbox.style.display = "inherit";
+	rollbox.innerHTML = "<B>" + result + "</B>";
+	e.returnValue = false;
+}
+
+config.macros.roll.handler = function(place, macroName, params) {
+	// param 0: text button
+	// param 1: tiddler name to display
+	// param 2: initial display by default
+	var dicestring = params[0];
+	var title = params[1];
+	var titleExists = params[1] != null;
+	if(!titleExists) {
+		title = dicestring;
+	}
+	
+	var element = createTiddlyElement(place, "span", null, null, title);
+	var btn = createLocalTiddlyButton(element, "*", "Roll: " + dicestring, this.onClick);
+	var rollbox = createTiddlyElement(element, "span", null, "rollresult", null);
+	rollbox.style.display = "none";
+	rollbox.onclick = hideElementEvent;
+	var parentTiddler = getParentTiddler(place);
+	parentTiddler.ondblclick = onDblClickTiddlerOverride;
+}
+
+function rollExpression(exp) {
+	testRe = /^[\+-]/;
+	testRe2 = /^DC/;
+	total = 0;
+	if(testRe.test(exp)) {
+		total = rollCheckExpression(exp)
+	}
+	else if(testRe2.test(exp)) {
+		total = rollDcExpression(exp)
+	}
+	else {
+		total = rollDiceExpression(exp)
+	}
+	return total;
+}
+
+function rollDiceExpression(exp) {
+	testRe = /\(.*\)/;
+	testRe2 = /^\d+$/;
+	testRe3 = /^\d*[dD][\dfF]+$/;
+	testRe4 = /^\d*[dD][\dfF]+[\+-].*/;
+	total = 0;
+	if (testRe.test(exp)) {
+		execRe = /\((.*)\)/;
+		var ret = execRe.exec(exp);
+		center = rollDiceExpression(ret[1]);
+		replaceRe = /(\(.*\))/;
+		total = rollDiceExpression(exp.replace(replaceRe, center));
+	}
+	else if (testRe2.test(exp)) {
+		total = parseInt(exp);
+	}
+	else if (testRe3.test(exp)) {
+		execRe = /(\d*)[dD]([\dfF]+)/;
+		var ret = execRe.exec(exp);
+		num = ret[1];
+		die = ret[2];
+
+		if(num == "") {
+			num = 1;
+		}
+		if(die == "f" || die == "F") {
+			total = rollDiceFudge(parseInt(num));
+		}
+		else {
+			total = rollDice(parseInt(num), parseInt(die));
+		}
+	}
+	else if (testRe4.test(exp)) {
+		execRe = /(\d*)[dD]([\dfF]+)([\+-])(.*)/;
+		var ret = execRe.exec(exp);
+		num = ret[1];
+		die = ret[2];
+		sign = ret[3];
+		subexp = ret[4];
+
+		if(num == "") {
+			num = 1;
+		}
+		if(die == "f" || die == "F") {
+			dieRoll = rollDiceFudge(parseInt(num));
+		}
+		else {
+			dieRoll = rollDice(parseInt(num), parseInt(die));
+		}
+		dieRoll2 = rollDiceExpression(subexp);
+		if (sign == "-") {
+			total = dieRoll - dieRoll2;
+		}
+		else if (sign == "+") {
+			total = dieRoll + dieRoll2;
+		}
+	}
+	return total;
+}
+
+function rollDcExpression(exp) {
+	return rollDcExpression(exp, 0);
+}
+
+function rollDcExpression(exp, plus) {
+	total = 0;
+	if(!plus) {
+		plus = 0;
+	}
+	testRe = /[Dd][Cc]\d+$/;
+	if(testRe.test(exp)) {
+		execRe = /[Dd][Cc](\d+)$/;
+		var ret = execRe.exec(exp);
+		dc = parseInt(ret[1]);
+		roll = rollDice(1,20);
+		total = roll + plus - dc;
+	}
+	return total;
+}
+
+function rollCheckExpression(exp) {
+	testRe = /^[\+-]\d+$/;
+	if(testRe.test(exp)) {
+		execRe = /^([\+-])(\d+)$/;
+		var ret = execRe.exec(exp);
+		sign = ret[1];
+		num = parseInt(ret[2]);
+		roll = rollDice(1,20);
+		if (sign == "-") {
+			total = roll - num;
+		}
+		else if (sign == "+") {
+			total = roll + num;
+		}
+	}
+	return total;
+}
+
+function rollDice(number, size) {
+	total = 0;
+	for(i = 0; i < number; i++) {
+		roll = Math.floor((size) * Math.random()) + 1;
+		total += roll;
+	}
+	return total;
+}
+
+function rollDiceFudge(number) {
+	total = 0;
+	for(i = 0; i < number; i++) {
+		roll = Math.floor((3) * Math.random()) - 1;
+		total += roll;
+	}
+	return total;
+}
+
+//}}}

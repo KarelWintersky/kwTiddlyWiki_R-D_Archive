@@ -1,0 +1,6 @@
+config.shadowTiddlers.StyleSheetTableOfContents = "/*{{{*/\n"
+	+ ".ToC {\n\tfloat: left; /* auto-width */\n\tmargin: 0 2em 2em 0;\n\tborder: 1px solid #aaa;\n\tpadding: 5px;\n\tbackground-color: #eee;\n}\n\n"
+	+ ".ToC ol {\n\tmargin: 0 1em;\n}\n\n"
+	+ "h1 {\n\tclear: left;\n}\n"
+	+ "/*}}}*/";
+store.addNotification("StyleSheetTableOfContents", refreshStyles);

@@ -1,0 +1,10 @@
+MarkupPreHead:
+
+Note: This tiddler is inserted at the top of the <head> section of the TiddlyWiki HTML file
+
+<!--{{{-->
+<link rel='alternate' type='application/rss+xml' title='RSS' href='index.xml' />
+<!--}}}-->
+
+
+<style type="text/css">#contentWrapper {display:none;}</style><div id="SplashScreen" style="border: 3px solid #ccc; display: block; text-align: center; width: 320px; margin: 100px auto; padding: 50px; color:#000; font-size: 28px; font-family:Tahoma; background-color:#eee;"><b>My TiddlyWiki</b> is loading<blink> ...</blink><br><br><span style="font-size: 14px; color:red;">Requires Javascript.</span></div>

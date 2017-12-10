@@ -1,0 +1,21 @@
+﻿!!Rollon Macro
+Usage {{{<<rollon tablename|table:string|dice_expression [times|times:number or dice_expression] [dice:dice_expresssion] [separator:sep_string] [resultName:string] [force:number]>>}}}
+!!!Parameters
+Parameters may be surrounded by quotes if they are to contain spaces, e.g. table:"My Table"  Any parameter except table may be passed "prompt" in order to cause the macro to prompt you for that value when it's run.
+*table - the name of the table to roll on, or a dice expression like 3d6+1.  Required
+*times - the number of times to roll, or a dice expression.  Defaults to 1.  Prompt will prompt for a number or dice expression when you click
+*dice - dice to use when rolling.  If not provided, rollon will roll a die precisely as large as the list or, for definition lists, as large as the highest number in the final entry in the list
+*separator - character to use to separate multiple results if times > 1.  Use {{{<br>}}} for line breaks
+*resultName - name of the tiddler to place the result in.  Otherwise will default to the name of the tiddler the macro is in, with " Result (n)" appended, where n is 1 higher than the highest like-named tiddler
+*force - force the number rolled to be a particular number.  Primarily used for debugging
+!!!Tables
+Tables are any Tiddler that contains:
+* an unordered list (introduced with {{{*}}})
+* an ordered list (introduced with {{{#}}})
+* a definition list (introduced with {{{;}}} on the term line and {{{:}}} on the definition line.  Be careful that you alternate definitions and terms... you can tell if it's right by whether the terms are bold and the definitions below and indented)
+* a sequence of lines beginning with numbers (and optionally having a {{{.}}} after the number)
+
+If the Tiddler has any prefatory material prior to the start of the first list in the Tiddler, that text is copied into the result.
+If the Tiddler has any postscript material after the end of the last list in the Tiddler, that text is ignored.  This is useful for notes and annotations.
+
+Lists don't actually have to be contiguous.  That is, since rollon is using a textual search, it will consider two lists in the same Tiddler as being the same as one.  That's probably a bug, but doesn't seem worth eliminating.  I wouldn't advise counting on that behavior to continue in future versions of Rollon Plugin.

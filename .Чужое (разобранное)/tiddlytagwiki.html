@@ -1,0 +1,3040 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<!--
+TiddlyWiki 1.2.6 by Jeremy Ruston, (jeremy [at] osmosoft [dot] com)
+Incorporating improvements by Isao Sonobe, http://www-gauge.scphys.kyoto-u.ac.jp/~sonobe/OgreKit/OgreKitWiki.html
+GTDTiddlyWiki modification by Nathan Bowers, (wiki [at] snapgrid [dot] com)
+
+Copyright (c) Osmosoft Limited, 14 April 2005
+
+All rights reserved.
+
+Redistribution and use in source and binary forms, with or without modification,
+are permitted provided that the following conditions are met:
+
+Redistributions of source code must retain the above copyright notice, this
+list of conditions and the following disclaimer.
+
+Redistributions in binary form must reproduce the above copyright notice, this
+list of conditions and the following disclaimer in the documentation and/or other
+materials provided with the distribution.
+
+Neither the name of the Osmosoft Limited nor the names of its contributors may be
+used to endorse or promote products derived from this software without specific
+prior written permission.
+
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY
+EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT
+SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
+INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED
+TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR
+BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
+ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH
+DAMAGE.
+-->
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html;charset=utf-8">
+<meta name="description" content="A Getting Things Done adaptation of TiddlyWiki.">
+<meta name="keywords" content="Getting Things Done Wiki, GTDTiddlyWiki, GTD TiddlyWiki, GTD Wiki, Personal productivity wiki">
+<title>GTD TiddlyWiki</title>
+<script>
+
+// ---------------------------------------------------------------------------------
+// Main
+// ---------------------------------------------------------------------------------
+
+// Default options
+var options = {};
+options.chkRegExp = false;
+options.chkCaseSens = false;
+options.chkAnimate = true;
+options.txtUserName = "YourName";
+
+// JML edit 23/05/2005
+options.txtDefaultTiddlers = "";
+options.chkSinglePage = false;
+
+// Starting up
+function main()
+{
+    loadOptionsCookie();
+    setupOptionsPanel();
+    setupRegexp();
+    hideMessage();
+    refreshAll();
+	
+	// JML edit 23/05/2005
+    var start = options.txtDefaultTiddlers;
+    if (start.length < 1)
+	    start = getTiddlerText("DefaultTiddlers");
+    if(window.location.hash)
+        displayTiddlers(null,convertUTF8ToUnicode(decodeURI(window.location.hash.substr(1))),1,null,null);
+    else if(start)
+        displayTiddlers(null,start,1,null,null);
+}
+
+// JML edit 23/05/2005
+function saveLayout() {
+	var tiddlerContainer = document.getElementById("tiddlerDisplay");
+	var visibleTiddlers = tiddlerContainer.childNodes;
+	var defaultTiddlerSpec = "";
+	for (i=0;i<visibleTiddlers.length;i++) {
+		defaultTiddlerSpec += ' [['+ visibleTiddlers[i].id.substring(7) +']] ';
+	}
+	options.txtDefaultTiddlers = defaultTiddlerSpec;
+	saveOptionCookie('txtDefaultTiddlers');
+}
+
+
+// ---------------------------------------------------------------------------------
+// Regular expression stuff
+// ---------------------------------------------------------------------------------
+
+var upperLetter = "[A-ZÀ-ß]";
+var lowerLetter = "[a-zà-ÿ_0-9\\-]";
+var anyLetter = "[A-Za-zÀ-ßà-ÿ_0-9\\-]";
+var anyDigit = "[0-9]";
+var anyNumberChar = "[0-9\\.E]";
+var wikiNamePattern = "(?:" + upperLetter + "+" + lowerLetter + "+" + upperLetter + anyLetter + "*)|(?:" + upperLetter + "{2,}" + lowerLetter + "+)";
+var urlPattern = "(?:http|https|mailto|ftp):[^\\s\"']*";
+var explicitLinkPattern = "\\[\\[([^\\[\\]\\|]+)\\|([^\\[\\]\\|]+)\\]\\]";
+var bracketNamePattern = "\\[\\[([^\\]]+)\\]\\]";
+
+var wikiNamePatterns;
+var wikiNameRegExp;
+var structurePatterns;
+var stylePatterns;
+var tableRegExp;
+var tableRowColRegExp;
+var invalidPreWikiNamePattern;
+
+function setupRegexp()
+{
+    // Table rows pattern
+    var rowPattern = "^\\|([^\\n]*\\|)([fhc]?)$";
+    tableRegExp = new RegExp(rowPattern,"mg");
+    // Table columns pattern
+    var elementPattern = "(?:(?:BGCOLOR|bgcolor)\\(([^\\)]+)\\):)?([^\\|]*)\\|";
+    tableRowColRegExp = new RegExp(elementPattern,"g");
+    // Link patterns
+    wikiNamePatterns = "(" + wikiNamePattern +
+        ")|(" + urlPattern +
+        ")|(?:" + explicitLinkPattern +
+        ")|(?:" + bracketNamePattern +
+        ")";
+    wikiNameRegExp = new RegExp(wikiNamePatterns,"mg");
+    invalidPreWikiNamePattern = anyLetter;
+    // Structural patterns
+    var breakPattern = "\\n";
+    var horizontalRulePattern = "^----$\\n?";
+    var headerPattern = "^!{1,5}";
+    var bulletListItemPattern = "^\\*+";
+    var numberedListItemPattern = "^#+";
+    var tablePattern = "(?:^\\|[^\\n]*$\\n?)+";
+    var blockquotePattern = "(?:^>[^\\n]*$\\n?)+";
+    var blockquotePattern2 = "^<<<\\n((?:^[^\\n]*\\n)+)(^<<<$\\n?)";
+    var imagePattern = "\\[[Ii][Mm][Gg]\\[(?:([^\\|]+)\\|)?([^\\[\\]\\|]+)\\]\\]";
+    structurePatterns = "(" + breakPattern +
+        ")|(" + horizontalRulePattern +
+        ")|(" + headerPattern +
+        ")|(" + bulletListItemPattern +
+        ")|(" + numberedListItemPattern +
+        ")|(" + tablePattern +
+        ")|(" + blockquotePattern +
+        ")|(?:" + blockquotePattern2 +
+        ")|(?:" + imagePattern +
+        ")";
+    // Style patterns
+    var boldPattern = "''([^']+)''";
+    var strikePattern = "==([^=]+)==";
+    var underlinePattern = "__([^_]+)__";
+    var italicPattern = "//([^/]+)//";
+    var supPattern = "\\^\\^([^\\^]+)\\^\\^";
+    var subPattern = "~~([^~]+)~~";
+    var colorPattern = "@@(?:color\\(([^\\)]+)\\):|bgcolor\\(([^\\)]+)\\):){0,2}([^@]+)@@";
+    stylePatterns = "(?:" + boldPattern +
+        ")|(?:" + strikePattern +
+        ")|(?:" + underlinePattern +
+        ")|(?:" + italicPattern +
+        ")|(?:" + supPattern +
+        ")|(?:" + subPattern +
+        ")|(?:" + colorPattern +
+        ")";
+}
+
+// Create child text nodes and link elements to represent a wiki-fied version of some text
+function wikify(text,parent,highlightText,highlightCaseSensitive)
+{
+    // Prepare the regexp for the highlighted selection
+    if(highlightText == "")
+        highlightText = null;
+    var highlightRegExp,highlightMatch;
+    if(highlightText)
+        {
+        highlightRegExp = new RegExp(highlightText,highlightCaseSensitive ? "mg" : "img");
+        highlightMatch = highlightRegExp.exec(text);
+        }
+    wikifyStructures(parent,text,text,0,text.length,highlightRegExp,highlightMatch);
+}
+
+
+function wikifyStructures(parent,text,targetText,startPos,endPos,highlightRegExp,highlightMatch)
+{
+    var body = parent;
+    var structureRegExp = new RegExp(structurePatterns,"mg");
+    var theList = new Array();  // theList[0]: don't use
+    var isInListMode = false;
+    var isInHeaderMode = false;
+    var isNewline = false;
+    // The start of the fragment of the text being considered
+    var nextPos = 0;
+    // Loop through the bits of the body text
+    do {
+        // Get the next formatting match
+        var formatMatch = structureRegExp.exec(targetText);
+        var matchPos = formatMatch ? formatMatch.index : targetText.length;
+        // Subwikify the plain text before the match
+        if(nextPos < matchPos)
+            {
+            isNewline = false;
+            highlightMatch = wikifyStyles(body,text,targetText.substring(nextPos,matchPos),startPos+nextPos,startPos+matchPos,highlightRegExp,highlightMatch);
+            }
+        // Dump out the formatted match
+        var level;
+        var theBlockquote;
+        if(formatMatch)
+            {
+            // Dump out the link itself in the appropriate format
+            if(formatMatch[1])
+                {
+                if(isNewline && isInListMode)
+                    {
+                    theList = new Array();
+                    body = parent;
+                    isInListMode = false;
+                    }
+                else if(isInHeaderMode)
+                    {
+                    body = parent;
+                    isInHeaderMode = false;
+                    }
+                else
+                    {
+                    isNewline = true;
+                    body.appendChild(document.createElement("br"));
+                    }
+                }
+            else if(formatMatch[2])
+                {
+                isNewline = false;
+                body.appendChild(document.createElement("hr"));
+                }
+            else if(formatMatch[3])
+                {
+                level = formatMatch[3].length + 1;
+                isNewline = false;
+                isInHeaderMode = true;
+                var theHeader = document.createElement("h" + level);
+                parent.appendChild(theHeader);
+                body = theHeader;
+                }
+            else if(formatMatch[4])
+                {
+                level = formatMatch[4].length;
+                isNewline = false;
+                isInListMode = true;
+                if (theList[level] == null)
+                    {
+                    theList[level] = document.createElement("ul");
+                    body.appendChild(theList[level]);
+                    }
+                theList = theList.slice(0,level + 1);
+                body = document.createElement("li");
+                theList[level].appendChild(body);
+                }
+            else if(formatMatch[5])
+                {
+                level = formatMatch[5].length;
+                isNewline = false;
+                isInListMode = true;
+                if (theList[level] == null)
+                    {
+                    theList[level] = document.createElement("ol");
+                    body.appendChild(theList[level]);
+                    }
+                theList = theList.slice(0,level + 1);
+                body = document.createElement("li");
+                theList[level].appendChild(body);
+                }
+            else if(formatMatch[6])
+                {
+                isNewline = false;
+                highlightMatch = wikifyTable(body,text,formatMatch[6],startPos+matchPos,startPos+structureRegExp.lastIndex,highlightRegExp,highlightMatch);
+                }
+            else if(formatMatch[7])
+                {
+                isNewline = false;
+                var quotedText = formatMatch[7].replace(new RegExp("^>(>*)","mg"),"$1");
+                theBlockquote = document.createElement("blockquote");
+                var newHighlightRegExp,newHighlightMatch;
+                if (highlightRegExp) {
+                    newHighlightRegExp = new RegExp(highlightRegExp.toString(), "img");
+                    newHighlightMatch = newHighlightRegExp.exec(quotedText);
+                }
+                wikifyStructures(theBlockquote,quotedText,quotedText,0,quotedText.length,newHighlightRegExp,newHighlightMatch);
+                body.appendChild(theBlockquote);
+                }
+            else if(formatMatch[8])
+                {
+                isNewline = false;
+                theBlockquote = document.createElement("blockquote");
+                highlightMatch = wikifyStructures(theBlockquote,text,formatMatch[8],startPos+matchPos+4,startPos+structureRegExp.lastIndex-formatMatch[9].length,highlightRegExp,highlightMatch);
+                body.appendChild(theBlockquote);
+                }
+            else if(formatMatch[11])
+                {
+                isNewline = false;
+                var theImage = document.createElement("img");
+                theImage.alt = formatMatch[10];
+                theImage.src = formatMatch[11];
+                body.appendChild(theImage);
+                }
+            }
+        // Move the next position past the formatting match
+        nextPos = structureRegExp.lastIndex;
+    } while(formatMatch);
+    return highlightMatch;
+}
+
+function wikifyLinks(parent,text,targetText,startPos,endPos,highlightRegExp,highlightMatch)
+{
+    // The start of the fragment of the text being considered
+    var nextPos = 0;
+    // Loop through the bits of the body text
+    var theLink;
+    do {
+        // Get the next formatting match
+        var formatMatch = wikiNameRegExp.exec(targetText);
+        var matchPos = formatMatch ? formatMatch.index : targetText.length;
+        // Subwikify the plain text before the match
+        if(nextPos < matchPos)
+            highlightMatch = subWikify(parent,text,startPos+nextPos,startPos+matchPos,highlightRegExp,highlightMatch);
+        // Dump out the formatted match
+        if(formatMatch)
+            {
+            // Dump out the link itself in the appropriate format
+            if(formatMatch[1])
+                {
+                if(matchPos > 0 && new RegExp(invalidPreWikiNamePattern,"").exec(targetText.charAt(matchPos - 1)))
+                    {
+                    theLink = parent;
+                    }
+                else
+                    {
+                     theLink = createTiddlyLink(parent,formatMatch[0],false);
+                     }
+                 highlightMatch = subWikify(theLink,text,startPos+matchPos,startPos+wikiNameRegExp.lastIndex,highlightRegExp,highlightMatch);
+                }
+            else if(formatMatch[2])
+                {
+                theLink = createExternalLink(parent,formatMatch[0]);
+                highlightMatch = subWikify(theLink,text,startPos+matchPos,startPos+wikiNameRegExp.lastIndex,highlightRegExp,highlightMatch);
+                }
+            else if(formatMatch[3])
+                {
+                theLink = createExternalLink(parent,formatMatch[4]);
+                highlightMatch = subWikify(theLink,text,startPos+matchPos+2,startPos+matchPos+2+formatMatch[3].length,highlightRegExp,highlightMatch);
+                }
+            else if(formatMatch[5])
+                {
+                theLink = createTiddlyLink(parent,formatMatch[5],false);
+                highlightMatch = subWikify(theLink,text,startPos+matchPos+2,startPos+wikiNameRegExp.lastIndex-2,highlightRegExp,highlightMatch);
+                }
+            }
+        // Move the next position past the formatting match
+        nextPos = wikiNameRegExp.lastIndex;
+    } while(formatMatch);
+    return highlightMatch;
+}
+
+function wikifyStyles(parent,text,targetText,startPos,endPos,highlightRegExp,highlightMatch)
+{
+    var formatRegExp = new RegExp(stylePatterns,"mg");
+    // The start of the fragment of the text being considered
+    var nextPos = 0;
+    // Loop through the bits of the body text
+    do {
+        // Get the next formatting match
+        var formatMatch = formatRegExp.exec(targetText);
+        var matchPos = formatMatch ? formatMatch.index : targetText.length;
+        // Subwikify the plain text before the match
+        if(nextPos < matchPos)
+            highlightMatch = wikifyLinks(parent,text,targetText.substring(nextPos,matchPos),startPos+nextPos,startPos+matchPos,highlightRegExp,highlightMatch);
+        // Dump out the formatted match
+        if(formatMatch)
+            {
+            // Dump out the link itself in the appropriate format
+            if(formatMatch[1])
+                {
+                var theBold = createTiddlyElement(parent,"b",null,null,null);
+                highlightMatch = wikifyStyles(theBold,text,formatMatch[1],startPos+matchPos+2,startPos+formatRegExp.lastIndex-2,highlightRegExp,highlightMatch);
+                }
+            else if(formatMatch[2])
+                {
+                var theStrike = createTiddlyElement(parent,"strike",null,null,null);
+                highlightMatch = wikifyStyles(theStrike,text,formatMatch[2],startPos+matchPos+2,startPos+formatRegExp.lastIndex-2,highlightRegExp,highlightMatch);
+                }
+            else if(formatMatch[3])
+                {
+                var theUnderline = createTiddlyElement(parent,"u",null,null,null);
+                highlightMatch = wikifyStyles(theUnderline,text,formatMatch[3],startPos+matchPos+2,startPos+formatRegExp.lastIndex-2,highlightRegExp,highlightMatch);
+                }
+            else if(formatMatch[4])
+                {
+                var theItalic = createTiddlyElement(parent,"i",null,null,null);
+                highlightMatch = wikifyStyles(theItalic,text,formatMatch[4],startPos+matchPos+2,startPos+formatRegExp.lastIndex-2,highlightRegExp,highlightMatch);
+                }
+            else if(formatMatch[5])
+                {
+                var theSup = createTiddlyElement(parent,"sup",null,null,null);
+                highlightMatch = wikifyStyles(theSup,text,formatMatch[5],startPos+matchPos+2,startPos+formatRegExp.lastIndex-2,highlightRegExp,highlightMatch);
+                }
+            else if(formatMatch[6])
+                {
+                var theSub = createTiddlyElement(parent,"sub",null,null,null);
+                highlightMatch = wikifyStyles(theSub,text,formatMatch[6],startPos+matchPos+2,startPos+formatRegExp.lastIndex-2,highlightRegExp,highlightMatch);
+                }
+            else if(formatMatch[9])
+                {
+                var theSpan;
+                if (formatMatch[7] == "" && formatMatch[8] == "" )
+                    {
+                    theSpan = createTiddlyElement(parent,"span",null,"marked",null);
+                    }
+                    else
+                    {
+                    theSpan = createTiddlyElement(parent,"span",null,null,null);
+                    if (formatMatch[7] != "") theSpan.style.color = formatMatch[7];
+                    if (formatMatch[8] != "") theSpan.style.background = formatMatch[8];
+                    }
+                highlightMatch = wikifyStyles(theSpan,text,formatMatch[9],startPos+formatRegExp.lastIndex-2-formatMatch[9].length,startPos+formatRegExp.lastIndex-2,highlightRegExp,highlightMatch);
+                }
+            }
+        // Move the next position past the formatting match
+        nextPos = formatRegExp.lastIndex;
+    } while(formatMatch);
+    return highlightMatch;
+}
+
+// Create a table
+function wikifyTable(parent,text,targetText,startPos,endPos,highlightRegExp,highlightMatch)
+{
+    // The start of the fragment of the text being considered
+    var nextPos = 0;
+    var theTable = document.createElement("table");
+    var bodyRowLen = 0;
+    var headRowLen = 0;
+    var footRowLen = 0;
+    var bodyRows = new Array();
+    var headRows = new Array();
+    var footRows = new Array();
+    var theCaption = null;
+    // Loop through the bits of the body text
+    do {
+        // Get the next formatting match
+        var formatMatch = tableRegExp.exec(targetText);
+        var matchPos = formatMatch ? formatMatch.index : targetText.length;
+        // Dump out the formatted match
+        if(formatMatch) {
+            if (formatMatch[2] == "c") {
+                var cap = formatMatch[1].substring(0,formatMatch[1].length-1);
+                theCaption = document.createElement("caption");
+                highlightMatch = wikifyStyles(theCaption,text,cap,startPos+matchPos+1,startPos+cap.length,highlightRegExp,highlightMatch);
+                if (bodyRowLen == 0 && headRowLen == 0 && footRowLen == 0) {
+                    theCaption.setAttribute("align", "top");
+                } else {
+                    theCaption.setAttribute("align", "bottom");
+                }
+            } else if (formatMatch[2] == "h") {
+                highlightMatch = wikifyTableRow(headRows,headRowLen,text,formatMatch[1],startPos+matchPos,startPos+matchPos+formatMatch[1].length,highlightRegExp,highlightMatch);
+                headRowLen++;
+            } else if (formatMatch[2] == "f") {
+                highlightMatch = wikifyTableRow(footRows,footRowLen,text,formatMatch[1],startPos+matchPos,startPos+matchPos+formatMatch[1].length,highlightRegExp,highlightMatch);
+                footRowLen++;
+            } else {
+                highlightMatch = wikifyTableRow(bodyRows,bodyRowLen,text,formatMatch[1],startPos+matchPos,startPos+matchPos+formatMatch[1].length,highlightRegExp,highlightMatch);
+                bodyRowLen++;
+            }
+        }
+        nextPos = tableRegExp.lastIndex;
+    } while(formatMatch);
+
+    if (theCaption != null) {
+        theTable.appendChild(theCaption);
+    }
+
+    if (headRowLen > 0) {
+        var theTableHead = document.createElement("thead");
+        createTableRows(headRows,theTableHead);
+        theTable.appendChild(theTableHead);
+    }
+
+    if (bodyRowLen > 0) {
+        var theTableBody = document.createElement("tbody");
+        createTableRows(bodyRows,theTableBody);
+        theTable.appendChild(theTableBody);
+    }
+
+    if (footRowLen > 0) {
+        var theTableFoot = document.createElement("tfoot");
+        createTableRows(footRows,theTableFoot);
+        theTable.appendChild(theTableFoot);
+    }
+
+    parent.appendChild(theTable);
+    return highlightMatch;
+}
+
+function wikifyTableRow(rows,rowIndex,text,targetText,startPos,endPos,highlightRegExp,highlightMatch)
+{
+    // The start of the fragment of the text being considered
+    var eIndex = 0;
+    var elements = new Array();
+    // Loop through the bits of the body text
+    do {
+        // Get the next formatting match
+        var formatMatch = tableRowColRegExp.exec(targetText);
+        var matchPos = formatMatch ? formatMatch.index : targetText.length;
+        if(formatMatch) {
+            var eText = formatMatch[2];
+            if (eText == "~" || eText == ">") {
+                elements[eIndex] = eText;
+            } else {
+                var eTextLen = eText.length;
+                var align = "";
+                if (eTextLen >= 1 && eText.charAt(0) == " ") {
+                    if (eTextLen >= 3 && eText.charAt(eTextLen - 1) == " ") {
+                        align = "center";
+                        eText = eText.substring(1,eTextLen - 1);
+                        //eTextLen -= 2;
+                        eTextLen--;
+                    } else {
+                        align = "right";
+                        eText = eText.substring(1);
+                        eTextLen--;
+                    }
+                } else if (eTextLen >= 2 && eText.charAt(eTextLen - 1) == " ") {
+                    align = "left";
+                    eText = eText.substring(0,eTextLen - 1);
+                    //eTextLen--;
+                }
+
+                var theElement;
+                if (eTextLen >= 1 && eText.charAt(0) == "!") {
+                    theElement = document.createElement("th");
+                    eText = eText.substring(1);
+                    eTextLen--;
+                } else {
+                    theElement = document.createElement("td");
+                }
+
+                if (align != "") {
+                    theElement.align = align;
+                }
+
+                if (formatMatch[1]) {
+                    theElement.style.background = formatMatch[1];
+                }
+
+                highlightMatch = wikifyStyles(theElement,text,eText,startPos+tableRowColRegExp.lastIndex-eTextLen,startPos+tableRowColRegExp.lastIndex-1,highlightRegExp,highlightMatch);
+                elements[eIndex] = theElement;
+            }
+            eIndex++;
+        }
+    } while(formatMatch);
+    rows[rowIndex] = elements;
+    return highlightMatch;
+}
+
+function createTableRows(rows,parent)
+{
+    var i, j, k, cols;
+    for (i = 0; i < rows.length; i++) {
+        cols = rows[i];
+        var theRow = document.createElement("tr");
+        for (j = 0; j < cols.length; j++) {
+            if (cols[j] == "~") continue;
+
+            var rowspan = 1;
+            for (k = i+1; k < rows.length; k++) {
+                if (rows[k][j] != "~") break;
+                rowspan++;
+            }
+
+            var colspan = 1;
+            for (; j < cols.length - 1; j++) {
+                if (cols[j] != ">") break;
+                colspan++;
+            }
+
+            var theElement = cols[j];
+            if (rowspan > 1) {
+                theElement.setAttribute("rowspan",rowspan);
+                theElement.valign = "center";
+            }
+            if (colspan > 1) theElement.setAttribute("colspan",colspan);
+            theRow.appendChild(theElement);
+        }
+        parent.appendChild(theRow);
+    }
+}
+
+// Helper for wikify that handles highlights within runs of text
+function subWikify(parent,text,startPos,endPos,highlightRegExp,highlightMatch)
+{
+    // Check for highlights
+    while(highlightMatch && (highlightRegExp.lastIndex > startPos) && (highlightMatch.index < endPos) && (startPos < endPos))
+        {
+        // Deal with the plain text before the highlight
+        if(highlightMatch.index > startPos)
+            {
+            parent.appendChild(document.createTextNode(text.substring(startPos,highlightMatch.index)));
+            startPos = highlightMatch.index;
+            }
+        // Deal with the highlight
+        var highlightEnd = Math.min(highlightRegExp.lastIndex,endPos);
+        var theHighlight = createTiddlyElement(parent,"span",null,"highlight",text.substring(startPos,highlightEnd));
+        startPos = highlightEnd;
+        // Nudge along to the next highlight if we're done with this one
+        if(startPos >= highlightRegExp.lastIndex)
+            highlightMatch = highlightRegExp.exec(text);
+        }
+    // Do the unhighlighted text left over
+    if(startPos < endPos)
+        {
+        parent.appendChild(document.createTextNode(text.substring(startPos,endPos)));
+        //startPos = endPos;
+        }
+    return(highlightMatch);
+}
+
+
+// ---------------------------------------------------------------------------------
+// Tiddler functions
+// ---------------------------------------------------------------------------------
+
+// Display several tiddlers from a list of space separated titles
+function displayTiddlers(src,titles,state,highlightText,highlightCaseSensitive,slowly)
+{
+    var wikiRegExp = new RegExp(wikiNamePatterns,"mg");
+    var tiddlerNames = new Array();
+    do {
+        var linkMatch = wikiRegExp.exec(titles);
+        if(linkMatch)
+            {
+            if(linkMatch[1]) // WikiName
+                tiddlerNames.push(linkMatch[1]);
+            else if(linkMatch[5]) // Bracketed link
+                tiddlerNames.push(linkMatch[5]);
+            }
+    } while(linkMatch);
+    for(var t = tiddlerNames.length-1;t>=0;t--)
+        displayTiddler(src,tiddlerNames[t],state,highlightText,highlightCaseSensitive,slowly);
+}
+
+// Display a tiddler with animation and scrolling, as though a link to it has been clicked on
+//  src = source element object (eg link) for animation effects and positioning
+//  title = title of tiddler to display
+//  state = 0 is default or current state, 1 is read only and 2 is edittable
+//  highlightText = text to highlight in the displayed tiddler
+//  highlightCaseSensitive = flag for whether the highlight text is case sensitive
+function displayTiddler(src,title,state,highlightText,highlightCaseSensitive,slowly)
+{
+    var place = document.getElementById("tiddlerDisplay");
+    var after = findContainingTiddler(src); // Which tiddler this one will be positioned after
+    var before;
+    if(after == null)
+        before = place.firstChild;
+    else if(after.nextSibling)
+        before = after.nextSibling;
+    else
+        before = null;
+    var theTiddler = createTiddler(place,before,title,state,highlightText,highlightCaseSensitive);
+    if(src)
+        {
+        var floater = document.getElementById("floater");
+        var floaterTitle = document.createTextNode(title);
+        if(floater.firstChild)
+            floater.replaceChild(floaterTitle,floater.firstChild);
+        if(options.chkAnimate)
+            {
+            theTiddler.style.opacity = 0;
+            startZoomer(floater,src,theTiddler,slowly);
+            }
+        else
+            window.scrollTo(0,ensureVisible(theTiddler));
+        }
+}
+
+// Create a tiddler if it doesn't exist (with no fancy animating)
+//  place = parent element
+//  before = node before which to create/move the tiddler
+//  title = title of tiddler to display
+//  state = 0 is default or current state, 1 is read only and 2 is edittable
+//  highlightText = text to highlight in the displayed tiddler
+//  highlightCaseSensitive = flag for whether the highlight text is case sensitive
+function createTiddler(place,before,title,state,highlightText,highlightCaseSensitive)
+{
+    var theTiddler = createTiddlerSkeleton(place,before,title);
+    createTiddlerTitle(title,highlightText,highlightCaseSensitive);
+    var theViewer = document.getElementById("viewer" + title);
+    var theEditor = document.getElementById("editor" + title);
+    switch(state)
+        {
+        case 0:
+            if(!theViewer && !theEditor)
+                {
+                createTiddlerToolbar(title,false);
+                createTiddlerViewer(title,highlightText,highlightCaseSensitive);
+                }
+            break;
+        case 1: // Viewer
+            if(theViewer)
+                theViewer.parentNode.removeChild(theViewer);
+            if(theEditor)
+                theEditor.parentNode.removeChild(theEditor);
+            createTiddlerToolbar(title,false);
+            createTiddlerViewer(title,highlightText,highlightCaseSensitive);
+            break;
+        case 2: // Editor
+            if(!theEditor)
+                {
+                if(theViewer)
+                    theViewer.parentNode.removeChild(theViewer);
+                createTiddlerToolbar(title,true);
+                createTiddlerEditor(title);
+                }
+            break;
+        }
+
+    saveLayout();
+    return(theTiddler);
+}
+
+function createTiddlerSkeleton(place,before,title)
+{
+    var theTiddler = document.getElementById("tiddler" + title);
+    if(!theTiddler) {
+        theTiddler = createTiddlyElement(null,"div","tiddler" + title,"tiddler",null);
+        theTiddler.onmouseover = onMouseOverTiddler;
+        theTiddler.onmouseout = onMouseOutTiddler;
+        theTiddler.ondblclick = onDblClickTiddler;
+        var theInnerTiddler = createTiddlyElement(theTiddler,"div",null,"innerTiddler",null);
+        var theToolbar = createTiddlyElement(theInnerTiddler,"div","toolbar" + title,"toolbar", null); // Moved toolbar above Title element for style reasons | Nathan Edit
+				var theTitle = createTiddlyElement(theInnerTiddler,"div","title" + title,"title",null);
+        var theBody = createTiddlyElement(theInnerTiddler,"div","body" + title,"body",null);
+        var theTags = createTiddlyElement(theInnerTiddler,"div","tags" + title,"tags",null);
+        place.insertBefore(theTiddler,before);
+		}
+    return(theTiddler);
+}
+
+function createTiddlerTitle(title,highlightText,highlightCaseSensitive)
+{
+    var theTitle = document.getElementById("title" + title);
+    if(theTitle)
+        {
+        removeChildren(theTitle);
+        if(highlightText == "")
+            highlightText = null;
+        var highlightRegExp,highlightMatch;
+        if(highlightText)
+            {
+            highlightRegExp = new RegExp(highlightText,highlightCaseSensitive ? "mg" : "img");
+            highlightMatch = highlightRegExp.exec(title);
+            }
+        highlightMatch = subWikify(theTitle,title,0,title.length,highlightRegExp,highlightMatch);
+        var subtitle = getTiddlerSubtitle(title);
+        theTitle.title = subtitle;
+        }
+}
+
+// Create a tiddler toolbar according to whether it's an editor or not
+function createTiddlerToolbar(title,editor)
+{
+    var theToolbar = document.getElementById("toolbar" + title);
+    if(theToolbar)
+        {
+        removeChildren(theToolbar);
+        insertSpacer(theToolbar);
+        if(!editor)
+            {
+            // Non-editor toolbar
+            createTiddlyButton(theToolbar,"close","Close this tiddler",onClickToolbarClose);
+            insertSpacer(theToolbar);
+            createTiddlyButton(theToolbar,"edit","Edit this tiddler",onClickToolbarEdit);
+            insertSpacer(theToolbar);
+            createTiddlyButton(theToolbar,"permalink","Permalink for this tiddler",onClickToolbarPermaLink);
+            insertSpacer(theToolbar);
+            createTiddlyButton(theToolbar,"references","Show tiddlers that link to this one",onClickToolbarBackLink);
+            }
+        else
+            {
+            // Editor toolbar
+            createTiddlyButton(theToolbar,"done","Save changes to this tiddler",onClickToolbarSave);
+            insertSpacer(theToolbar);
+            createTiddlyButton(theToolbar,"cancel","Undo changes to this tiddler",onClickToolbarUndo);
+            insertSpacer(theToolbar);
+            createTiddlyButton(theToolbar,"delete","Delete this tiddler",onClickToolbarDelete);
+            }
+        // Commented out | Nathan Edit insertSpacer(theToolbar);
+        }
+}
+
+// Create the body section of a read-only tiddler
+function createTiddlerViewer(title,highlightText,highlightCaseSensitive)
+{
+    var theBody = document.getElementById("body" + title);
+    if(theBody) {
+        var tiddlerText = getTiddlerText(title);
+        var tiddlerExists = (tiddlerText != null);
+        if(!tiddlerExists)
+            tiddlerText = "This tiddler doesn't yet exist. Double-click to create it";
+        var theViewer = createTiddlyElement(theBody,"div","viewer" + title,"viewer",null);
+        if(!tiddlerExists)
+            theViewer.style.fontStyle = "italic";
+        wikify(tiddlerText,theViewer,highlightText,highlightCaseSensitive);
+//        createTiddlyElement(theViewer,"div",null,null,"Tags: "+ getTiddlerTags(title));
+				addTagLinks(theViewer, title);
+     }
+}
+
+// Create the body section of an edittable tiddler
+function createTiddlerEditor(title) {
+    var theBody = document.getElementById("body" + title);
+    if(theBody) {
+        var tiddlerText = getTiddlerText(title);
+        var tiddlerExists = (tiddlerText != null);
+        if(!tiddlerExists)
+            tiddlerText = "Type the text for '" + title + "' here.";
+
+        var theEditor = createTiddlyElement(theBody,"div","editor" + title,"editor",null);
+        theEditor.onkeypress = onEditKey;
+
+        var theTitleBox = createTiddlyElement(theEditor,"input","editorTitle" + title,null,null);
+        theTitleBox.setAttribute("type","text");
+        theTitleBox.value = title;
+        theTitleBox.setAttribute("size","40");
+
+        var theBodyBox = createTiddlyElement(theEditor,"textarea","editorBody" + title,null,null);
+        theBodyBox.value = tiddlerText;
+        theBodyBox.setAttribute("rows","10");
+        theBodyBox.style.width = "100%";
+        //theBodyBox.setAttribute("cols","80");
+
+				var defaultTagText = "[enter tags separated by spaces here]";
+        var tiddlerTags = getTiddlerTags(title);
+        var theTagsBox = createTiddlyElement(theEditor,"input","editorTags" + title,null,null);
+        theTagsBox.setAttribute("type","text");
+        theTagsBox.value = tiddlerTags.length > 0 ? tiddlerTags : defaultTagText;
+        theTagsBox.setAttribute("size","40");
+        theTagsBox.setAttribute("autocomplete","off");
+        theTagsBox.setAttribute("onfocus","if(this.value.indexOf('[')==0)this.value='';");
+
+        theBodyBox.focus();
+		}
+}
+
+function saveTiddler(title) {
+    var theNewTitle = document.getElementById("editorTitle" + title).value;
+    var theNewBody = document.getElementById("editorBody" + title).value;
+    var theNewTags = document.getElementById("editorTags" + title).value;
+    if(theNewTags == null || theNewTags.length == 0 || theNewTags.indexOf("[")==0)
+    	theNewTags="";
+    else
+	    theNewTags = theNewTags.toLowerCase().replace(/[^\w|\s]/g, '');
+
+    var theExisting = document.getElementById("store" + title);
+    if(theExisting)
+        theExisting.parentNode.removeChild(theExisting);
+    if(title != theNewTitle) {
+       theExisting = document.getElementById("store" + theNewTitle);
+       if(theExisting)
+            theExisting.parentNode.removeChild(theExisting);
+		}
+    var place = document.getElementById("storeArea");
+    var storeItem = createTiddlyElement(place,"div","store" + theNewTitle,null,escapeTiddler(theNewBody));
+    var now = new Date();
+    storeItem.setAttribute("modified",ConvertToYYYYMMDDHHMM(now));
+    storeItem.setAttribute("modifier",options.txtUserName);
+
+    storeItem.setAttribute("tags",theNewTags);
+    displayTiddler(null,theNewTitle,1,null,null,null,false);
+    // Close the old tiddler if this is a rename
+    if(title != theNewTitle) {
+        var oldTiddler = document.getElementById("tiddler" + title);
+        oldTiddler.parentNode.removeChild(oldTiddler);
+		}
+    refreshAll();
+}
+
+function searchTiddlers(text,caseSensitive,useRegExp)
+{
+    var searchText;
+    closeAllTiddlers();
+    if (useRegExp)
+        searchText = text;
+    else
+        searchText = escapeRegExp(text);
+    if(document.getElementById("store" + text))
+        displayTiddler(null,text,1,text,caseSensitive,false); // Special case of searching for a tiddler title
+    var theTiddler = document.getElementById("tiddler" + text);
+    var store = document.getElementById("storeArea").childNodes;
+    var c = 0;
+    var regExp = new RegExp(searchText,caseSensitive ? "m" : "im");
+    for(var t = 0; t < store.length; t++)
+        {
+        var e = store[t];
+        if(e.id)
+            if(e.id.substr(0,5) == "store")
+                {
+                var tiddlerText = "";
+                if(e.firstChild)
+                    tiddlerText = unescapeTiddler(e.firstChild.nodeValue);
+                if(regExp.exec(e.id.substr(5)) || regExp.exec(tiddlerText))
+                    {
+                    displayTiddler(null,e.id.substr(5),1,searchText,caseSensitive,false);
+                    c++;
+                    }
+                }
+        }
+    var q = useRegExp ? "/" : "'";
+    displayMessage(c + " tiddlers found matching " + q + text + q);
+}
+
+function selectTiddler(title)
+{
+    var e = document.getElementById("toolbar" + title);
+    if(e != null)
+        e.style.visibility = "visible";
+
+    var tid = document.getElementById("tiddler" + title);
+    if(tid != null)
+        tid.className = "selectedTiddler";
+}
+
+function deselectTiddler(title)
+{
+    var e = document.getElementById("toolbar" + title);
+    if(e != null)
+        e.style.visibility = "hidden";
+
+    var tid = document.getElementById("tiddler" + title);
+    if(tid != null)
+        tid.className = "tiddler";
+}
+
+function deleteTiddler(title)
+{
+    closeTiddler(title,false);
+    var tiddler = document.getElementById("store" + title);
+    if(tiddler)
+        tiddler.parentNode.removeChild(tiddler);
+    refreshAll();
+}
+
+function closeTiddler(title,slowly)
+{
+    var tiddler = document.getElementById("tiddler" + title);
+    if(tiddler != null) {
+        scrubIds(tiddler);
+        if(options.chkAnimate)
+            startSlider(tiddler,false,slowly,true);
+        else
+            tiddler.parentNode.removeChild(tiddler);
+    }
+
+    saveLayout();
+}
+
+function scrubIds(e)
+{
+    if(e.id)
+        e.id = null;
+    var children = e.childNodes;
+    for(var t=0; t<children.length; t++)
+        {
+        var c = children[t];
+        if(c.id)
+            c.id = null;
+        }
+}
+
+function closeAllTiddlers()
+{
+    hideMessage();
+    var place = document.getElementById("tiddlerDisplay");
+    var tiddler = place.firstChild;
+    var nextTiddler;
+    while(tiddler)
+        {
+        nextTiddler = tiddler.nextSibling;
+        if(tiddler.id)
+            if(tiddler.id.substr(0,7) == "tiddler")
+                {
+                var title = tiddler.id.substr(7);
+                if(!document.getElementById("editor" + title))
+                    place.removeChild(tiddler);
+                }
+        tiddler = nextTiddler;
+        }
+}
+
+
+// ---------------------------------------------------------------------------------
+// Tiddler-related utility functions
+// ---------------------------------------------------------------------------------
+
+function getTiddlerText(title)
+{
+    var tiddlerStore = document.getElementById("store" + title);
+    if(tiddlerStore == null)
+        return(null);
+    else if(tiddlerStore.firstChild)
+        {
+        if(tiddlerStore.firstChild)
+            return(unescapeTiddler(tiddlerStore.firstChild.nodeValue));
+        else
+            return("");
+        }
+    else
+        return("");
+}
+
+var regexpBackSlashEn = new RegExp("\\\\n","mg");
+var regexpSingleBackSlash = new RegExp("\\\\","mg");
+var regexpDoubleBackSlash = new RegExp("\\\\\\\\","mg");
+var regexpNewLine = new RegExp("\n","mg");
+
+// Convert "\n" to newlines
+function unescapeTiddler(text)
+{
+    return(text.replace(regexpBackSlashEn,"\n").replace(regexpSingleBackSlash,"\\\\"));
+}
+
+// Convert newlines to "\n"
+function escapeTiddler(text)
+{
+    return(text.replace(regexpDoubleBackSlash,"\\").replace(regexpNewLine,"\\n"));
+}
+
+function getTiddlerSubtitle(title)
+{
+    var tiddlerStore = document.getElementById("store" + title);
+    if(tiddlerStore != null)
+        {
+        var theModifier = tiddlerStore.getAttribute("modifier");
+        if(!theModifier)
+            theModifier = "(unknown)";
+        var theModified = tiddlerStore.getAttribute("modified");
+        if(theModified)
+            theModified = ConvertFromYYYYMMDDHHMM(theModified).toLocaleString();
+        else
+            theModified = "(unknown)";
+        return(theModifier + ", " + theModified);
+        }
+    else
+        return(null);
+}
+
+function createTiddlyElement(theParent,theElement,theID,theClass,theText)
+{
+    var e = document.createElement(theElement);
+    if(theClass != null)
+        e.className = theClass;
+    if(theID != null)
+        e.setAttribute("id",theID);
+    if(theText != null)
+        e.appendChild(document.createTextNode(theText));
+    if(theParent != null)
+        theParent.appendChild(e);
+    return(e);
+}
+
+function createTiddlyButton(theParent,theText,theTooltip,theAction)
+{
+    var theButton = document.createElement("a");
+    if(theAction)
+        {
+        theButton.onclick = theAction;
+        theButton.setAttribute("href","JavaScript:;");
+        }
+    theButton.setAttribute("title",theTooltip);
+    if(theText)
+        {
+        theButton.appendChild(document.createTextNode(theText));
+        }
+    theParent.appendChild(theButton);
+    return(theButton);
+}
+
+function createTiddlyLink(place,title,includeText)
+{
+    var text = includeText ? title : null;
+    var subTitle = getTiddlerSubtitle(title);
+    var theClass = subTitle ? "tiddlyLinkExisting" : "tiddlyLinkNonExisting";
+    if(!subTitle)
+        subTitle = title + " doesn't yet exist";
+    var btn = createTiddlyButton(place,text,subTitle,onClickTiddlerLink);
+    btn.className = theClass;
+    btn.setAttribute("tiddlyLink",title);
+    return(btn);
+}
+
+function createExternalLink(place,url)
+{
+    var theLink = document.createElement("a");
+    theLink.className = "externalLink";
+    theLink.href = url;
+    theLink.title = "External link to " + url;
+    theLink.target = "_blank";
+    place.appendChild(theLink);
+    return(theLink);
+}
+
+// Find the tiddler instance (if any) containing a specified element
+function findContainingTiddler(e)
+{
+    if(e == null)
+        return(null);
+    do {
+        if(e != document)
+            {
+            if(e.id)
+                if(e.id.substr(0,7) == "tiddler")
+                    return(e);
+            }
+        e = e.parentNode;
+    } while(e != document);
+    return(null);
+}
+
+function displayMessage(text)
+{
+    var msgArea = document.getElementById("messageArea");
+    var msg = document.createTextNode(text);
+    msgArea.replaceChild(msg,msgArea.firstChild);
+    msgArea.style.display = "block";
+}
+
+function hideMessage()
+{
+    var msgArea = document.getElementById("messageArea");
+    msgArea.style.display = "none";
+}
+
+// ---------------------------------------------------------------------------------
+// Tag functions
+// ---------------------------------------------------------------------------------
+
+// JML edit 23/05/2005
+function getTiddlerTags(title) {
+	var theTags;
+	var tiddlerStore = document.getElementById("store" + title);
+	if(tiddlerStore != null) {
+	    theTags = tiddlerStore.getAttribute("tags");
+	}
+	return theTags == null ? "" : theTags;
+}
+
+
+function searchTags(text) {
+    closeAllTiddlers();
+    var store = document.getElementById("storeArea").childNodes;
+    var c = 0;
+    for(var t = 0; t < store.length; t++) {
+        var e = store[t];
+        if(e.id) {
+            if(e.id.substr(0,5) == "store") {
+            		var tagText = e.getAttribute("tags");
+            		if (tagText != null) {
+	                var tags = tagText.split(' ');
+	                for (i=0;i<tags.length;i++) {
+	                    if (tags[i] == text) {
+	                    	displayTiddler(null,e.id.substr(5),1,null,null,false);
+	                    	c++;
+	                    	break;
+	                    }
+	                }
+	             }
+            }
+        }
+    }
+    displayMessage(c + " tiddlers found for tag \"" + text +"\"");
+}
+
+function Tag(name) {
+	this.name = name;
+	this.count = 0;
+	//this.toString = function() {return this.name.toLowerCase();}
+	//order our sort() by count then by case-insensitive name
+	this.toString = function() {return 1000000 - this.count +' - '+ this.name.toLowerCase();}
+}
+
+function TagList() {
+	this.arr = new Array();
+	this.add = tagListAdd;
+	this.get = tagListGet;
+	this.sort = function() {this.arr.sort();}
+}
+
+function tagListAdd(tagName) {
+		var tagKey = getTagKey(tagName);
+		var theTag = this[tagKey];
+		if (theTag == null) {
+			theTag = new Tag(tagName);
+			this[tagKey] = theTag;
+			this.arr.push(theTag);
+		}
+		theTag.count++;
+}
+
+function tagListGet(tagName) {
+		var tagKey = getTagKey(tagName);
+		return this[tagKey];
+}
+
+function getTagKey(tagName) {
+	return tagName.toLowerCase().replace(/[^\w|\s]/g, '');
+}
+
+function getAllTags() {
+		var allTags = new TagList();
+    var store = document.getElementById("storeArea").childNodes;
+    for(var t = 0; t < store.length; t++) {
+        var e = store[t];
+        if(e.id && (e.id.substr(0,5) == "store")) {
+        		var tagText = e.getAttribute("tags");
+        		if (tagText != null) {
+	            var tags = tagText.split(' ');
+	            for (i=0;i<tags.length;i++) {
+	            		if (tags[i].length > 0) {
+										allTags.add(tags[i]);
+									}
+	            }
+	         }
+        }
+    }
+    return allTags;
+}
+
+
+function refreshTagMenu() {
+    var place = document.getElementById("tagMenu");
+    while(place.firstChild != null)
+        place.removeChild(place.firstChild);
+
+    var allTags = getAllTags();
+    allTags.sort();
+    for (i=0;i<allTags.arr.length;i++) {
+			var theTag = allTags.arr[i];
+			createTagLink(place, theTag);
+    }
+}
+
+function createTagLink(place, theTag) {
+	var linkText = theTag.name.replace(/_/g,' ');
+  	var theTagLink = createTiddlyElement(place,'a',null,null,linkText);
+  	theTagLink.setAttribute('href','javascript:searchTags(\''+ theTag.name.replace(/'/g,"\\'") +'\')');
+		if (theTag.count > 0) {
+			createTiddlyElement(theTagLink,'span',null,null,'('+ theTag.count +')');
+		}
+}
+
+function addTagLinks(place, title) {
+    var theTagsText = getTiddlerTags(title);
+    if (theTagsText.length > 0) {
+	    var theTags = theTagsText.split(' ');
+	    var theTagHolder = createTiddlyElement(place,"div",null,"tagLinks","Tags: ");
+	    for (i=0;i<theTags.length;i++) {
+				var theTag = theTags[i];
+				if (theTag.length > 0) {
+					if (i > 0) createTiddlyElement(theTagHolder,'span',null,null,', ');
+					createTagLink(theTagHolder, new Tag(theTag));
+				}
+	    }
+	 }
+}
+
+
+
+
+
+// ---------------------------------------------------------------------------------
+// Menu and sidebar functions
+// ---------------------------------------------------------------------------------
+
+var currentTab; // The id of the currently selected tab
+
+function refreshAll()
+{
+    refreshHeader();
+    refreshMenu();
+	//JML edit 23/5/2005
+    refreshTagMenu();
+    refreshSidebar();
+}
+
+// Refresh all parts of the header
+function refreshHeader()
+{
+    var theTitle = getTiddlerText("SiteTitle");
+    if(!theTitle) theTitle = "SiteTitle";
+    var theSubtitle = getTiddlerText("SiteSubtitle");
+    if(!theSubtitle) theSubtitle = "SiteSubtitle";
+    document.title = theTitle + " - " + theSubtitle;
+    var place = document.getElementById("siteTitle");
+    while(place.firstChild != null)
+        place.removeChild(place.firstChild);
+    wikify(theTitle,place,null,null);
+    place = document.getElementById("siteSubtitle");
+    while(place.firstChild != null)
+        place.removeChild(place.firstChild);
+    wikify(theSubtitle,place,null,null);
+}
+
+function refreshMenu()
+{
+    var place = document.getElementById("mainMenu");
+    while(place.firstChild != null)
+        place.removeChild(place.firstChild);
+    var menu = getTiddlerText("MainMenu");
+    if(!menu) menu = "MainMenu";
+    wikify(menu,place,null,null);
+}
+
+function refreshSidebar()
+{
+    var tabContent = document.getElementById("sidebarContent");
+    switch(currentTab)
+        {
+            case "tabTimeline":
+                tabContent.className = "tabContentTimeline";
+                refreshTabTimeline();
+                break;
+            case "tabAll":
+                tabContent.className = "tabContentAll";
+                refreshTabAll();
+                break;
+            default:
+                tabContent.className = "tabContentTimeline";
+                refreshTabTimeline();
+                break;
+        }
+}
+
+function refreshTabTimeline()
+{
+	//JML edit 23/5/2005
+    var allTiddlers = new Array(); // An array of 3-entry arrays, where entry 0 = name, 1 = date, 2 = modifier
+    var storeNodes = document.getElementById("storeArea").childNodes;
+    for (var t = 0; t < storeNodes.length; t++)
+        {
+        var n = storeNodes[t];
+        if(n.id)
+            if(n.id.substr(0,5) == "store") {
+				//JML edit 23/5/2005
+                allTiddlers.push(new Array(n.id.substr(5),n.getAttribute("modified"),n.getAttribute("modifier")));
+			}
+        }
+    allTiddlers.sort(function (a,b) { if(a[1] == b[1]) return(1); else return (a[1] < b[1]) ? +1 : -1; }); // Sort by date
+    var place = document.getElementById("sidebarContent");
+    while(place.firstChild != null)
+        place.removeChild(place.firstChild);
+    var lastDay = "";
+    for (t = 0; t < allTiddlers.length; t++) {
+//Jonny LeRoy - commented out filtering for now until I can make it configurable
+//JML edit 23/5/2005
+//	   	if (allTiddlers[t][2] == options.txtUserName) {
+        var theDay = allTiddlers[t][1].substr(0,8);
+        if(theDay != lastDay) {
+            var theDateElement = document.createElement("span");
+            var theDateCaption = ConvertFromYYYYMMDDHHMM(allTiddlers[t][1]).toLocaleDateString();
+            theDateElement.appendChild(document.createTextNode(theDateCaption));
+            theDateElement.className = "sidebarSubHeading";
+            place.appendChild(theDateElement);
+            // DISABLE BR IN SIDEBAR | Nathan Edit place.appendChild(document.createElement("br"));
+            lastDay = theDay;
+        }
+        // DISABLE EXTRA SPACE IN SIDEBAR | Nathan Edit place.appendChild(document.createTextNode(String.fromCharCode(160)));
+        // DISABLE EXTRA SPACE IN SIDEBAR | Nathan Edit place.appendChild(document.createTextNode(String.fromCharCode(160)));
+        var arrowSpan = createTiddlyElement(place,'span',null,'arrows',null);
+        arrowSpan.appendChild(document.createTextNode(String.fromCharCode(187)));
+        createTiddlyLink(place,allTiddlers[t][0],true);
+//Jonny LeRoy - commented out filtering for now until I can make it configurable
+//   		}
+   	}
+
+	//JML edit 23/5/2005
+    var timeLineTab = document.getElementById("tabTimeline");
+    var allTab = document.getElementById("tabAll");
+
+    timeLineTab.className = "tabIn";
+    allTab.className = "tabOut";
+}
+
+function refreshTabAll()
+{
+    var allTiddlers = new Array(); // An array of 2-entry arrays, where entry 0 = name, 1 = date
+    var storeNodes = document.getElementById("storeArea").childNodes;
+    for (var t = 0; t < storeNodes.length; t++)
+        {
+        var n = storeNodes[t];
+        if(n.id)
+            if(n.id.substr(0,5) == "store")
+                allTiddlers.push(new Array(n.id.substr(5),n.getAttribute("modified")));
+        }
+    allTiddlers.sort(function (a,b) { if(a[0] == b[0]) return(0); else return (a[0] > b[0]) ? +1 : -1; }); // Sort by name
+    var place = document.getElementById("sidebarContent");
+    while(place.firstChild != null)
+        place.removeChild(place.firstChild);
+    for (t = 0; t < allTiddlers.length; t++) {
+		//JML edit 23/5/2005
+        var arrowSpan = createTiddlyElement(place,'span',null,'arrows',null);
+        arrowSpan.appendChild(document.createTextNode(String.fromCharCode(187)));
+        createTiddlyLink(place,allTiddlers[t][0],true);
+        // Commented out | Nathan Edit place.appendChild(document.createElement("br"));
+    }
+
+	//JML edit 23/5/2005
+    var timeLineTab = document.getElementById("tabTimeline");
+    var allTab = document.getElementById("tabAll");
+
+    timeLineTab.className = "tabOut";
+    allTab.className = "tabIn";
+}
+
+
+
+
+// ---------------------------------------------------------------------------------
+// Options stuff
+// ---------------------------------------------------------------------------------
+
+function setupOptionsPanel() {
+    for(var opt in options) {
+        var e = document.getElementById(opt);
+		//JML edit 23/5/2005
+        if (e) {
+	        switch(opt.substr(0,3)) {
+	            case "txt":
+	                e.value = options[opt];
+	                break;
+	            case "chk":
+	                e.checked = options[opt];
+	                break;
+	        }
+	     }
+	 }
+}
+
+function loadOptionsCookie()
+{
+    var cookies = document.cookie;
+    if(cookies.length > 0)
+        for(var opt in options)
+            {
+            var n = opt + "=";
+            var p = cookies.indexOf(n);
+            if(p > -1)
+                {
+                p += n.length;
+                var e = cookies.indexOf(";",p);
+                if(e == -1)
+                    e = cookies.length;
+                var v = cookies.substr(p,e-p);
+                switch(opt.substr(0,3))
+                    {
+                    case "txt":
+						//JML edit 23/5/2005
+                        options[opt] = unescape(v);
+                        break;
+                    case "chk":
+                        options[opt] = v == "true";
+                        break;
+                    }
+                }
+            }
+}
+
+function saveOptionCookie(name)
+{
+    var c = name + "=";
+    switch(name.substr(0,3))
+        {
+        case "txt":
+            c += escape(options[name].toString());
+            break;
+        case "chk":
+            c += options[name] ? "true" : "false";
+            break;
+        }
+    c += "; expires=Fri, 1 Jan 2038 12:00:00 UTC; path=/";
+    document.cookie = c;
+}
+
+function onChangeOption(e)
+{
+    if (!e) var e = window.event;
+    var opt = resolveTarget(e);
+    if(opt.id)
+        {
+        switch(opt.id.substr(0,3))
+            {
+            case "txt":
+                options[opt.id] = opt.value;
+                break;
+            case "chk":
+                options[opt.id] = opt.checked;
+                break;
+            }
+        saveOptionCookie(opt.id);
+        changeOption(opt.id);
+        }
+    return(true);
+}
+
+// React to an option having been changed
+function changeOption(name)
+{
+    switch(name)
+        {
+        case "chkRegExp":
+            break;
+        case "chkCaseSens":
+            break;
+        case "txtUserName":
+            break;
+		//JML edit 23/5/2005
+        case "chkSinglePage":
+            break;
+        }
+}
+
+
+
+// ---------------------------------------------------------------------------------
+// Saving
+// ---------------------------------------------------------------------------------
+
+var startSaveArea = '<div id="' + 'storeArea">'; // Split up into two so that indexOf() of this source doesn't find it
+var endSaveArea = '</d' + 'iv>';
+
+// Save this tiddlywiki with the pending changes
+function saveChanges()
+{
+    // Get the URL of the document
+    var originalPath = document.location.toString();
+    // Check we were loaded from a file URL
+    if(originalPath.substr(0,5) != "file:")
+        {
+        alert("You need to save this TiddlyWiki to a file before you can save changes");
+        displayTiddler(null,"SaveChanges",0,null,null,null);
+        return;
+        }
+    // Remove any location part of the URL
+    var hashPos = originalPath.indexOf("#");
+    if(hashPos != -1)
+        originalPath = originalPath.substr(0,hashPos);
+    // Convert to a native file format assuming
+    // "file:///x:/path/path/path..." - pc local file --> "x:\path\path\path..."
+    // "file://///server/share/path/path/path..." - FireFox pc network file --> "\\server\share\path\path\path..."
+    // "file:///path/path/path..." - mac/unix local file --> "/path/path/path..."
+    // "file://server/share/path/path/path..." - pc network file --> "\\server\share\path\path\path..."
+    var localPath;
+    if(originalPath.charAt(9) == ":") // pc local file
+        localPath = unescape(originalPath.substr(8)).replace(new RegExp("/","g"),"\\");
+    else if(originalPath.indexOf("file://///") == 0) // FireFox pc network file
+        localPath = "\\\\" + unescape(originalPath.substr(10)).replace(new RegExp("/","g"),"\\");
+    else if(originalPath.indexOf("file:///") == 0) // mac/unix local file
+        localPath = unescape(originalPath.substr(7));
+	 else if(originalPath.indexOf("file://") == 0) // Allow Camino capability. Code by Schlaefer[http://tinyurl.com/aeqpt] | Nathan Edit
+		localPath = unescape(originalPath.substr(16));
+    else // pc network file
+        localPath = "\\\\" + unescape(originalPath.substr(7)).replace(new RegExp("/","g"),"\\");
+    // Create backup filename
+    // DISABLED DATESTAMPED BACKUPS | Nathan Edit //
+
+	//JML edit 23/5/2005
+    var backSlash = true;
+    var dirPathPos = localPath.lastIndexOf("\\");
+    if (dirPathPos == -1) {
+    	dirPathPos = localPath.lastIndexOf("/");
+    	backSlash = false;
+    }
+
+	//JML edit 23/5/2005
+    //put it in the backup directory
+    var backupPath = localPath.substr(0,dirPathPos) + (backSlash ? "\\" : "/")
+    				+ "backup" + localPath.substr(dirPathPos, localPath.length - dirPathPos);
+
+    backupPath = backupPath.substr(0,backupPath.lastIndexOf(".")) + "." + ConvertToYYYYMMDDHHMMSSMMM(new Date()) + ".html";
+		//var backupPath = localPath.substr(0,localPath.lastIndexOf(".")) + "_" + "backup" + ".html"; // NON-DATE STAMPED BACKUPS  | Nathan Edit //
+    var original = loadFile(localPath);
+    if(original == null)
+        {
+        alert("It's not possible to save changes using this browser. Use FireFox if you can");
+        displayTiddler(null,"SaveChanges",0,null,null,null);
+        return;
+        }
+    else
+        {
+        var posOpeningDiv = original.indexOf(startSaveArea);
+        var posClosingDiv = original.lastIndexOf(endSaveArea);
+        if((posOpeningDiv == -1) || (posClosingDiv == -1))
+            alert("Doesn't appear to be a TiddlyWiki");
+        else {
+            backup = saveFile(backupPath,original); //COMMENT THIS LINE OUT TO DISABLE ALL BACKUPS | Nathan Edit //
+            var revised = original.substr(0,posOpeningDiv + startSaveArea.length) + convertUnicodeToUTF8(allTiddlersAsHtml()) + original.substr(posClosingDiv);
+            var save = saveFile(localPath,revised)
+            if(save) {
+//                alert("Saved successfully as '" + localPath + "'"); // Disabled save success alert | Nathan Edit //
+            } else {
+                alert("Error while saving");
+            }
+        }
+     }
+}
+
+function allTiddlersAsHtml()
+{
+    var storeNodes = document.getElementById("storeArea").childNodes;
+    var savedTiddlers = new Array();
+    for (var t = 0; t < storeNodes.length; t++)
+        {
+        var n = storeNodes[t];
+        if(n.id)
+            if(n.id.substr(0,5) == "store")
+                {
+                var title = n.id.substr(5);
+                var text = "";
+                if(n.firstChild)
+                    text = n.firstChild.nodeValue;
+
+				//JML edit 23/5/2005
+                var theTags = n.getAttribute("tags");
+                if (theTags == null) theTags = "";
+                savedTiddlers.push('<div id="store' + title + '" modified="' +
+                                    n.getAttribute("modified") + '" modifier="' + n.getAttribute("modifier") + '" tags="' + theTags + '">' +
+                                    text + '</div>');
+                }
+        }
+    return savedTiddlers.join("\n");
+}
+
+// UTF-8 encoding rules:
+// 0x0000 - 0x007F:	0xxxxxxx
+// 0x0080 - 0x07FF:	110xxxxx 10xxxxxx
+// 0x0800 - 0xFFFF:	1110xxxx 10xxxxxx 10xxxxxx
+
+function convertUTF8ToUnicode(u)
+{
+    var s = "";
+    var t = 0;
+    var b1, b2, b3;
+    while(t < u.length)
+        {
+        b1 = u.charCodeAt(t++);
+        if(b1 < 0x80)
+            s += String.fromCharCode(b1);
+        else if(b1 < 0xE0)
+            {
+            b2 = u.charCodeAt(t++);
+            s += String.fromCharCode(((b1 & 0x1F) << 6) | (b2 & 0x3F));
+            }
+        else
+            {
+            b2 = u.charCodeAt(t++);
+            b3 = u.charCodeAt(t++);
+            s += String.fromCharCode(((b1 & 0xF) << 12) | ((b2 & 0x3F) << 6) | (b3 & 0x3F));
+            }
+    }
+    return(s);
+}
+
+function convertUnicodeToUTF8(s)
+{
+    var u = "";
+    for(var t=0;t<s.length;t++)
+        {
+        var c = s.charCodeAt(t);
+        if(c <= 0x7F)
+            u += String.fromCharCode(c);
+        else if(c <= 0x7FF)
+            {
+            u += String.fromCharCode((c >> 6) | 0xC0);
+            u += String.fromCharCode((c & 0x3F) | 0x80);
+            }
+        else
+            {
+            u += String.fromCharCode((c >> 12) | 0xE0);
+            u += String.fromCharCode(((c >> 6) & 0x3F) | 0x80);
+            u += String.fromCharCode((c & 0x3F) | 0x80);
+            }
+        }
+    return(u);
+}
+
+function saveFile(fileUrl, content)
+{
+    var r = mozillaSaveFile(fileUrl, content);
+    if((r == null) || (r == false))
+        r = ieSaveFile(fileUrl, content);
+    return(r);
+}
+
+function loadFile(fileUrl)
+{
+    var r = mozillaLoadFile(fileUrl);
+    if((r == null) || (r == false))
+        r = ieLoadFile(fileUrl);
+    return(r);
+}
+
+// Returns null if it can't do it, false if there's an error
+function ieSaveFile(filePath, content)
+{
+    try
+        {
+        var fso = new ActiveXObject("Scripting.FileSystemObject");
+        }
+    catch(e)
+        {
+        //alert("Exception while attempting to save\n\n" + e.toString());
+        return(null);
+        }
+    var file = fso.OpenTextFile(filePath,2,-1,0);
+    file.Write(content);
+    file.Close();
+    return(true);
+}
+
+// Returns null if it can't do it, false if there's an error, or a string of the content if successful
+function ieLoadFile(filePath)
+{
+    try
+        {
+        var fso = new ActiveXObject("Scripting.FileSystemObject");
+        }
+    catch(e)
+        {
+        //alert("Exception while attempting to load\n\n" + e.toString());
+        return(null);
+        }
+    var file = fso.OpenTextFile(filePath,1);
+    var content = file.ReadAll();
+    file.Close();
+    return(content);
+}
+
+// Returns null if it can't do it, false if there's an error
+function mozillaSaveFile(filePath, content)
+{
+    if(window.Components)
+        try
+            {
+            netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+            var file = Components.classes["@mozilla.org/file/local;1"].createInstance(Components.interfaces.nsILocalFile);
+            file.initWithPath(filePath);
+            if (!file.exists())
+                file.create(0, 0664);
+            var out = Components.classes["@mozilla.org/network/file-output-stream;1"].createInstance(Components.interfaces.nsIFileOutputStream);
+            out.init(file, 0x20 | 0x02, 00004,null);
+            out.write(content, content.length);
+            out.flush();
+            out.close();
+            return(true);
+            }
+        catch(e)
+            {
+            //alert("Exception while attempting to save\n\n" + e);
+            return(false);
+            }
+    return(null);
+}
+
+// Returns null if it can't do it, false if there's an error, or a string of the content if successful
+function mozillaLoadFile(filePath)
+{
+    if(window.Components)
+        try
+            {
+            netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+            var file = Components.classes["@mozilla.org/file/local;1"].createInstance(Components.interfaces.nsILocalFile);
+            file.initWithPath(filePath);
+            if (!file.exists())
+                return(null);
+            var inputStream = Components.classes["@mozilla.org/network/file-input-stream;1"].createInstance(Components.interfaces.nsIFileInputStream);
+            inputStream.init(file, 0x01, 00004, null);
+            var sInputStream = Components.classes["@mozilla.org/scriptableinputstream;1"].createInstance(Components.interfaces.nsIScriptableInputStream);
+            sInputStream.init(inputStream);
+            return(sInputStream.read(sInputStream.available()));
+            }
+        catch(e)
+            {
+            //alert("Exception while attempting to load\n\n" + e);
+            return(false);
+            }
+    return(null);
+}
+
+
+
+// ---------------------------------------------------------------------------------
+// Event handlers
+// ---------------------------------------------------------------------------------
+
+function onEditKey(e)
+{
+    if (!e) var e = window.event;
+    hideMessage();
+    var consume = false;
+    switch(e.keyCode)
+        {
+		case 13: // Ctrl-Enter
+        case 10: // Ctrl-Enter on IE PC
+        case 77: // Ctrl-Enter is "M" on some platforms
+            if(e.ctrlKey && this.id && this.id.substr(0,6) == "editor")
+                {
+                saveTiddler(this.id.substr(6));
+                saveChanges(); // Added save all on ctrl-e edit finish. Suggested by members at http://tinyurl.com/89qhc | Nathan Edit
+                consume = true;
+                }
+            break;
+        case 27: // Escape
+            if(this.id && this.id.substr(0,6) == "editor")
+                {
+                displayTiddler(null,this.id.substr(6),1,null,null,false);
+                consume = true;
+                }
+            break;
+        }
+    e.cancelBubble = consume;
+    if(consume)
+        if (e.stopPropagation) e.stopPropagation();
+    return(!consume);
+
+}
+
+// Event handler for clicking on a tiddly link
+function onClickTiddlerLink(e)
+{
+    if (!e) var e = window.event;
+    var theTarget = resolveTarget(e);
+    var theLink = theTarget;
+    var title = null;
+    do {
+        title = theLink.getAttribute("tiddlyLink");
+        theLink = theLink.parentNode;
+    } while(title == null && theLink != null);
+    if(title) {
+		//JML edit 23/5/2005
+        if(options.chkSinglePage) {
+        	closeAllTiddlers();
+        }
+        displayTiddler(theTarget,title,0,null,null,e.shiftKey || e.altKey);
+    }
+    hideMessage();
+}
+
+// Event handler for mouse over a tiddler
+function onMouseOverTiddler(e)
+{
+    var tiddler;
+    if(this.id.substr(0,7) == "tiddler")
+        tiddler = this.id.substr(7);
+    if(tiddler)
+        selectTiddler(tiddler);
+}
+
+// Event handler for mouse out of a tiddler
+function onMouseOutTiddler(e)
+{
+    var tiddler;
+    if(this.id.substr(0,7) == "tiddler")
+        tiddler = this.id.substr(7);
+    if(tiddler)
+        deselectTiddler(tiddler);
+}
+
+// Event handler for double click on a tiddler
+function onDblClickTiddler(e)
+{
+    hideMessage();
+    if(document.selection)
+        document.selection.empty();
+    var tiddler;
+    if(this.id.substr(0,7) == "tiddler")
+        tiddler = this.id.substr(7);
+    if(tiddler)
+        displayTiddler(null,tiddler,2,null,null,false);
+}
+
+// Event handler for clicking on toolbar close
+function onClickToolbarClose(e)
+{
+    if (!e) var e = window.event;
+    hideMessage();
+    if(this.parentNode.id)
+        closeTiddler(this.parentNode.id.substr(7),e.shiftKey || e.altKey);
+    e.cancelBubble = true;
+    if (e.stopPropagation) e.stopPropagation();
+    return(false);
+}
+
+// Event handler for clicking on toolbar permalink
+function onClickToolbarPermaLink(e)
+{
+    if(this.parentNode.id)
+        {
+        var t = encodeURIComponent(this.parentNode.id.substr(7));
+        if(window.location.hash != t)
+            window.location.hash = t;
+        }
+}
+
+// Event handler for clicking on toolbar close
+function onClickToolbarDelete(e)
+{
+    hideMessage();
+    if(this.parentNode.id)
+        deleteTiddler(this.parentNode.id.substr(7));
+}
+
+// Event handler for clicking on the toolbar backlink
+function onClickToolbarBackLink(e)
+{
+    hideMessage();
+    if(this.parentNode.id)
+        searchTiddlers(this.parentNode.id.substr(7),true,false);
+}
+
+// Event handler for clicking on toolbar close
+function onClickToolbarEdit(e)
+{
+    hideMessage();
+    if(this.parentNode.id)
+        displayTiddler(null,this.parentNode.id.substr(7),2,null,null,false);
+}
+
+// Event handler for clicking on toolbar save
+function onClickToolbarSave(e)
+{
+    if(this.parentNode.id)
+        saveTiddler(this.parentNode.id.substr(7));
+		saveChanges(); // Added save all on edit finish. Suggested by members at http://tinyurl.com/89qhc | Nathan Edit
+}
+
+// Event handler for clicking on toolbar save
+function onClickToolbarUndo(e)
+{
+    if(this.parentNode.id)
+        displayTiddler(null,this.parentNode.id.substr(7),1,null,null,false);
+}
+
+var optionsOpen = false;
+
+// Options button
+function onClickOptions(e)
+{
+    if (!e) var e = window.event;
+    var thePanel = document.getElementById("optionsPanel");
+    optionsOpen = !optionsOpen;
+    if(options.chkAnimate)
+        startSlider(thePanel,optionsOpen,e.shiftKey || e.altKey,false);
+    else
+        thePanel.style.display = optionsOpen ? "block" : "none";
+    e.cancelBubble = true;
+    if (e.stopPropagation) e.stopPropagation();
+    return(false);
+}
+
+// Event handler for clicking on a tab
+function onClickTab(e) {
+    if (!e) var e = window.event;
+    var theTab = resolveTarget(e);
+    currentTab = theTab.id;
+    refreshSidebar();
+}
+
+var lastSearchText = ""; // For keeping track of when the search text actually changes
+
+function onSearch(e)
+{
+    var text = document.getElementById("searchText").value;
+    if((text.length > 2) && (text != lastSearchText))
+        {
+        searchTiddlers(text,options.chkCaseSens,options.chkRegExp);
+        lastSearchText = text;
+        }
+}
+
+function onClearSearch()
+{
+    var text = document.getElementById("searchText");
+    text.value = "";
+    hideMessage();
+}
+
+// Eek... it's bad that this is done via a function rather than a normal, copy-able href
+function onClickPermaView()
+{
+    var wikiRegExp = new RegExp("^" + wikiNamePattern + "$","g");
+    var tiddlerDisplay = document.getElementById("tiddlerDisplay");
+    var openTiddlers = "";
+    var separator = "";
+    for(var t=0;t<tiddlerDisplay.childNodes.length;t++)
+        {
+        var tiddlerName = tiddlerDisplay.childNodes[t].id.substr(7);
+        if(wikiRegExp.test(tiddlerName))
+            openTiddlers = openTiddlers + separator + tiddlerName;
+        else
+            openTiddlers = openTiddlers + separator + "[[" + tiddlerName + "]]";
+        separator = " ";
+        }
+    window.location.hash = encodeURIComponent(openTiddlers);
+}
+
+
+
+// ---------------------------------------------------------------------------------
+// Animation engine
+// ---------------------------------------------------------------------------------
+
+// Animation housekeeping
+var animating = 0; // Incremented at start of each animation, decremented afterwards. If zero, the interval timer is disabled
+var animaterID; // ID of the timer used for animating
+// 'zoomer' module of the animation engine smoothly moves an element from the position/size of the start element to the target element
+var zoomerElement = null; // Element being shifted; null if none
+var zoomerStart; // Where we're shifting from
+var zoomerTarget; // Where we're shifting to
+var zoomerStartScroll; // Where we're scrolling from
+var zoomerTargetScroll; // Where we're scrolling to
+var zoomerProgress; // 0..1 of how far we are
+var zoomerStep; // 0..1 of how much to shift each step
+// 'slider' module of the animation engine slides an element smoothly open or closed
+var sliderElement = null; // Element being slid open or closed; null if none
+var sliderDeleteAfterwards;
+var sliderOpening; // True if the element is being opened
+var sliderRealHeight; // Starting height
+var sliderProgress; // 0..1 of how far we are
+var sliderStep; // 0..1 of how much to shift each step
+
+// Start animation engine
+function startAnimating()
+{
+    if(animating++ == 0)
+        animaterID = window.setInterval("doAnimate();",25);
+}
+
+// Stop animation engine
+function stopAnimating()
+{
+    if(--animating == 0)
+        window.clearInterval(animaterID)
+}
+
+// Perform an animation engine tick, calling each of the known animation modules
+function doAnimate()
+{
+    if(zoomerElement)
+        doZoomer();
+    if(sliderElement)
+        doSlider();
+}
+
+// Start moving the element 'e' from the position of the element 'start' to the position of the element 'target'
+function startZoomer(e,start,target,slowly)
+{
+    stopZoomer();
+    zoomerElement = e;
+    zoomerStart = start;
+    zoomerStartScroll = findScrollY();
+    zoomerTargetScroll = ensureVisible(target);
+    zoomerTarget = target;
+    zoomerProgress = 0;
+    zoomerStep = slowly ? 0.01 : 0.12;
+    startAnimating();
+}
+
+// Stop any ongoing zoomer animation
+function stopZoomer()
+{
+    if(zoomerElement)
+        {
+        stopAnimating();
+        zoomerElement.style.display = "none"; // Changed to display:none because of wierd  line artifact issue | Nathan Edit
+        zoomerTarget.style.opacity = 1;
+        window.scrollTo(0,zoomerTargetScroll);
+        zoomerElement = null;
+        }
+}
+
+// Perform a tick of the zoomer animation
+function doZoomer()
+{
+    zoomerProgress += zoomerStep;
+    if(zoomerProgress >= 1.0)
+        stopZoomer();
+    else
+        {
+        var f = slowInSlowOut(zoomerProgress);
+        var zoomerStartLeft = findPosX(zoomerStart);
+        var zoomerStartTop = findPosY(zoomerStart);
+        var zoomerStartWidth = zoomerStart.offsetWidth;
+        var zoomerStartHeight = zoomerStart.offsetHeight;
+        var zoomerTargetLeft = findPosX(zoomerTarget);
+        var zoomerTargetTop = findPosY(zoomerTarget);
+        var zoomerTargetWidth = zoomerTarget.offsetWidth;
+        var zoomerTargetHeight = zoomerTarget.offsetHeight;
+        zoomerElement.style.left = zoomerStartLeft + (zoomerTargetLeft-zoomerStartLeft) * f;
+        zoomerElement.style.top = zoomerStartTop + (zoomerTargetTop-zoomerStartTop) * f;
+        zoomerElement.style.width = zoomerStartWidth + (zoomerTargetWidth-zoomerStartWidth) * f;
+        zoomerElement.style.height = zoomerStartHeight + (zoomerTargetHeight-zoomerStartHeight) * f;
+        zoomerElement.style.display= "block"; // Changed to display:block because of wierd  line artifact issue | Nathan Edit
+        zoomerTarget.style.opacity = zoomerProgress;
+        window.scrollTo(0,zoomerStartScroll + (zoomerTargetScroll-zoomerStartScroll) * f);
+        }
+}
+
+// Start sliding an element
+function startSlider(e,opening,slowly,deleteAfterwards)
+{
+    stopSlider();
+    sliderDeleteAfterwards = deleteAfterwards;
+    sliderElement = e;
+        sliderElement.style.display = "block";
+    sliderElement.style.height = "auto";
+    sliderRealHeight = sliderElement.offsetHeight;
+    sliderOpening = opening;
+    sliderStep = slowly ? 0.01 : 0.16;
+    if(opening)
+        {
+        sliderProgress = 0;
+        sliderElement.style.height = "2px";
+        sliderElement.style.display = "block";
+        }
+    else
+        {
+        sliderStep = -sliderStep;
+        sliderProgress = 1;
+        }
+    sliderElement.style.overflow = "hidden";
+    startAnimating();
+}
+
+// Stop sliding the current element
+function stopSlider()
+{
+    if(sliderElement)
+        {
+        stopAnimating();
+        if(sliderOpening)
+            sliderElement.style.height = "auto";
+        else
+            {
+            if(sliderDeleteAfterwards)
+                sliderElement.parentNode.removeChild(sliderElement);
+            else
+                sliderElement.style.display = "none";
+            }
+        sliderElement = null;
+        }
+}
+
+// Perform a tick of the slider animation
+function doSlider()
+{
+    sliderProgress += sliderStep;
+    if((sliderProgress < 0) || (sliderProgress > 1.0))
+        stopSlider();
+    else
+        {
+        var f = slowInSlowOut(sliderProgress);
+        var h = sliderRealHeight*f;
+        sliderElement.style.height = (h <= 2) ? 2 : h;
+        sliderElement.style.opacity = f;
+        }
+}
+
+// ---------------------------------------------------------------------------------
+// Standalone utility functions
+// ---------------------------------------------------------------------------------
+
+// Escape a string to ensure it doesn't have any RegExp special characters
+function escapeRegExp(s)
+{
+    // Escape any special characters with that character preceded by a backslash
+    return(s.replace(new RegExp("[\\\\\\^\\$\\*\\+\\?\\(\\)\\=\\!\\|\\,\\{\\}\\[\\]\\.]","g"),"\\$0"));
+}
+
+// Return a date in UTC YYYYMMDDHHMM format
+function ConvertToYYYYMMDDHHMM(d)
+{
+    return(zeroPad(d.getFullYear(),4) + zeroPad(d.getMonth()+1,2) + zeroPad(d.getDate(),2) + zeroPad(d.getHours(),2) + zeroPad(d.getMinutes(),2));
+}
+
+// Left-pad a string with 0s to a certain width
+function zeroPad(n,d)
+{
+    var s = n.toString();
+    if(s.length < d)
+        s = "000000000000000000000000000".substr(0,d-s.length) + s;
+    return(s);
+}
+
+// Return a date in UTC YYYYMMDD.HHMMSSMMM format
+function ConvertToYYYYMMDDHHMMSSMMM(d)
+{
+    return(zeroPad(d.getFullYear(),4) + zeroPad(d.getMonth()+1,2) + zeroPad(d.getDate(),2) + "." + zeroPad(d.getHours(),2) + zeroPad(d.getMinutes(),2) + zeroPad(d.getSeconds(),2) + zeroPad(d.getMilliseconds(),4));
+}
+
+// Convert a date in UTC YYYYMMDDHHMM format to date type
+function ConvertFromYYYYMMDDHHMM(d)
+{
+    var theDate = new Date(parseInt(d.substr(0,4),10),
+                            parseInt(d.substr(4,2),10)-1,
+                            parseInt(d.substr(6,2),10),
+                            parseInt(d.substr(8,2),10),
+                            parseInt(d.substr(10,2),10),0,0);
+    return(theDate);
+}
+
+// Map a 0..1 value to 0..1, but slow down at the start and end
+function slowInSlowOut(progress)
+{
+    return(1-((Math.cos(progress * Math.PI)+1)/2));
+}
+
+// Resolve the target object of an event
+function resolveTarget(e)
+{
+    var obj;
+    if (e.target)
+        obj = e.target;
+    else if (e.srcElement)
+        obj = e.srcElement;
+    if (obj.nodeType == 3) // defeat Safari bug
+        obj = obj.parentNode;
+    return(obj);
+}
+
+// Get the scroll position for window.scrollTo necessary to scroll a given element into view
+function ensureVisible(e)
+{
+    var posTop = findPosY(e);
+    var posBot = posTop + e.offsetHeight;
+    var winTop = findScrollY();
+    var winHeight = findWindowHeight();
+    var winBot = winTop + winHeight;
+    if(posTop < winTop)
+        return(posTop);
+    else if(posBot > winBot)
+        {
+        if(e.offsetHeight < winHeight)
+            return(posTop - (winHeight - e.offsetHeight));
+        else
+            return(posTop);
+        }
+    else
+        return(winTop);
+}
+
+function findWindowHeight()
+{
+    return(window.innerHeight ? window.innerHeight : document.body.clientHeight);
+}
+
+function findScrollY()
+{
+    return(window.scrollY ? window.scrollY : document.body.scrollTop);
+}
+
+// From QuirksMode.com
+function findPosX(obj)
+{
+    var curleft = 0;
+    if (obj.offsetParent)
+    {
+        while (obj.offsetParent)
+        {
+            curleft += obj.offsetLeft;
+            obj = obj.offsetParent;
+        }
+    }
+    else if (obj.x)
+        curleft += obj.x;
+    return curleft;
+}
+
+// From QuirksMode.com
+function findPosY(obj)
+{
+    var curtop = 0;
+    if (obj.offsetParent)
+    {
+        while (obj.offsetParent)
+        {
+            curtop += obj.offsetTop;
+            obj = obj.offsetParent;
+        }
+    }
+    else if (obj.y)
+        curtop += obj.y;
+    return curtop;
+}
+
+// Create a non-breaking space
+function insertSpacer(place)
+{
+    place.appendChild(document.createTextNode(String.fromCharCode(160)));
+}
+
+function removeChildren(e)
+{
+    while(e.hasChildNodes())
+        e.removeChild(e.firstChild);
+}
+
+
+// ---------------------------------------------------------------------------------
+// End of scripts
+// ---------------------------------------------------------------------------------
+</script>
+
+
+<style media="screen">
+	/* LAYOUT ELEMENTS ========================================================== */
+* {
+	margin-top: 0px;
+	padding-top: 0px;
+	font-family: Arial, Helvetica, sans-serif;
+}
+
+body {
+    background-color: #fff; color: #333;
+}
+
+#header {
+	color: #FF0084;
+	padding: 20px 20px 10px 0;
+}
+
+#side_container {
+	width: 14em;
+	margin: 10px 10px 0 0;
+	float: left;
+	font-size: 12px;
+}
+
+
+#displayArea {
+  margin: 1em 13em 0em 12em;
+}
+
+#rightNav {
+  float: right;
+	width: 12em;
+}
+
+a {
+  color: #0063DC;
+	text-decoration: none;
+}
+
+a:hover, a:active {
+  color: #FF0084;
+	text-decoration: none;
+}
+
+/* HEADER ========================================================== */
+
+#siteTitle {
+	font-size: 30px;
+}
+
+#siteSubtitle {
+	font-size: 13px;
+	padding-left: 10px;
+  color: #FF0084;
+}
+
+#titleLine a {
+	color: #0063DC;
+}
+
+#titleLine a:hover {
+	color: #FF0084;
+}
+
+/* SIDEBARS ========================================================== */
+
+#side_container {
+	text-align: right;
+}
+
+#side_container a {
+	font-weight: bold;
+}
+
+
+#mainMenuTitle {
+  color: #FF0084;
+	font-weight: bold;
+	padding: 10px 0px 4px 0px;
+	font-size: 1.2em;
+	letter-spacing: .1em;
+	border-bottom: dotted 1px #ccc;
+}
+
+#mainMenu a {
+  line-height: 2em;
+}
+
+
+#tagMenuTitle {
+  color: #FF0084;
+	font-weight: bold;
+	padding: 10px 0px 4px 0px;
+	font-size: 1.2em;
+	letter-spacing: .1em;
+	border-bottom: dotted 1px #ccc;
+}
+
+#tagMenu {
+  line-height: 1.4em;
+  margin-bottom: 20px;
+}
+
+#tagMenu A {
+	display: block;
+}
+
+#tagMenu A SPAN {
+	font-weight: normal;
+	padding-left: 5px;
+}
+
+
+
+
+
+#licensePanel {
+  padding-top: 10px;
+	font-size: 11px;
+}
+
+#licensePanel a {
+	font-weight: normal;
+  color: #999;
+	display: block;
+	margin-top: 10px;
+}
+
+#licensePanel a:hover {
+    color: #FF0084;
+}
+
+#commandTitle {
+  color: #FF0084;
+	font-weight: bold;
+	padding: 10px 0px 4px 0px;
+	font-size: 1.2em;
+	letter-spacing: .1em;
+	border-bottom: dotted 1px #ccc;
+}
+
+#commandPanel {
+/*  background: #ddd;
+  color: #333;*/
+}
+
+#commandPanel a {
+  color: #333;
+	display: block;
+	font-weight: normal;
+	line-height: 1.5em;
+}
+
+#commandPanel a:hover, #commandPanel a:active {
+	color: #FF0084;
+}
+
+#commandPanel input {
+    border: 1px solid #999;
+}
+
+
+#optionsPanel {
+	display: none;
+	padding: 4px;
+	font-size: 11px;
+	border: dotted 1px #ccc;
+	text-align: left;
+}
+
+#optionsPanel div{
+    margin: 5px 0;
+}
+
+#optionsPanel a {
+    display: inline;
+    font-weight: normal;
+}
+
+#optionsPanel a:hover, #optionsPanel a:active  {
+    color: #FF0084;
+}
+
+#optionsPanel input {
+	float: right;
+}
+
+
+
+
+
+
+#sidebarTabs {
+	border-bottom: 1px solid #e6e6e6;
+}
+
+#tabTimeline, #tabAll {
+  font-weight: bold;
+  display: inline;
+	border-bottom: 1px solid #e6e6e6;
+}
+
+a.tabIn {
+	background: #fff;
+	color: #FF0084;
+	padding: 3px 11px 3px 11px;
+	border: 1px solid #e6e6e6;
+	border-bottom: 1px solid #fff;
+	margin-right: 3px; margin-left: 3px;
+}
+
+a.tabOut {
+	font-size: 14px;
+	color: #0063DC;
+	background: #e6e6e6;
+	padding: 2px 8px 4px 8px;
+}
+
+a.tabOut:hover {
+	color: #FF0084;
+}
+
+/* SIDEBAR (RIGHT) =============================================================*/
+
+
+#sidebarTabs {
+	padding: 8px 0 0 10px;
+}
+
+#sidebarTabs a {
+/*  color: #fff;*/
+	padding: 2px 8px 1px 8px;
+	height: 22px;
+}
+
+#sidebarTabs a:hover {
+}
+
+#sidebarContent {
+	padding: 0 10px 10px 10px;
+	font-size: 11px;
+	clear: both;
+	border-left: solid 1px #e6e6e6;
+}
+
+#sidebarContent br{
+    display: none;
+}
+
+.sidebarSubHeading {
+ 	padding: 8px 0 0 0;
+	display: block;
+	width: 100%;
+	color: #000;
+}
+
+#sidebarContent a {
+	display: block;
+	margin: 5px 0 1px 12px;
+}
+
+#sidebarContent span.arrows {
+	float: left;
+	font-weight: bold;
+	color: #FF0084;
+	margin-top: 5px;
+}
+
+#sidebarContent a:hover {
+}
+
+
+
+
+
+
+/* TIDDLER DISPLAY/EDIT SPACE ========================================================== */
+
+.tiddler, .selectedTiddler  {
+	margin: 0 0 10px 0;
+	padding: 0 15px;
+	font-size: .8em;
+}
+
+.tiddler {
+	border: dotted 1px #fff;
+	color: #666;
+}
+
+.tiddler .title {
+	background-color: #e9e9e9;
+}
+
+.selectedTiddler {
+	border: dotted 1px #ccc;
+}
+
+.selectedTiddler .viewer * {
+    color: #000;
+}
+
+.selectedTiddler .viewer h2, .selectedTiddler .viewer h4, .selectedTiddler .viewer h6, .selectedTiddler .viewer h3, .selectedTiddler .viewer h5 {
+    color: #0063DC;
+}
+
+.selectedTiddler .title {
+	color: #FF0084;
+	background-color: #e9e9e9;
+}
+
+.selectedTiddler .viewer A {
+	color: #0063DC;
+}
+
+.selectedTiddler .viewer a:hover {
+	color: #FF0084;
+}
+
+#messageArea {
+	font-size: 13px;
+	font-weight: bold;
+	padding: 5px;
+	margin: 10px 20px;
+	color: #FF0084;
+	border: dotted 1px #ccc;
+	text-align: center;
+}
+
+#displayArea .tiddlyLinkExisting {
+    font-weight: bold;
+	text-decoration: none;
+}
+
+#displayArea .tiddlyLinkNonExisting {
+    font-style: italic;
+	text-decoration: none;
+}
+
+#displayArea .externalLink {
+    text-decoration: underline;
+}
+
+.title {
+	font-size: 1.3em;
+	padding: 0 0 0 0;
+	font-weight: bold;
+	display: block;
+	color: #0063DC;
+}
+
+.toolbar {
+  font-weight: normal;
+  font-size: 11px;
+  visibility: hidden;
+	text-align: right;
+	padding: 5px 0;
+}
+
+.toolbar a {
+  padding: 1px 5px;
+  color: #fff;
+	text-decoration: none;
+	border: 1px outset #0063DC;
+	background: #0063DC;
+}
+
+.toolbar a:hover {
+	color: #fff;
+  background: #FF0084;
+	border: 1px outset #FF0084;
+}
+
+.toolbar a:active {
+	color: #fff;
+	border: 1px inset #FF0084;
+}
+
+.tagLinks {
+	padding-top: 5px;
+	margin-top: 10px;
+ 	border-top: 1px dotted #ccc;
+ 	color: #aaa;
+}
+
+.tagLinks a {
+ 	color: #aaa;
+}
+
+.selectedTiddler .tagLinks a {
+	color: #0063DC;
+}
+
+.tagLinks a:hover {
+	color: #FF0084;
+}
+
+
+.viewer {
+    line-height: 140%;
+}
+
+.viewer blockquote {
+    border-left: 3px solid #777;
+	margin: 5px;
+	padding: 5px;
+}
+
+.viewer ul {
+	padding-left: 30px;
+}
+
+.viewer ol {
+    padding-left: 30px;
+}
+
+ol
+{
+	list-style-type: decimal;
+}
+
+ol ol
+{
+	list-style-type: lower-alpha;
+}
+
+ol ol ol
+{
+	list-style-type: lower-roman;
+}
+
+.viewer ul, .viewer ol, .viewer p {
+    margin: 5px 0 12px 0;
+}
+
+.viewer li {
+    margin: 3px 0;
+}
+
+h2,h3,h4,h5,h6 {
+    font-weight: bold;
+}
+
+.viewer * {
+    color: #999;
+}
+
+
+.viewer h2 {
+    font-size: 1.2em;
+}
+
+.viewer h3 {
+    font-size: 1.1em;
+    font-style: italic;
+}
+
+.viewer h4 {
+    font-size: 1em;
+}
+
+.viewer h5 {
+    font-size: .9em;
+    font-style: italic;
+}
+
+.viewer h6 {
+    font-size: .8em;
+}
+
+.viewer table {
+  border-collapse: collapse;
+  border: 2px solid #303030;
+	font-size: 11px;
+	margin: 10px 0;
+}
+
+.viewer th {
+    background: #eee;
+    border: 1px solid #aaa;
+    padding: 3px;
+}
+
+.viewer td {
+    border: 1px solid #aaa;
+    padding: 3px;
+}
+
+.viewer caption {
+    padding: 3px;
+}
+
+.viewer hr {
+    border: none;
+    border-top: dotted 1px #777;
+    height: 1px;
+    color: #fff;
+		margin: 7px 0;
+}
+
+.body {
+	margin: 5px 0 0px 0;
+	padding: 5px 0;
+/*	border-top: 1px dotted #ccc;*/
+}
+
+.highlight {
+  color: #000;
+  background: #ffe72f;
+}
+
+.editor {
+  font-size: 8pt;
+  color: #402C74;
+  font-weight: normal;
+	padding: 10px 0;
+}
+
+.editor input, .editor textarea {
+	display: block;
+	font: 13px/130% "Andale Mono", "Monaco", "Lucida Console", "Courier New", monospace;
+	margin: 0 0 10px 0;
+	border: 1px inset #333;
+	padding: 2px 0;
+}
+
+.editor textarea {
+	height: 500px;
+}
+
+input:focus, textarea:focus {
+	background: #ffe;
+	border: 1px solid #000 !important;
+}
+
+#storeArea, #copyright {
+   display: none;
+}
+
+#floater {
+	background: #9cf;
+	border: 3px solid #0063DC;
+	color: #9cf;
+	position: absolute;
+	left: -99999999px;
+	top: -99999999px;
+	width: 1px;
+	opacity: 0.5;
+	filter: alpha(opacity=50);
+	display: none;
+}
+</style>
+
+
+<style media="print">
+</style>
+
+</head>
+<body onLoad="main()">
+
+<div id="copyright">
+Welcome to TiddlyWiki by Jeremy Ruston, Copyright &#169; 2005 Osmosoft Limited
+</div>
+
+<div id="header">
+    <div id="titleLine">
+        <span id="siteTitle"></span>
+        <span id="siteSubtitle"></span>
+    </div>
+</div>
+
+<div id="side_container">
+	<div id="mainMenuTitle">
+		Main Stuff
+	</div>
+	<div id="mainMenu">
+	</div>
+
+	<div id="tagMenuTitle">
+		All Tags
+	</div>
+	<div id="tagMenu">
+	</div>
+
+	<div id="commandTitle">
+		Options
+	</div>
+	<div id="commandPanel">
+		<!-- Commented out big happy button. Might need it later | Nathan Edit <a href="javascript:;" onClick="saveChanges(event)" title="Save all tiddlers to create a new TiddlyWiki" id="save_button">Save changes [alt+s]</a>-->
+		<a href="javaScript:;" onClick="onSearch()">Search:</a>
+		<input id="searchText" size="15" onKeyUp="onSearch()" autocomplete="off" />
+		<a href="javascript:;" onClick="closeAllTiddlers(event);displayTiddlers(null,getTiddlerText('DefaultTiddlers'),1,null,null);" title="Reset the layout to the default">Reset layout</a>
+		<a href="javascript:;" onClick="closeAllTiddlers(event)" title="Close all displayed tiddlers (except any that are being edited)">Close all</a>
+		<a href="javascript:;" onClick="onClickPermaView(event)" title="Link to an URL that retrieves all the currently displayed tiddlers">Permaview</a>
+		<a href="javascript:;" tiddlyLink="MainMenu" onClick="onClickTiddlerLink(event);" title="Edit the main menu">Main Menu</a>
+		<a href="javascript:;" tiddlyLink="DefaultTiddlers" onClick="onClickTiddlerLink(event);" title="Edit the default layout">Default Tiddlers</a>
+		<a href="javascript:;" onClick="onClickOptions(event)" title="Change TiddlyWikiOptions">Options</a>
+	</div>
+
+	<div id="optionsPanel">
+		<div class="optionsText">These
+			<a href="javascript:;" tiddlylink="InterfaceOptions" onClick="onClickTiddlerLink(event);">InterfaceOptions</a>
+			for customising
+			<a href="javascript:;" tiddlylink="TiddlyWiki" onClick="onClickTiddlerLink(event);">TiddlyWiki</a>
+			are saved in your browser
+		</div>
+
+		<div class="optionsItem"><input type=checkbox onClick="onChangeOption(event);" id="chkRegExp" />
+			<a href="javascript:;" tiddlylink="RegExpSearch" onClick="onClickTiddlerLink(event);">RegExpSearch</a>
+		</div>
+
+		<div class="optionsItem"><input type=checkbox onClick="onChangeOption(event);" id="chkCaseSens" />
+			<a href="javascript:;" tiddlylink="CaseSensitiveSearch" onClick="onClickTiddlerLink(event);">CaseSensitiveSearch</a>
+		</div>
+
+		<div class="optionsItem"><input type=checkbox onClick="onChangeOption(event);" id="chkAnimate" />
+            	<a href="javascript:;" tiddlylink="EnableAnimations" onClick="onClickTiddlerLink(event);">EnableAnimations</a>
+   	</div>
+
+		<div class="optionsItem"><input type=checkbox onClick="onChangeOption(event);" id="chkSinglePage" />
+			<a href="javascript:;" tiddlylink="SinglePageMode" onClick="onClickTiddlerLink(event);">Single Page Mode</a>
+   	</div>
+
+		<div class="optionsText">Your username for signing your edits. Write it as a
+			<a href="javascript:;" tiddlylink="WikiWord" onClick="onClickTiddlerLink(event);">WikiWord</a>
+			(eg
+			<a href="javascript:;" tiddlylink="JoeBloggs" onClick="onClickTiddlerLink(event);">JoeBloggs</a>)
+		</div>
+
+		<input id="txtUserName" size=15 onKeyUp="onChangeOption(event)" autocomplete=off />
+	</div>
+
+	<div id="licensePanel">
+		<a rel="license" href="http://www.tiddlywiki.com" target="_new">
+			TiddlyWiki is published by Jeremy Ruston at Osmosoft under a BSD open source license
+		</a>
+		<a rel="license" href="http://snapgrid.com" target="_new">
+			GTD TiddlyWiki is a modification by Nathan Bowers at Snapgrid under the same license terms.
+		</a>
+		<a rel="license" href="http://www.digitaldimsum.co.uk" target="_new">
+			TiddlyTagWiki is a modification by Jonny LeRoy of ThoughtWorks under the same license terms.
+		</a>
+	</div>
+
+</div>
+
+
+<div id="rightNav">
+	<div id="sidebarTabs">
+		<a href="JavaScript:;" onClick="onClickTab(event)" id="tabTimeline">Timeline</a>
+		<a href="JavaScript:;" onClick="onClickTab(event)" id="tabAll">All</a>
+	</div>
+	<div id="sidebarContent" class="tabContentTimeline">
+	</div>
+</div>
+
+<div id="displayArea">
+    <div id="messageArea">Message Area</div>
+    <div id="tiddlerDisplay"></div>
+    	&#160;
+    <div id="floater">&#160;</div>
+</div>
+
+
+<div id="storeArea"><div id="storeStartupBehaviour" modified="200412192141" modifier="JeremyRuston" tags="">When it loads, TiddlyWiki looks for the names of tiddlers to open as a space-separated list after the # in the URL. If there are no tiddlers in the URL it instead loads the tiddlers named in DefaultTiddlers, one of the SpecialTiddlers.</div>
+<div id="storeOpenSourceLicense" modified="200504091859" modifier="JeremyRuston" tags="">TiddlyWiki is published under a BSD OpenSourceLicense that gives you the freedom to use it pretty much however you want, including for commercial purposes, as long as you keep my copyright notice. I'd appreciate a link back to http://www.tiddlywiki.com as well. </div>
+<div id="storeInternetExplorer" modified="200504120008" modifier="JeremyRuston" tags="">InternetExplorer on Windows allows you to SaveChanges in TiddlyWiki. It will give you an ActiveX warning, and ask for your permission to proceed each time. It should work from version 4, but I have only extensively tested against version 6. I have found some annoying difficulties with XpServicePack2, but there's always FireFox.</div>
+<div id="storeWikiWord" modified="200504132135" modifier="JeremyRuston" tags="">A WikiWord is a word composed of a bunch of other words slammed together with each of their first letters capitalised. WikiWord notation in a conventional WikiWikiWeb is used to name individual pages while TiddlyWiki uses WikiWord titles for smaller chunks of MicroContent. Referring to a page with a WikiWord automatically creates a link to it. Clicking on a link jumps to that page or, if it doesn't exist, to an editor to create it. This ThirdVersion of TiddlyWiki also adds NonWikiWordLinks.</div>
+<div id="storeWikiWikiWeb" modified="200504132139" modifier="JeremyRuston" tags="">A Wiki is a popular way of building collaborative websites. It's based on the ideas of easy editing of pages and the use of special WikiWord notation to automagically create links between pages. See Wikipedia for [[more details|http://en.wikipedia.org/wiki/Wiki]]. TiddlyWiki is different from a conventional Wiki because it is not based on entire pages of content, but rather items of MicroContent that are referred to as 'tiddlers'.</div>
+<div id="storePermaView" modified="200504132301" modifier="JeremyRuston" tags="">I think this feature from the SecondVersion of TiddlyWiki is quite original. It's a button in the right-hand sidebar that sets the browser address bar to a URL embodying all the currently open tiddlers in the order that they are currently shown. To use it, arrange the open tiddlers that you want, click the permaview button, copy the URL from the browser address bar, and then paste it into an email, web page or whatever.</div>
+<div id="storeIncrementalSearch" modified="200504132301" modifier="JeremyRuston" tags="">When you type more than three characters in the search box at the upper right, any matching tiddlers are automatically displayed with the text highlighted. There's a couple of minor issues: the highlights don't get removed when you clear the search, and occasionally, on some browsers, keystrokes get missed if you type quickly so you may need to click the 'search' button to manually trigger the search.</div>
+<div id="storeEasterEgg" modified="200504132334" modifier="JeremyRuston" tags="">Try holding down the alt- or shift-key while clicking on a link to a tiddler, on the 'options' button or on the CloseButton for a tiddler. Kind of a respectful homage to Mac OS X, which does something similar for many of its system animations. (On browsers like InternetExplorer that use the shift key to open a new window, it's best to use the alt-key).</div>
+<div id="storeRegExpSearch" modified="200504132345" modifier="JeremyRuston" tags="">RegExpSearch uses JavaScript's [[RegExp syntax|http://www.programmershelp.co.uk/docs/javascript/regexp.html#1193188]] to allow flexible searches.</div>
+<div id="storeInterfaceOptions" modified="200505021559" modifier="NathanBowers" tags="">InterfaceOptions are displayed when you click the 'options' button on the right. They are saved in a cookie on your browser, making them sticky between visits. RegExpSearch allows more complex search expressions; CaseSensitiveSearch does as it's name implies. The user name for edits should be set //before// starting to edit things (ouch. another bug).</div>
+<div id="storeExtendedFormatting" modified="200505021559" modifier="NathanBowers" tags="">''Bold''\n==Strike==\n__Underline__\n//Italic//\n2^^3^^=8\na~~ij~~ = -a~~ji~~\n@@highlight@@\n@@color(green):green colored@@\n@@bgcolor(#ff0000):color(#ffffff):red colored@@</div>
+<div id="storeSpecialTiddlers" modified="200505042327" modifier="NathanBowers" tags="">TiddlyWiki uses several special tiddlers to hold the text used for the MainMenu, the SiteTitle and the SiteSubtitle. DefaultTiddlers is used to store the titles of the tiddlers that are shown at startup. SaveChanges is automatically displayed if there's a problem with saving. Any of them can be edited with the changes taking effect immediately.</div>
+<div id="storeRenameTiddlers" modified="200505051736" modifier="NathanBowers" tags="">If you rename a Tiddler and it lives in MainMenu or DefaultTiddlers, you'll need to update those SpecialTiddlers manually.</div>
+<div id="storeJeremyRuston" modified="200505052354" modifier="NathanBowers" tags="">The creator of TiddlyWiki and a technologist based in London. He does consultancy work through his company [[Osmosoft|http://www.osmosoft.com]], as well as pursuing some independent projects like TiddlyWiki.</div>
+<div id="storeAboutTiddlers" modified="200505061530" modifier="NathanBowers" tags="">"Tiddlers" are the building blocks of TiddlyWiki. Each "entry" or "post" is a Tiddler. There are also SpecialTiddlers that control the MainMenu, SiteTitle, SiteSubtitle, and list of DefaultTiddlers that display on start up. </div>
+<div id="storeEnableAnimations" modified="200505101746" modifier="NathanBowers" tags="">There's now an option under InterfaceOptions to allow TiddlyWiki's animation effects to be turned off.</div>
+<div id="storeDeleteTiddlers" modified="200505101753" modifier="NathanBowers" tags="">Enter Tiddler edit mode and click "delete" \n\nIf you delete a Tiddler that lives in MainMenu or DefaultTiddlers, you'll need to manually remove them from those SpecialTiddlers.\n\nSee also: RenameTiddlers </div>
+<div id="storeCreateTiddlers" modified="200505101758" modifier="NathanBowers" tags="">! Preferred Method\n# Create new Tiddlers directly in the MainMenu by typing them in the MainMenu Tiddler.\n\n! Method 2\n# Click CreateNewTiddler in the MainMenu.\n# Edit the title and content to create.\n\n! Method 3\n# Enter a mixed-case WikiWord (or double square brackets for NonWikiWordLinks) into an existing Tiddler.\n# Click on the new italicized "empty" Tiddler to edit.\n# When you are done editing, the Tiddler is created.</div>
+<div id="storeSaveChanges" modified="200505122328" modifier="NathanBowers" tags="">You can SaveChanges if you're using FireFox or InternetExplorer:\n# if you're using Windows XP you might run into ServicePack2Problems\n# right click on [[this link|#]] and select 'Save link as...' or 'Save target as...'\n** choose where to save the file, and what to call it (but keep the .HTML extension)\n# open the newly downloaded file in your browser\n# click the 'options' button to set your username\n# edit, create and delete the tiddlers you want\n** you can change the SpecialTiddlers to change the SiteTitle and MainMenu etc.\n# Every time you click "done" or press [ctrl+enter] after editing a Tiddler, your changes are saved and a backup of the last saved state is created.\n</div>
+<div id="storeNoWarranty" modified="200505130023" modifier="NathanBowers" tags="">TiddlyWiki is a spare time project that I'm making available under an OpenSourceLicense. Accordingly, there's no warranty on it, and you can only use it at your own risk. To report bugs go to the GoogleGroup.</div>
+<div id="storeEmailMe" modified="200505130025" modifier="NathanBowers" tags="">Questions? Comments? Bugs? Please use the GTD Tiddly Wiki GoogleGroup. It's the best way to get a response and you'll have more eyes on  your issue.\n\nMy email is [wiki (at) snapgrid (dot) com] or my [[mail form|http://snapgrid.com/contact/]]. Due to the popularity of this app I can't reply to everyone, though I do read all emails.\n\nTo contact the original creator of TiddlyWiki, EmailJeremy.</div>
+<div id="storeGoogleGroup" modified="200505130033" modifier="NathanBowers" tags="">Visit the [[Google Group|http://groups-beta.google.com/group/GTD-TiddlyWiki?hl=en]] to report bugs, annoyances, ask questions, offer help, or sound off.</div>
+<div id="storeKeyboardShortcuts" modified="200505130036" modifier="NathanBowers" tags="">* Double click on a Tidder entry to edit it.\n* [Control + Enter] accepts your changes and switches out of editing mode\n* [Escape] abandons your changes and reverts the tiddler to it's previous state</div>
+<div id="storeSupportedBrowsers" modified="200505130042" modifier="NathanBowers" tags="">!Supported\n* Firefox\n* Win IE 6 (caveat: see KnownBugs)\n* Camino (I haven't verified this)\n\n!Non Supported\n* Safari: Saving doesn't work in Safari, which renders TiddlyWiki useless. If anyone knows of a work around, report it at the GoogleGroup.\n* Opera: I've gotten mixed reports.</div>
+<div id="storeKnownBugs" modified="200505130047" modifier="NathanBowers" tags="">!Bugs\n* "Highlighted" and Hexidecimal colored text formatting is broken\n* When printing WIN/IE 6 inserts one blank page because it does not recognize the :first-child CSS psuedo element.\n* WIN/IE 6 messes up list items when you edit a Tiddler with multiple headings.\n\n!Annoyances\n* You have to do alot to customize your browser print settings to remove the page URL, pagination, timestamp, and ensure that the output is sized and paged correctly.\n* Firefox/Mac has no "page properties" interface for removing the page URL, page numbers, etc... from printed pages. This is pretty lame. Try entering about:config in Firefox's URL bar and look for "print" to configure it the hard way. Ask the Firefox development team to fix this.\n\n!Help out\n* If you you encounter new bugs, can help fix bugs, or can help make this usable in Safari, Opera, or handhelds, go to the GoogleGroup. Thanks!</div>
+<div id="storeSiteSubtitle" modified="200505230157" modifier="JonnyLeRoy" tags="special_tiddlers">Micro-content with the power of tags ...</div>
+<div id="storeSiteTitle" modified="200505232104" modifier="JonnyLeRoy" tags="special_tiddlers">TiddlyTagWiki</div>
+<div id="storeLittleBitMore" modified="200505232351" modifier="JonnyLeRoy" tags="stupid">What everyone wants, but not everyone gets ... at least not all the time.</div>
+<div id="storeHowToUpgrade" modified="200505232359" modifier="JonnyLeRoy" tags="help">When TiddlyTagWiki is updated with enhancements and fixes, here's how to upgrade while keeping your data.\n\n* Just to be safe, create a backup of your current file and archive it somewhere. Though if you've already been using it there will be a whole bunch of backups (maybe too many).\n\nOkay then:\n* Open your TiddlyWiki file (say it's called "mystuff.html") in a browser.\n* Without closing that page, right-click on [[this link|#]], select 'Save target' or 'Save link' and save it as "mystuff.html", replacing your existing file\n* Now go back to the previously opened copy of "mystuff.html" in your browser and SaveChanges by editing a Tiddler (you don't have to actually change any text, just click "done"). It will inherit the newly saved code\n* Refresh the page in the browser to verify that the upgrade has worked</div>
+<div id="storeDownloadSoftware" modified="200505232359" modifier="JonnyLeRoy" tags="help">Because TiddlyWiki is a single HTML file, you've actually already downloaded the entire software just by viewing this site. If you want to be able to SaveChanges, you can save your own TiddlyWiki to your local drive by right clicking on [[this link|#]] and selecting 'Save link as...' or 'Save target as...'. You can choose where to save the file, and what to call it (but keep the .HTML extension).</div>
+<div id="storeReusingThisSite" modified="200505232359" modifier="JonnyLeRoy" tags="help">It's easy to make your own TiddlyWiki that you can publish yourself - see how to SaveChanges for details. If you want to change the layout or the colour scheme, you'll need some basic HTML and CSS knowledge.</div>
+<div id="storeUsingThisSite" modified="200505232359" modifier="JonnyLeRoy" tags="help">Within the main story column you can click on bold links to read a linked tiddler. Click on italic links to create a new tiddler. When you hover the mouse over a tiddler several ToolbarButtons appear. You can edit the text of any tiddler by double-clicking on it (or selecting 'edit' from the toolbar), but your changes won't get saved permanently until you make your own copy of TiddlyWiki, as described in SaveChanges.</div>
+<div id="storeMainMenu" modified="200505240001" modifier="JonnyLeRoy" tags="special_tiddlers">TiddlyTagWiki\nTiddlyTags\nNewFeatures\nUsingThisSite\nReusingThisSite\nDownloadSoftware\nHowToUpgrade\n\n[[Create New Tiddler]]\n\n</div>
+<div id="storeMicroContent" modified="200505240004" modifier="JonnyLeRoy" tags="introduction glossary">MicroContent being a fashionable word for self-contained fragments of content that are typically smaller than entire pages. Often MicroContent is presented via some kind of aggregation that reduces the perceptual shock and resource cost of context switching (eg Blogs aggregating several entries onto a page or Flickr presenting photos in an album). This TiddlyWiki aggregates MicroContent items that I call 'tiddlers' into pages that are loaded in one gulp and progressively displayed as the user clicks hypertext links to read them.</div>
+<div id="storeHeadings" modified="200505240005" modifier="JonnyLeRoy" tags="formatting">Edit this to see how to create Headers\n\n!Header 1\n!!Header 2\n!!!Header 3\n!!!!Header 4\n!!!!!Header 5\n</div>
+<div id="storeEmbeddedImages" modified="200505240006" modifier="JonnyLeRoy" tags="formatting">Edit this tiddler to see how to insert images.\n[img[http://img110.echo.cx/img110/139/gorilla8nw.jpg]]</div>
+<div id="storeBulletPoints" modified="200505240006" modifier="JonnyLeRoy" tags="formatting">Edit this tiddler to see how to create BulletPoints\n* Like this one\n* And this one\n** And this second-level one\n* And a final one</div>
+<div id="storeBlockQuotes" modified="200505240006" modifier="JonnyLeRoy" tags="formatting">JeremyRuston said:\n<<<\nA TiddlyWiki is like a blog because it's divided up into neat little chunks, but it encourages you to read it by hyperlinking rather than sequentially: if you like, a non-linear blog analogue that binds the individual microcontent items into a cohesive whole. I think that TiddlyWiki represents a novel medium for writing, and will promote it's own distinctive WritingStyle. This is the first version of TiddlyWiki and so, as discussed in TiddlyWikiDev, it's bound to be FullOfBugs, have many MissingFeatures and fail to meet all of the DesignGoals. And of course there's NoWarranty, and it might be judged a StupidName.\n<<<\n\n>level 1\n>level 1\n>>level 2\n>>level 2\n>>>level 3\n>>>level 3\n>>level 2\n>level 1\n</div>
+<div id="storePrettyLinks" modified="200505240007" modifier="JonnyLeRoy" tags="formatting">You can now link to [[external sites|http://www.osmosoft.com]] with ordinary words, without the messiness of the full URL appearing. Edit this tiddler to see how.\n\nYou can also LinkToFolders.</div>
+<div id="storePeriodicTable" modified="200505240007" modifier="JonnyLeRoy" tags="formatting">|Standard Periodic Table (ref. Wikipedia)|c\n|| !1 | !2 |!| !3 | !4 | !5 | !6 | !7 | !8 | !9 | !10 | !11 | !12 | !13 | !14 | !15 | !16 | !17 | !18 |\n|!1|bgcolor(#a0ffa0): @@color(red):H@@ |>|>|>|>|>|>|>|>|>|>|>|>|>|>|>|>||bgcolor(#c0ffff): @@color(red):He@@ |\n|!2|bgcolor(#ff6666): Li |bgcolor(#ffdead): Be |>|>|>|>|>|>|>|>|>|>||bgcolor(#cccc99): B |bgcolor(#a0ffa0): C |bgcolor(#a0ffa0): @@color(red):N@@ |bgcolor(#a0ffa0): @@color(red):O@@ |bgcolor(#ffff99): @@color(red):F@@ |bgcolor(#c0ffff): @@color(red):Ne@@ |\n|!3|bgcolor(#ff6666): Na |bgcolor(#ffdead): Mg |>|>|>|>|>|>|>|>|>|>||bgcolor(#cccccc): Al |bgcolor(#cccc99): Si |bgcolor(#a0ffa0): P |bgcolor(#a0ffa0): S |bgcolor(#ffff99): @@color(red):Cl@@ |bgcolor(#c0ffff): @@color(red):Ar@@ |\n|!4|bgcolor(#ff6666): K |bgcolor(#ffdead): Ca ||bgcolor(#ffc0c0): Sc |bgcolor(#ffc0c0): Ti |bgcolor(#ffc0c0): V |bgcolor(#ffc0c0): Cr |bgcolor(#ffc0c0): Mn |bgcolor(#ffc0c0): Fe |bgcolor(#ffc0c0): Co |bgcolor(#ffc0c0): Ni |bgcolor(#ffc0c0): Cu |bgcolor(#ffc0c0): Zn |bgcolor(#cccccc): Ga |bgcolor(#cccc99): Ge |bgcolor(#cccc99): As |bgcolor(#a0ffa0): Se |bgcolor(#ffff99): @@color(green):Br@@ |bgcolor(#c0ffff): @@color(red):Kr@@ |\n|!5|bgcolor(#ff6666): Rb |bgcolor(#ffdead): Sr ||bgcolor(#ffc0c0): Y |bgcolor(#ffc0c0): Zr |bgcolor(#ffc0c0): Nb |bgcolor(#ffc0c0): Mo |bgcolor(#ffc0c0): Tc |bgcolor(#ffc0c0): Ru |bgcolor(#ffc0c0): Rh |bgcolor(#ffc0c0): Pd |bgcolor(#ffc0c0): Ag |bgcolor(#ffc0c0): Cd |bgcolor(#cccccc): In |bgcolor(#cccccc): Sn |bgcolor(#cccc99): Sb |bgcolor(#cccc99): Te |bgcolor(#ffff99): I |bgcolor(#c0ffff): @@color(red):Xe@@ |\n|!6|bgcolor(#ff6666): Cs |bgcolor(#ffdead): Ba |bgcolor(#ffbfff):^^*1^^|bgcolor(#ffc0c0): Lu |bgcolor(#ffc0c0): Hf |bgcolor(#ffc0c0): Ta |bgcolor(#ffc0c0): W |bgcolor(#ffc0c0): Re |bgcolor(#ffc0c0): Os |bgcolor(#ffc0c0): Ir |bgcolor(#ffc0c0): Pt |bgcolor(#ffc0c0): Au |bgcolor(#ffc0c0): @@color(green):Hg@@ |bgcolor(#cccccc): Tl |bgcolor(#cccccc): Pb |bgcolor(#cccccc): Bi |bgcolor(#cccc99): Po |bgcolor(#ffff99): At |bgcolor(#c0ffff): @@color(red):Rn@@ |\n|!7|bgcolor(#ff6666): Fr |bgcolor(#ffdead): Ra |bgcolor(#ff99cc):^^*2^^|bgcolor(#ffc0c0): Lr |bgcolor(#ffc0c0): Rf |bgcolor(#ffc0c0): Db |bgcolor(#ffc0c0): Sq |bgcolor(#ffc0c0): Bh |bgcolor(#ffc0c0): Hs |bgcolor(#ffc0c0): Mt |bgcolor(#ffc0c0): Ds |bgcolor(#ffc0c0): Rg |bgcolor(#ffc0c0): @@color(green):Uub@@ |bgcolor(#cccccc): Uut |bgcolor(#cccccc): Uuq |bgcolor(#cccccc): Uup |bgcolor(#cccccc): Uuh |bgcolor(#fcfecc): @@color(#cccccc):Uus@@ |bgcolor(#ecfefc): @@color(#cccccc):Uuo@@ |\n\n| !Lanthanides^^*1^^|bgcolor(#ffbfff): La |bgcolor(#ffbfff): Ce |bgcolor(#ffbfff): Pr |bgcolor(#ffbfff): Nd |bgcolor(#ffbfff): Pm |bgcolor(#ffbfff): Sm |bgcolor(#ffbfff): Eu |bgcolor(#ffbfff): Gd |bgcolor(#ffbfff): Tb |bgcolor(#ffbfff): Dy |bgcolor(#ffbfff): Ho |bgcolor(#ffbfff): Er |bgcolor(#ffbfff): Tm |bgcolor(#ffbfff): Yb |\n| !Actinides^^*2^^|bgcolor(#ff99cc): Ac |bgcolor(#ff99cc): Th |bgcolor(#ff99cc): Pa |bgcolor(#ff99cc): U |bgcolor(#ff99cc): Np |bgcolor(#ff99cc): Pu |bgcolor(#ff99cc): Am |bgcolor(#ff99cc): Cm |bgcolor(#ff99cc): Bk |bgcolor(#ff99cc): Cf |bgcolor(#ff99cc): Es |bgcolor(#ff99cc): Fm |bgcolor(#ff99cc): Md |bgcolor(#ff99cc): No |\n\n*Chemical Series of the Periodic Table\n**@@bgcolor(#ff6666): Alkali metals@@\n**@@bgcolor(#ffdead): Alkaline earth metals@@\n**@@bgcolor(#ffbfff): Lanthanides@@\n**@@bgcolor(#ff99cc): Actinides@@\n**@@bgcolor(#ffc0c0): Transition metals@@\n**@@bgcolor(#cccccc): Poor metals@@\n**@@bgcolor(#cccc99): Metalloids@@\n**@@bgcolor(#a0ffa0): Nonmetals@@\n**@@bgcolor(#ffff99): Halogens@@\n**@@bgcolor(#c0ffff): Noble gases@@\n\n*State at standard temperature and pressure\n**those in @@color(red):red@@ are gases\n**those in @@color(green):green@@ are liquids\n**those in black are solids</div>
+<div id="storeNumberedLists" modified="200505240007" modifier="JonnyLeRoy" tags="formatting">start\n#item1\n#item2\n##item2.1\n##item2.2\n##item2.3\n#item3\n##item3.1\n###item3.1.1\n###item3.1.2\n\nend</div>
+<div id="storeNonWikiWordLinks" modified="200505240007" modifier="JonnyLeRoy" tags="formatting">To make a tiddler that doesn't have a WikiWord as it's name, you can enclose the name in [[double square brackets]] - edit this tiddler to see an example. After saving the tiddler you can then click on the link to create the new tiddler. NonWikiWordLinks permits tiddlers to be created with names that are made from character sets that don't have upper and lower case.</div>
+<div id="storeLinkToFolders" modified="200505240007" modifier="JonnyLeRoy" tags="formatting">The format for PrettyLinks allows for links that open local or network folders. Depending on your browser and operating system, the folders are opened in Windows Explorer, the OS X Finder, or the browser itself.\n\nEdit this tiddler to see [[this link to a Windows network share|file://server/share/folder/path/name]], [[this link to a Windows drive-mapped folder|file:///c:/folder/path/name]] and [[this link to a Unix-style folder|file:///folder/path/name]].</div>
+<div id="storeHtmlTables" modified="200505240007" modifier="JonnyLeRoy" tags="formatting">*sample:\n|!th1111111111|!th2222222222|\n|>| colspan |\n| rowspan |left|\n|~| right|\n|bgcolor(#a0ffa0):colored| center |\n|caption|c\n*another sample: see PeriodicTable.\n</div>
+<div id="storeFormattingInstructions" modified="200505240008" modifier="JonnyLeRoy" tags="formatting">TiddlyWiki uses Wiki style markup, a way of lightly "tagging" plain text so it can be transformed into HTML. Edit this Tiddler to see samples.\n\n! Header Samples\n!Header 1\n!!Header 2\n!!!Header 3\n!!!!Header 4\n!!!!!Header 5\n\n! Unordered Lists:\n* Lists are where it's at\n* Just use an asterisk and you're set\n** To nest lists just add more asterisks...\n***...like this\n* The circle makes a great bullet because once you've printed a list you can mark off completed items\n* You can also nest mixed list types\n## Like this\n\n! Ordered Lists\n# Ordered lists are pretty neat too\n# If you're handy with HTML and CSS you could customize the [[numbering scheme|http://www.w3schools.com/css/pr_list-style-type.asp]]\n## To nest, just add more octothorpes (pound signs)...\n### Like this\n* You can also\n** Mix list types\n*** like this\n# Pretty neat don't you think?\n\n! Tiddler links\nTo create a Tiddler link, just use mixed-case WikiWord, or use [[brackets]] for NonWikiWordLinks. This is how the GTD style [[@Action]] lists are created. \n\nNote that existing Tiddlers are in bold and empty Tiddlers are in italics. See CreatingTiddlers for details.\n\n! External Links\nYou can link to [[external sites|http://google.com]] with brackets. You can also LinkToFolders on your machine or network shares.\n\n! Images\nEdit this tiddler to see how it's done.\n[img[http://img110.echo.cx/img110/139/gorilla8nw.jpg]]\n\n!Tables\n|!th1111111111|!th2222222222|\n|>| colspan |\n| rowspan |left|\n|~| right|\n|colored| center |\n|caption|c\n\nFor a complex table example, see PeriodicTable.\n\n! Horizontal Rules\nYou can divide a tiddler into\n----\nsections by typing four dashes on a line by themselves.\n\n! Blockquotes\n<<<\nThis is how you do an extended, wrapped blockquote so you don't have to put angle quotes on every line.\n<<<\n>level 1\n>level 1\n>>level 2\n>>level 2\n>>>level 3\n>>>level 3\n>>level 2\n>level 1\n\n! Other Formatting\n''Bold''\n==Strike==\n__Underline__\n//Italic//\nSuperscript: 2^^3^^=8\nSubscript: a~~ij~~ = -a~~ji~~\n@@highlight@@ Unfortunately highlighting is broken right now.\n@@color(green):green colored@@\n@@bgcolor(#ff0000):color(#ffffff):red colored@@ Hex colors are also broken right now.\n</div>
+<div id="storeIMadeThat" modified="200505240008" modifier="JonnyLeRoy" tags="me">[[Whatsonwhen|http://www.whatsonwhen.com]]\n[[International Student Travel Confederation|http://www.isic.org]]\n[[Methods Consulting|http://www.methods.co.uk]]\n[[Phil Braham|http://www.philbraham.com]]\n</div>
+<div id="storeDefaultTiddlers" modified="200505240015" modifier="JonnyLeRoy" tags="special_tiddlers">TiddlyTagWiki\nNewFeatures\nUsingThisSite</div>
+<div id="storeJonnyLeRoy" modified="200505240038" modifier="JonnyLeRoy" tags="introduction me">I'm Jonny LeRoy, an IT consultant working for [[ThoughtWorks|http://www.thoughtworks.com/uk]] in London.\n\nIn a previous incarnation IMadeThat. You can ContactMe if you want to say nice things.</div>
+<div id="storeLeRoy" modified="200505240042" modifier="JonnyLeRoy" tags="">That's my surname and yes it does have a captital "R" in the middle, which makes it slightly annoying for Wikis since it always gets turned into a link ...</div>
+<div id="storeContactMe" modified="200505240043" modifier="JonnyLeRoy" tags="me">My email is:\n\n''jleroy at thoughtworks dot com''\n\n//mutatis mutandis//\n</div>
+<div id="storeNewFeatures" modified="200505240045" modifier="JonnyLeRoy" tags="changes">This version of TiddlyWiki is based on a mixture of JeremyRuston's original and NathanBower's GTDTiddlyWiki.\n\nThe main functional change from the original TiddlyWiki is the introduction of TiddlyTags - allowing you to categorise your Tiddlers in an ad hoc manner. \n\nI've also updated the LookAndFeel and layout to suit my [[Flickr|http://www.flickr.com]] obsessed taste.\n\nOther small changes include the automatic saving of the current layout to the OptionsCookie rather than using the DefaultTiddlers. Though they are still used if no layout is set in the OptionsCookie.\n\nYou can now also select to view the TimeLine filtered to just show Tiddlers that you've modified. This has been commented out for now since it isn't configurable and if you haven't edited anything then nothing will appear in the timeline. If you UseTheSource then you can put this filter back in ;-) \n\nI've also changed the backup logic so it saves to a sub-directory called "backup" - this just keeps the main directory cleaner and makes it simpler to zip up your backups to reduce space.</div>
+<div id="storeOptionsCookie" modified="200505240049" modifier="JonnyLeRoy" tags="help changes glossary">A little cookie storing various options for how the TiddlyTagWiki should function. \n\n!Changes\nI've also stored the current layout in there - it gets updated each time you open or close a Tiddler. This means that when you come back to the page the layout will be remembered.\n\nYou can still get back to the default view (defined in DefaultTiddlers) by clicking "Reset Layout" on the lefthand options menu.\n\nIf you don't yet have a cookie stored you will just see the DefaultTiddlers.</div>
+<div id="storeTiddlyTagWiki" modified="200505240049" modifier="JonnyLeRoy" tags="introduction changes glossary">Welcome to TiddlyTagWiki - an adaptation of Jeremy Ruston's TiddlyWiki. It's a simple, self-contained, client-side, personal publishing engine. It's a single web page containing all the content you create and the logic to link it all together. This makes it fast and portable.\n\nThe addition of TiddlyTags allows you greater control over how you group together your chunks of MicroContent.\n\nThe NewFeatures of this version were hacked together by JonnyLeRoy because he loved [[the original|http://www.tiddlywiki.com/]], but just wanted a LittleBitMore.</div>
+<div id="storeTiddlyWiki" modified="200505240049" modifier="JonnyLeRoy" tags="introduction glossary">A TiddlyWiki is like a blog because it's divided up into neat little chunks, but it encourages you to read it by hyperlinking rather than sequentially: if you like, a non-linear blog analogue that binds the individual microcontent items into a cohesive whole. I think that TiddlyWiki represents a novel medium for writing, and will promote it's own distinctive WritingStyle. This is the ThirdVersion of TiddlyWiki, which adds several NewFeatures. There are also several TiddlyWikiAdaptations by other developers based on earlier versions.\n\nThe original TiddlyWiki is [[here|http://tiddlywiki.com]].</div>
+<div id="storeUseTheSource" modified="200505240054" modifier="JonnyLeRoy" tags="stupid">Go on, have a look, have a play, it's yours. \nGo on, be bold, make some changes. \nGo on, be even bolder, upload the changes, and tell someone.\n\nGo on, it's what Jedi coders do ...\n\nGoogleGroup</div>
+<div id="storeTiddlyTags" modified="200505271701" modifier="JonnyLeRoy" tags="help introduction changes">TiddlyTags are simple keywords you can add to Tiddlers to help classify and group them.\n\nThere's an edit box below the main content box where you can enter them - just separate them with spaces.\n\nAll the tags that you've created will be added to a list on the left, along with a count of how many Tiddlers each tag is attached to.\n\nIf you want to have a tag made up of multiple words, just separate them with underscores like_this_example. The underscores will be stripped out in the list on the left.\n\nFor another implementation of tags in a TiddlyWiki see TagglyWiki.</div>
+<div id="storeTagglyWiki" modified="200505271703" modifier="JonnyLeRoy" tags="">Jody Foo has put together another tag-based implementation where the tags are also Tiddlers\n\nhttp://www.informationality.com/tagglywiki/tagglywiki.html</div>
+<div id="storeProsAndCons" modified="200505310956" modifier="JonnyLeRoy" tags="musings issues development">A brief list of conceptual problems and benefits with TiddlyWiki\n\n!Pros\n* Download software - you've already got it!\n* Pushes the processing load client-side\n* Fast interaction\n* Highly portable\n* Next generation of webapps - more local\n* Naturally open source\n\n!Cons\n* Not easy for collaboration - need to save to the same file.\n* Needs work on remote syncing\n* If used for web page isn't ideal for search engines\n* Not RESTful architecture?\n* Decentralised source distribution leads to many branches - hard to merge back together\n* Cross-browser issues?\n* Natural size limit - doesn't scale?\n\n</div></div>
+</body>
+</html>	

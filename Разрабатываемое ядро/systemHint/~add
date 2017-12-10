@@ -1,0 +1,3 @@
+﻿В тегах допустим пробел, но такие теги надо оборачивать в [[]], например так: [[foo bar]]
+
+ For tags with more than one word, either use WikiWords with alternating upper and lowercase letters, or use double square brackets [[these]] to enclose multiple word phrases.

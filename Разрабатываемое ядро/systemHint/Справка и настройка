@@ -1,0 +1,32 @@
+﻿* [[Настроить главное меню|MainMenu]]
+!! Справка
+* [[Справка: форматирование]]
+* [[Справка: встроенные плагины]]
+* [[Справка: FAQ]]
+@@Minor change: @@ - если при сохранении записки зажать shift - это будет "минорное" изменение без корректировки даты.
+!! Конфигурация
+* [[Configuration]]
+! Полезные внешние плагины (то, что musthave):
+* [[SectionMacro]] - Allows you to create collapsable sections just like the slider macro but without needing to create new tiddlers for these sections. @@Creates text-link@@
+* NestedSlidersPlugin - улучшенная версия SectionMacro, смотри NestedSlidersPluginInfo.
+* FramedLinksPlugin - clicking an external link opens an IFRAME following the link instead of opening a new tab/window
+* [[saveAndReloadPlugin]] - Save and Reload - add macros {{{ <<saveAndReload>> }}} anywhere.
+* FullScreenPlugin - требует правки ToolbarCommands, позволяет развернуть на полный экран просмотр/редактирование.
+* WikiBar - простенький редактор разметки.
+* DeliciousTagging - Allows easy 'del.icio.us'-like tagging in the EditTemplate by showing all tags as a list of link-buttons.
+* SinglePageModePlugin - одностраничный режим, к нему рекомендуется апгрейд: 
+* TiddlersBarPlugin -  open several tiddlers to use the tabs bar.
+* CloseUnsavedOnCancel - When you click new tiddler then click cancel I think the new tiddler should close automatically.
+----
++++[Все плагины]>
+<<tagging systemConfig "системные">>
+===
+----
++++[Ссылки и благодарности]>
+* [[TiddlyWiki|http://www.tiddlywiki.com]] was originally created by ~JeremyRuston and is now a thriving [[open source|OpenSourceLicense]] project with a busy [[Community]] of independent developers. Osmosoft, part of [[BT|http://btplc.com]], is the leading contributor to the project.
+* Переведено и адаптировано с http://webpages.charter.net/one_each/
+* This is a simple cheat sheet gleened from the [[TiddlyWiki Tutorial|http://www.blogjones.com/TiddlyWikiTutorial.html]].
+* Визуальные апгрейды - http://visualtw.ouvaton.org/VisualTW.html
+* Special thanks to http://tiddlywiki.org/
+===
+

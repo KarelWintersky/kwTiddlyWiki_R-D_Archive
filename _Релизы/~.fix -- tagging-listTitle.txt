@@ -1,0 +1,9 @@
+JS:
+	createTiddlyElement(ul,"li",null,"listTitle",prompt.format([title,tagged.length]));
+to
+	createTiddlyElement(ul,"li",null,"tagging-listTitle",prompt.format([title,tagged.length]));
+
+StyleSheet tiddle:
+
+.tagging-listTitle {list-style-type:none; margin-left:-2em;}
+

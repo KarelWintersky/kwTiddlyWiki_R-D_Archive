@@ -1,0 +1,29 @@
+/*
+{{{
+*/
+config.macros.tagging = {
+label: "Записки категории '%0':",
+labelNotTag: "Записок из категории '%0' нет",
+tooltip: "Записки из категории '%0'"
+}
+
+config.macros.tagging.handler = function(place,macroName,params,wikifier,paramString,tiddler)
+{
+	var theList = createTiddlyElement(place,"ul");
+	var title = "";
+	if(tiddler instanceof Tiddler)
+        title = tiddler.title;
+	if(params[0])
+        { t_tagged = params[0]; title = params[0]; }
+	if(params[1])
+        title = params[1];
+	theList.setAttribute("title",this.tooltip.format([title]));
+	var tagged = store.getTaggedTiddlers(t_tagged);
+	var prompt = tagged.length == 0 ? this.labelNotTag : this.label;
+	createTiddlyElement(theList,"nbsp",null,"listTitle",prompt.format([title]));
+	for(var t=0; t<tagged.length; t++)
+		createTiddlyLink(createTiddlyElement(theList,"li"),tagged[t].title,true);
+}
+/*
+}}}
+*/

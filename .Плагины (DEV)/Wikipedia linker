@@ -1,0 +1,15 @@
+﻿config.formatters.push(
+    {
+	name: "wikipediaLink",
+	match: "\\[w:\\[",
+        lookaheadRegExp: /\[w:\[(.*?)(?:\|(~)?(.*?))?\]\]/mg,
+	handler: function(w)
+	{
+	var lookaheadMatch = this.lookaheadRegExp.exec(w.source);
+	var e;
+	var text = lookaheadMatch[1];
+
+w.outputText(createExternalLink(w.output,'http://ru.wikipedia.org/wiki/'+w.matchText),w.matchText,w.nextMatch);
+	}
+	
+    } );

@@ -1,0 +1,89 @@
+﻿{{warning{This tutorial assumes some familiarity with a computer. And an IQ of at least 100, because anything less and this tutorial might set fire to your brain. You have been warned.}}}
+
+''[ Intro / Getting Started ]''
+SMTP is an //extremely// easy protocol, which might explain the huge ****load of spam we receive every day. So why another tutorial waiting to be perused by a script kiddie to mass email some poor sucker? &nbsp;<<smiley :-D>>
+
+''[ Tools ]''
+If you're on windows, telnet will do. If you're on another platform, anything that can simulate telnet will suffice.
+
+''[ EHLO World ]''
+First of all, you need to find an SMTP server to test this on, usually the domain name is smtp.~InternetProvider.com since many IP's these day's block port 25 (to prevent spammers from mass emailing) and force you to use their smtp server.
+
+For the purposes of this tutorial, I'm using a fictional server called: smtp.fictionalserver.com.
+
+ok, now that we've got a server, lets start. go to Start->Run... and enter in telnet, as shown below...
+
+[img[Run|Images/smtp1.jpg]]
+
+And now you should have some nifty program pop up. Now enter this command
+<<<
+{{code{open smtp.fictionalserver.com 25}}}
+<<<
+''open'' is a telnet command, telling it to open a connection with ''smtp.fictionalserver.com'' at port ''25''.
+
+It should display a status code of ''220'' at the top, followed by server information. Something along the lines of
+<<<
+{{code{220 smtp.fictionalserver.edu ESMTP Sendmail 8.13.6/8.13.4; Sat, 3 Feb 2007}}}
+<<<
+If that's not the case, find a different SMTP server to connect to, or find out if your internet provider is blocking port 25 (which is probably the case).
+
+So now for some SMTP commands, first of which is ''EHLO''. Try it out, do
+<<<
+{{code{EHLO smtp.fictionalserver.com}}}
+<<<
+Which as a result should show something along the lines of below if successfully typed in...
+<<<
+{{code{250-smtp.fictionalserver.com Hello, pleased to meet you
+250-ENHANCEDSTATUSCODES
+250-8BITMIME
+250-SIZE
+250-DSN
+250-STARTTLS
+250-DELIVERBY
+250 HELP}}}
+<<<
+''Note:'' It doesn't have have everything exactly as it is above, different servers will have different options, so whats on your screen can and may differ.
+
+''[ Sending Mail ]''
+So now we go head first into some more SMTP commands, first of which is
+<<<
+{{code{MAIL FROM: email@something.com}}}
+<<<
+and
+<<<
+{{code{RCPT TO: email@something.com}}}
+<<<
+{{code{MAIL FROM}}} tells the server that email is from whatever address is placed after the colon, while {{code{RCPT TO}}} tells the server to send an email to whatever address is placed after the colon. Together they form a superior force of goodness, saving the world from evil villains. Kidding aside, these two commands form the beginnings of an email message that will be sent by the server.
+
+The server, after any of these two commands should respond with something similar to...
+<<<
+{{code{250 2.1.0 bob@abc.edu... Sender ok}}}
+<<<
+and
+<<<
+{{code{250 2.1.5 george@abc.com... Recipient ok}}}
+<<<
+Now, specifying where an email is from and where its going is all fine and dandy, but what about the content of the email? Well that's what the next command is for.
+<<<
+{{code{DATA}}}
+<<<
+which should respond with
+<<<
+{{code{354 Please start email input}}}
+<<<
+Yup, its that simple. Now go ahead and type your message, see the below example for ''fields'' that can be placed.
+<<<
+{{code{From: Name <email@email.com>
+To: Name <email@email.com>
+Subject: EHLO World
+EHLO World, this is the email message.
+.}}}
+<<<
+Remember to end the message with a period all by itself to signify the end of the message. Afterwards you should get a message similar to the one below.
+<<<
+{{code{250 Mail queued for delivery}}}
+<<<
+Now you have the choice of entering {{code{QUIT}}} which will close the connection, or starting a new email.
+
+''[ Conclusion ]''
+Well pat yourself on the back, you've managed to send an email using the very commands your favorite email program automagically does for you. &nbsp;<<smiley :-)>>&nbsp; Now, a little note, some servers may not check to see if the sender's email is valid, so technically you can place any email there and it will show up as the sender when some poor sucker opens it. Of course, I don't publicly condone this kind of behavior, which is illegal, but go ahead a try it out on yourself. Maybe your parents will be happy to see that you've been accepted to MIT, but of course humble you, you decide to decline and go to community college since you worry about the cost of tuition.

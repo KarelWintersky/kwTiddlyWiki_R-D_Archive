@@ -1,0 +1,35 @@
+﻿Create a tabbed view with one tab for every tiddler containing the tag "glossar" (using the {{{<<tabs...>>}}} macro).
+{{{
+<<forEachTiddler
+    where
+       'tiddler.tags.contains("glossar")'
+
+    sortBy
+       'tiddler.title.toUpperCase()'
+
+    write '" [["+tiddler.title+" ]] \"view ["+tiddler.title+"]\" [["+tiddler.title+"]] "'
+
+        begin '"<<tabs txtMyAutoTab "'
+
+        end '">"+">"'
+
+        none '"//No tiddler tagged with \"glossar\"//"'
+>>
+}}}
+<<forEachTiddler
+    where
+       'tiddler.tags.contains("glossar")'
+
+    sortBy
+       'tiddler.title.toUpperCase()'
+
+    write '" [["+tiddler.title+" ]] \"view ["+tiddler.title+"]\" [["+tiddler.title+"]] "'
+
+        begin '"<<tabs txtMyAutoTab "'
+
+        end '">"+">"'
+
+        none '"//No tiddler tagged with \"glossar\"//"'
+>>
+
+//If you wonder about the trailing space in the tab titles read [[this article|http://twhelp.tiddlyspot.com/#tabs]] (Thanks to Morris Gray for this hint).//

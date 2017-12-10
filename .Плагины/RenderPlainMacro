@@ -1,0 +1,31 @@
+﻿/***
+|Name|RenderPlain|
+|Source|http://tiddlywiki.tiddlyspace.com/#RenderPlain|
+|Version|1.0|
+|Author|Tobias Beer|
+|License|Creative Commons|
+|~CoreVersion|2.1|
+|Description|renders a tiddler or tiddler slice or section as a monospaceblock|
+!!!Usage
+{{{
+<<renderPlain SomeTiddler##HiddenSection [inline]>>
+}}}
+Using the optional parameter {{{inline}}}, the text will be rendered as inline monospaced text.
+!!!Code
+***/
+//{{{
+config.macros.renderPlain = { 
+	handler: function(place,macroName,params,wikifier,paramString,tiddler) {
+		if(paramString) {
+			var out =
+				paramString.indexOf('inline')<0?
+				'{{{\n%0\n}}}':
+				'{{{%0}}}';
+			wikify(
+				out.format([store.getTiddlerText(params[0])]),
+				place
+			);
+		}
+	}
+}
+//}}}

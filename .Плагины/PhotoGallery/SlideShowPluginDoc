@@ -1,0 +1,147 @@
+﻿!Description
+This plugin turns any number of tiddlers into a slide show. A single macro provides a flexible way to present a set of tiddlers, including:
+#a full screen presentation that hides the TiddlyWiki structure (header, sidebar, main menu);
+#a way to navigate through a set of tiddlers keeping the TiddlyWiki structure (similar to the [[NavigationMacro|http://tw.lewcid.org/#NavigationMacro]] by Saq Imtiaz);
+#a display of all the selected tiddlers ready to be printed.
+!Main features
+Most features that are usually found in presentation software are available. 
+*Build a slide show from a list of tiddlers' titles or selecting a specific tag with optional sort
+*Build a slide show from a single tiddler where slides are divided by a separator
+*Fully customizable presentations (CSS knowledge required)
+*Auto-advancing slide show (kiosk mode) and looping (circular mode)
+*Incremental display (several overlays or layers in a slide)
+*Optional clock with 4 different modes:
+**local time
+**elapsed time of presentation
+**elapsed time for each slide
+**countdown clock for a given period
+*Screen blanking for pauses
+!Installation
+To install this plugin copy the tiddler SlideShowPlugin to your TiddlyWiki, label it with the ''systemConfig'' tag, save the TW and refresh the browser.
+Optionally, you can also copy this documentation tiddler. If you don't, a link to the original one in my site is provided.  
+!Quick start
+The simplest way to make a slide show is to create a new tiddler with references to all the tiddlers you want to include in your presentation. Any reference or group of references to tiddlers that should be skipped must be wrapped in a {{{exclude}}} class as in the following example:
+{{{
+MissingSlide
+[[First slide|SlideShowExample-1]] {{exclude{(the tiddler SlideShowPluginDoc will not be included in the presentation)}}}
+SlideShowExample-2
+SlideShowExample-3
+SlideShowExample-4
+}}}
+Add {{{<<slideShow>>}}} anywhere in the tiddler, close the edit form, click the ''slide show'' button and there you are. Move forward/backward in the presentation with the mouse left/right button. If you move the mouse pointer over the bottom of the browser window you will see a few navigation buttons. Click the ''x'' button or press the ''Escape'' key to exit.
+!Options
+{{{
+<<slideShow
+  noClicks
+  noKeyboard
+  noOverlays
+  cycle
+  showAll
+  single
+  tiddler:tiddler
+  label:string
+  tooltip:string
+  tag:tag
+  sort:field
+  theme:tiddler
+  toc:string
+  auto:time
+  clock:type
+  clockFormat:string
+  header:string
+  footer:string
+>> 
+}}}
+''noClicks''
+Disables navigation through mouse clicks on the tiddlers. This is useful when there are lots of clickable elements in the presentation.
+If you want to keep using the mouse to move around the presentation and there are occasional elements that require mouse clicking, these can be formatted with a {{{noClicks}}} class (read more [[here|http://www.tiddlywiki.com/#CustomCssClass]]).
+
+''noKeyboard''
+Disables keyboard navigation.
+
+''noOverlays''
+Disables the incremental display of overlays.
+
+''cycle''
+The slide shows runs in a continuous loop. 
+
+''showAll''
+To print a presentation all the selected tiddlers are opened in the specified order. Press any key to return to the default TiddlyWiki layout.
+
+''single''
+Use this if a presentation is defined in a single tiddler.
+
+''tiddler''
+Use this option to indicate the tiddler where your slide show is defined when it is not the same one that contains the button that starts the presentation.
+
+''label''
+Text to replace the default text in the slide show button.
+
+''tooltip''
+Text to be shown when the mouse is over the slide show button.
+
+''tag''
+Use this option to create a slide show with the tiddlers with the provided tag instead of providing a list of tiddlers.
+
+''sort''
+If the ''tag'' option is used you can use this other option to sort the tiddlers according to a specific field. Valid values are: //created// (default), //modified//, //title// and //text//.
+
+''theme''
+A user provided tiddler containing CSS rules that define the style of the slide show. To redefine the default style, edit the SlideShowStyleSheet shadow tiddler. 
+
+''toc''
+Choose the type of table of contents. Possible values: ''titles'' will enable the use of the tiddlers titles, ''headers'' (default) to choose html headers (h1, h2,...), anything else will disable the table of contents.  
+
+''auto''
+The slide show auto advances after the defined number of seconds. The slide show can be paused by pressing the ''space bar''.
+
+''clock''
+Displays a clock near the navigation buttons at the bottom of the screen. Four types of clocks can be defined:
+#''clock:0'' -- shows the local time.
+#''clock:'+''' -- displays the elapsed time of the presentation. Click the clock display to reset the time.
+#''clock:'-''' -- displays the elapsed for each slide. Click the clock display to reset the time.
+#''clock:-20'' -- displays a countdown clock for the given (negative) number of minutes. Click the clock display to reset the time.
+''clockFormat''
+A string that defines the clock format. The default is '0hh:0mm:0ss' where the prefix '0' forces a leading zero. 
+
+''header''
+A string to be used as a permanent header for the slide show. By default it's used the title of tiddler that defines the slide show.
+
+''footer''
+A string to be used as a permanent footer for the slide show. By default the footer is empty.
+!Incremental display
+A succession of overlays (or layers) can be defined in each slide by marking blocks of text with
+{{{
+{{overlay1{...some text...}}}, {{overlay2{...some text...}}}, {{overlay3{...some text...}}}, ...
+}}}
+The default name of the classes (//overlay//) can be redefined with //config.macros.slideShow.text.overlay = "layer"//, for example. 
+To costumize the way overlays are shown you can redefine the following CSS classes
+*.previousOverlay 
+*.currentOverlay 
+*.nextOverlay 
+in a ~StyleSheet. The default style simply hides the next overlays and shows the current and the previous ones as normal text.
+!Slide show navigation
+You can navigate through a slide show using the keyboard or the mouse. 
+!!Mouse navigation
+Left (right) clicking on a slide jumps to the next (previous) slide or overlay. To move to the first or last slides you must use the navigation bar at the bottom of the browser's window.
+!!Keyboard
+The following keys are defined:
+*Home - first slide
+*~PageUp - previous slide
+*~PageDown - next slide
+*End - last slide
+*Escape - exit slide show
+*Up arrow - first overlay
+*Left arrow - previous overlay/slide
+*Pause/Right arrow - next overlay/slide
+*Down arrow - last overlay
+*Spacebar - pause/resume slide show in auto advance mode, next overlay/slide otherwise
+*B - blank screen and block the slide show
+!Miscellaneous 
+Any block of text marked as
+{{{
+{{comment{For my eyes only!}}}
+}}}
+will not be displayed in the slide show.
+
+All translatable strings are defined in //config.macros.slideShow.text// parameter. See SlideShowPluginMsgPT with the portuguese translation as an example.

@@ -1,0 +1,22 @@
+﻿!Summary
+@ShowDown is a plugin space which, when included, allows you to use [[MarkDown|http://daringfireball.net/projects/markdown/syntax#html]] syntax in a tiddler. See @MarkDownTutor for an introduction to MarkDown and @ShowDown in use.
+!StyleSheet
+All ShowDown blocks will be rendered in a {{{div}}} of the class {{{showdown}}}, so you can easily assign a custom color, background or border using your StyleSheet.
+!Formatter
+If you need ShowDown to use a different formatter other than {{{§§§}}}, you can either change the plugin code or put something like this into your [[zzConfig]] tiddler tagged ''systemConfig'':
+{{{
+var f=config.formatters[config.formatters.findByField("name","showdown")];
+if(f){
+	f.match= "<md>";
+	f.lookaheadRegExp= /\s?<md>((?:.|\n)*?)<\/md>\s?/img;
+}
+}}}
+The example above will allow you to use...
+{{{
+<md>
+`some markdown code block`
+</md>
+}}}
+Thanks @psd and @pmario for [[your tips|http://bit.ly/atzHny]]! Of course, you could just as well substitute {{{md}}} with {{{markdown}}} or {{{showdown}}} in the example above.
+!!~SideNote - Pagr
+@MarkDownTutor also contains a small new plugin called [[PagrPlugin]]@MarkDownTutor that allows you to navigate document pages based on a ~ToC tiddler or section which contains (possibly nested) lists of content tiddlers. Look for ''pagr'' in the ViewTemplate@MarkDownTutor of @MarkDownTutor which uses the tiddler [[MarkDown]]@MarkDownTutor as the main ~ToC for paging.

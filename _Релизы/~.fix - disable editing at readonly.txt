@@ -1,0 +1,18 @@
+Story.prototype.onTiddlerDblClick = function(ev)
+{
+	var e = ev || window.event;
+	var target = resolveTarget(e);
+	if(target && target.nodeName.toLowerCase() != "input" && target.nodeName.toLowerCase() != "textarea") {
+
+// this!
+		if (window.readOnly) return false; //KW: ?prevent dblclick editing event outside localhost
+
+		if(document.selection && document.selection.empty)
+			document.selection.empty();
+		config.macros.toolbar.invokeCommand(this,"defaultCommand",e);
+		e.cancelBubble = true;
+		if(e.stopPropagation) e.stopPropagation();
+		return true;
+	}
+	return false;
+};

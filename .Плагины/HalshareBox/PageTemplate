@@ -1,0 +1,10 @@
+﻿<!--{{{-->
+<div class='header' macro='gradient vert [[ColorPalette::PrimaryLight]] [[ColorPalette::PrimaryMid]]'>
+</div>
+<div id='topBar' refresh='content' tiddler='TopBar'></div>
+<div id='mainMenu' refresh='content' tiddler='MainMenu'></div>
+<div id='displayArea'>
+<div id='messageArea'></div>
+<div id='tiddlerDisplay'></div>
+</div>
+<!--}}}-->

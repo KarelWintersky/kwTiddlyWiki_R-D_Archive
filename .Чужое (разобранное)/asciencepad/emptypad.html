@@ -1,0 +1,123 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<script type="text/javascript">
+var version = {major: 2, minor: 0, revision: 2, date: new Date("Jan 11, 2006"), extensions: {}};
+</script>
+<!--
+TiddlyWiki 2.0.2 by Jeremy Ruston, (jeremy [at] osmosoft [dot] com)
+
+Copyright (c) Osmosoft Limited 2004-2006
+
+Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions are
+met:
+
+Redistributions of source code must retain the above copyright notice, this
+list of conditions and the following disclaimer.
+
+Redistributions in binary form must reproduce the above copyright
+notice, this list of conditions and the following disclaimer in the
+documentation and/or other materials provided with the distribution.
+
+Neither the name of the Osmosoft Limited nor the names of its
+contributors may be used to endorse or promote products derived from
+this software without specific prior written permission.
+
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+"AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+-->
+
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html;charset=utf-8" >
+<title>ASciencePad - a TiddlyWiki adaptation for scientific notes</title>
+
+<!--PJ-->
+<script type="text/javascript" src="HTMLArea/plugins/AsciiMath/ASCIIMathML.js"></script>
+<script type="text/javascript" src="HTMLArea/plugins/AsciiSvg/ASCIIsvg.js"></script>
+<script type="text/javascript" src="HTMLArea/plugins/AsciiSvg/ASCIIsvgAddon.js"></script>
+<!--script type="text/javascript" src="HTMLArea/plugins/AsciiMath/ASCIIMathCalculator.js"></script-->
+<script type="text/javascript">
+  _editor_url = "HTMLArea/";
+  _editor_lang = "en";
+</script>
+<script type="text/javascript" src="HTMLArea/htmlarea.js"></script>
+<script type="text/javascript" src="HTMLArea/TiddlyWiki202.js"></script>
+<!--PJ-->
+
+<style type="text/css">
+#saveTest {
+	display: none;
+}
+.zoomer {
+	display: none;
+}
+#messageArea {
+	display: none;
+}
+#storeArea, #copyright {
+	display: none;
+}
+.popup {
+	position: absolute;
+}
+</style>
+<noscript>
+<style type="text/css">
+#storeArea {
+    display: block;
+    margin: 4em 10em 3em;
+}
+#storeArea div {
+ padding: 0.5em;
+ margin: 1em 0em 0em 0em;
+ border-color: #f0f0f0 #606060 #404040 #d0d0d0; 
+ border-style: solid; 
+ border-width: 2px;
+ overflow: auto;
+}
+#javascriptWarning {
+    width: 100%;
+    text-align: center;
+    font-weight: bold;
+    background-color: #dd1100;
+    color: #fff;
+    padding:1em 0em; 
+}
+</style>
+</noscript>
+</head>
+<body onload="main();" onunload="if(checkUnsavedChanges) checkUnsavedChanges();">
+	<script>
+	if (detectPlugin("TiddlyWiki Saver"))
+		{
+		document.write('<embed style="display: none" name="tiddlyWikiSafariSaver" width="0" height="0" type="application/x-webkit-tiddlywiki-saver"></embed>'); 
+		saveUsingSafari = true;
+		}
+	</script>
+	<div id="copyright">
+	Welcome to TiddlyWiki by Jeremy Ruston, Copyright &copy; 2005 Osmosoft Limited
+	</div>
+	<noscript>
+		<div id="javascriptWarning">This page requires JavaScript to function properly</div>
+	</noscript>
+	<div id="saveTest"></div>
+	<div id="contentWrapper"></div>
+	<div id="contentStash"></div>
+	<div id="storeArea"><div tiddler="SiteTitle" modifier="PeterJipsen" modified="200601101142" created="200601101142" tags="systemTiddlers">ASciencePad</div>
+<div tiddler="SiteSubtitle" modifier="PeterJipsen" modified="200601101142" created="200601101142" tags="systemTiddlers">a TiddlyWiki adaptation for scientific notes</div>
+<div tiddler="SiteUrl" modifier="YourName" modified="200601101142" created="200601101142" tags="systemTiddlers"></div>
+<div tiddler="DefaultTiddlers" modifier="YourName" modified="200601101142" created="200601101142" tags="systemTiddlers">GettingStarted</div>
+<div tiddler="MainMenu" modifier="YourName" modified="200601101142" created="200601101142" tags="systemTiddlers">GettingStarted</div>
+<div tiddler="GettingStarted" modifier="YourName" modified="200601101142" created="200601101142" tags="">To get started with this blank ASciencePad, you'll need to modify the following tiddlers:\n* SiteTitle &amp; SiteSubtitle: The title and subtitle of the site, as shown above (after saving, they will also appear in the browser title bar)\n* MainMenu: The menu (usually on the left)\n* DefaultTiddlers: Contains the names of the tiddlers that you want to appear when the file is opened\n</div>
+		</div>
+	</body>
+</html>

@@ -1,0 +1,13 @@
+<script label="L2W" title="convert list to wikilinks">
+var here=story.findContainingTiddler(place);
+   if (!here) return;
+   var title=here.getAttribute("tiddler");
+   var tid=store.getTiddler(title);
+   var t=store.getTiddlerText(tiddler.title) ;
+   var target = store.getTiddler(tiddler.title) ;
+var txt='[['+tid.text.split('\n').join(']]\n[[')+']]';
+store.saveTiddler
+(tid.title,tid.title,txt,tid.modifier,tid.modified,tid.tags,tid.fields);
+</script> 
+
+Paste a line seperated list into a tiddler then "run" the script on the list to get double bracketed list items. 

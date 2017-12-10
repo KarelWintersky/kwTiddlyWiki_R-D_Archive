@@ -1,0 +1,32 @@
+A tiddler containing the {{{<<autoRefresh...>>}}} macro is automatically refreshed (re-painted) whenever a tiddler changes.
+
+!Syntax
+{{{
+<<autoRefresh [observeTiddler: tiddler ...]>>
+}}}
+|{{{observeTiddler}}}|(optional) <<br>>when specified the refresh will only happen when one of the tiddlers specified is changed.<<br>>When no "observerTiddler" is specified every tiddler change triggers a repaint/refresh|
+
+!Usage
+You may add this macro to a tiddler T when the content displayed by T depends on other tiddlers, e.g. when using the ForEachTiddlerPlugin or the PartTiddlerPlugin.
+
+!!Example 1: Keep forEachTiddler List up-to-date'
+{{{
+<<forEachTiddler where 'tiddler.title.startsWith("function")'>>
+<<autoRefresh>>
+}}}
+I.e. the tiddler lists all tiddlers that start with "function" using the ForEachTiddlerPlugin.
+ 
+By adding the {{{<<autoRefresh>>}}} the list is automatically updated whenever a tiddler is changed (e.g. when a new "function..." tiddler is added or an existing one is deleted).
+
+!!Example 2: Always display most recent part content
+The tiddler "Example 2" has this content:
+{{{
+!Topics
+<<tiddler Summary/Topics>>
+!Authors
+<<tiddler Summary/Authors>>
+<<autoRefresh observeTiddler: Summary>>
+}}}
+I.e. "Example 2" displays the text of the two parts "Topics" and "Authors" of the tiddler "Summary" (see PartTiddlerPlugin). 
+
+To ensure always the latest content of these parts are displayed (even when the tiddler "Summary" is changed after tiddler "Example 2" is displayed) add {{{<<autoRefresh observeTiddler: Summary>>}}} to the tiddler. Now the tiddler "Example 2" is automatically repainted whenever the (observed) tiddler "Summary" changes.

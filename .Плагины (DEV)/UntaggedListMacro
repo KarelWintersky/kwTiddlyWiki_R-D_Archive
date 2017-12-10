@@ -1,0 +1,14 @@
+﻿config.macros.list["untagged"] = {prompt: "Tiddlers that are not tagged"};
+
+config.macros.list.untagged.handler = function(params)
+{
+//displayMessage("Building list of untagged tiddlers");
+var results = [];
+for(var t in store.tiddlers) {
+var tiddler = store.tiddlers[t];
+if(tiddler.getTags() == "")
+results.push(t);
+}
+results.sort();
+return results;
+}

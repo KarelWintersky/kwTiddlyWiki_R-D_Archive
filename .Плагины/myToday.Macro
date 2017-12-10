@@ -1,0 +1,14 @@
+﻿//{{{
+config.macros.myToday = {}
+config.macros.myToday.handler = function (place, macroName, params) {
+    var now = new Date();
+    var text;
+    if (params[0]) {
+        text = now.formatString(params[0].trim());
+    } else {
+        text = now.toLocaleString();
+    }
+    createTiddlyElement(place, "span", null, null, text);
+}
+
+//}}}

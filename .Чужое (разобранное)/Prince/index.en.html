@@ -1,0 +1,940 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+<script id="versionArea" type="text/javascript">
+//<![CDATA[
+var version = {title: "TiddlyWiki", major: 2, minor: 6, revision: 0, beta: 1, date: new Date("Mar 11, 2010"), extensions: {}};
+//]]>
+</script>
+<meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
+<meta name="copyright" content="
+TiddlyWiki created by Jeremy Ruston, (jeremy [at] osmosoft [dot] com)
+
+Copyright (c) UnaMesa Association 2004-2009
+
+Redistribution and use in source and binary forms, with or without modification,
+are permitted provided that the following conditions are met:
+
+Redistributions of source code must retain the above copyright notice, this
+list of conditions and the following disclaimer.
+
+Redistributions in binary form must reproduce the above copyright notice, this
+list of conditions and the following disclaimer in the documentation and/or other
+materials provided with the distribution.
+
+Neither the name of the UnaMesa Association nor the names of its contributors may be
+used to endorse or promote products derived from this software without specific
+prior written permission.
+
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS 'AS IS' AND ANY
+EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT
+SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
+INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED
+TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR
+BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
+ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH
+DAMAGE.
+" />
+<!--PRE-HEAD-START-->
+<!--{{{-->
+<link rel='alternate' type='application/rss+xml' title='RSS' href='index.xml' />
+<!--}}}-->
+
+<!--PRE-HEAD-END-->
+<title> My TiddlyWiki - a reusable non-linear personal web notebook </title>
+<style type="text/css">
+#saveTest {display:none;}
+#messageArea {display:none;}
+#copyright {display:none;}
+#storeArea {display:none;}
+#storeArea div {padding:0.5em; margin:1em 0em 0em 0em; border-color:#fff #666 #444 #ddd; border-style:solid; border-width:2px; overflow:auto;}
+#shadowArea {display:none;}
+#javascriptWarning {width:100%; text-align:center; font-weight:bold; background-color:#dd1100; color:#fff; padding:1em 0em;}
+</style>
+<script type="text/javascript" src="jquery-1.4.2.min.js"></script>
+<script type="text/javascript" src="TiddlyWiki.en.js"></script>
+<!--POST-HEAD-START-->
+
+<!--POST-HEAD-END-->
+</head>
+<body onload="main();" onunload="if(window.unload) unload();">
+<!--PRE-BODY-START-->
+<!--{{{-->
+<!-- Borrowed -->
+<script type="text/javascript" src="plugins/BigThemePack.js"></script>
+<script type="text/javascript" src="plugins/NestedSlidersPlugin.js"></script>
+<!--}}}-->
+<!--{{{-->
+<!-- PTW -->
+<script type="text/javascript" src="plugins/ArchivedTimeline.js"></script>
+<script type="text/javascript" src="plugins/BreadCrumbs2.js"></script>
+<script type="text/javascript" src="plugins/BookrmarksCommand.js"></script>
+<script type="text/javascript" src="plugins/ListExtensionsCode.js"></script>
+<script type="text/javascript" src="plugins/TiddlyCalendar.js"></script>
+<script type="text/javascript" src="plugins/XMLReader2.js"></script>
+<!--}}}-->
+<!--PRE-BODY-END-->
+<div id="copyright">
+Welcome to TiddlyWiki created by Jeremy Ruston, Copyright &copy; 2007 UnaMesa Association
+</div>
+<noscript>
+<div id="javascriptWarning">
+This page requires JavaScript to function properly.<br /><br />If you are using Microsoft Internet Explorer you may need to click on the yellow bar above and select 'Allow Blocked Content'. You must then click 'Yes' on the following security warning.
+</div>
+</noscript>
+<div id="saveTest"></div>
+<div id="backstageCloak"></div>
+<div id="backstageButton"></div>
+<div id="backstageArea"><div id="backstageToolbar"></div></div>
+<div id="backstage">
+	<div id="backstagePanel"></div>
+</div>
+<div id="contentWrapper"></div>
+<div id="contentStash"></div>
+<div id="shadowArea">
+<div title="MarkupPreHead">
+<pre>&lt;!--{{{--&gt;
+&lt;link rel='alternate' type='application/rss+xml' title='RSS' href='index.xml' /&gt;
+&lt;!--}}}--&gt;
+</pre>
+</div>
+<div title="ColorPalette">
+<pre>Background: #fff
+Foreground: #000
+PrimaryPale: #8cf
+PrimaryLight: #18f
+PrimaryMid: #04b
+PrimaryDark: #014
+SecondaryPale: #ffc
+SecondaryLight: #fe8
+SecondaryMid: #db4
+SecondaryDark: #841
+TertiaryPale: #eee
+TertiaryLight: #ccc
+TertiaryMid: #999
+TertiaryDark: #666
+Error: #f88
+</pre>
+</div>
+<div title="StyleSheetColors">
+<pre>/*{{{*/
+body {background:[[ColorPalette::Background]]; color:[[ColorPalette::Foreground]];}
+
+a {color:[[ColorPalette::PrimaryMid]];}
+a:hover {background-color:[[ColorPalette::PrimaryMid]]; color:[[ColorPalette::Background]];}
+a img {border:0;}
+
+h1,h2,h3,h4,h5,h6 {color:[[ColorPalette::SecondaryDark]]; background:transparent;}
+h1 {border-bottom:2px solid [[ColorPalette::TertiaryLight]];}
+h2,h3 {border-bottom:1px solid [[ColorPalette::TertiaryLight]];}
+
+.button {color:[[ColorPalette::PrimaryDark]]; border:1px solid [[ColorPalette::Background]];}
+.button:hover {color:[[ColorPalette::PrimaryDark]]; background:[[ColorPalette::SecondaryLight]]; border-color:[[ColorPalette::SecondaryMid]];}
+.button:active {color:[[ColorPalette::Background]]; background:[[ColorPalette::SecondaryMid]]; border:1px solid [[ColorPalette::SecondaryDark]];}
+
+.header {background:[[ColorPalette::PrimaryMid]];}
+.headerShadow {color:[[ColorPalette::Foreground]];}
+.headerShadow a {font-weight:normal; color:[[ColorPalette::Foreground]];}
+.headerForeground {color:[[ColorPalette::Background]];}
+.headerForeground a {font-weight:normal; color:[[ColorPalette::PrimaryPale]];}
+
+.tabSelected{color:[[ColorPalette::PrimaryDark]];
+	background:[[ColorPalette::TertiaryPale]];
+	border-left:1px solid [[ColorPalette::TertiaryLight]];
+	border-top:1px solid [[ColorPalette::TertiaryLight]];
+	border-right:1px solid [[ColorPalette::TertiaryLight]];
+}
+.tabUnselected {color:[[ColorPalette::Background]]; background:[[ColorPalette::TertiaryMid]];}
+.tabContents {color:[[ColorPalette::PrimaryDark]]; background:[[ColorPalette::TertiaryPale]]; border:1px solid [[ColorPalette::TertiaryLight]];}
+.tabContents .button {border:0;}
+
+#sidebar {}
+#sidebarOptions input {border:1px solid [[ColorPalette::PrimaryMid]];}
+#sidebarOptions .sliderPanel {background:[[ColorPalette::PrimaryPale]];}
+#sidebarOptions .sliderPanel a {border:none;color:[[ColorPalette::PrimaryMid]];}
+#sidebarOptions .sliderPanel a:hover {color:[[ColorPalette::Background]]; background:[[ColorPalette::PrimaryMid]];}
+#sidebarOptions .sliderPanel a:active {color:[[ColorPalette::PrimaryMid]]; background:[[ColorPalette::Background]];}
+
+.wizard {background:[[ColorPalette::PrimaryPale]]; border:1px solid [[ColorPalette::PrimaryMid]];}
+.wizard h1 {color:[[ColorPalette::PrimaryDark]]; border:none;}
+.wizard h2 {color:[[ColorPalette::Foreground]]; border:none;}
+.wizardStep {background:[[ColorPalette::Background]]; color:[[ColorPalette::Foreground]];
+	border:1px solid [[ColorPalette::PrimaryMid]];}
+.wizardStep.wizardStepDone {background:[[ColorPalette::TertiaryLight]];}
+.wizardFooter {background:[[ColorPalette::PrimaryPale]];}
+.wizardFooter .status {background:[[ColorPalette::PrimaryDark]]; color:[[ColorPalette::Background]];}
+.wizard .button {color:[[ColorPalette::Foreground]]; background:[[ColorPalette::SecondaryLight]]; border: 1px solid;
+	border-color:[[ColorPalette::SecondaryPale]] [[ColorPalette::SecondaryDark]] [[ColorPalette::SecondaryDark]] [[ColorPalette::SecondaryPale]];}
+.wizard .button:hover {color:[[ColorPalette::Foreground]]; background:[[ColorPalette::Background]];}
+.wizard .button:active {color:[[ColorPalette::Background]]; background:[[ColorPalette::Foreground]]; border: 1px solid;
+	border-color:[[ColorPalette::PrimaryDark]] [[ColorPalette::PrimaryPale]] [[ColorPalette::PrimaryPale]] [[ColorPalette::PrimaryDark]];}
+
+.wizard .notChanged {background:transparent;}
+.wizard .changedLocally {background:#80ff80;}
+.wizard .changedServer {background:#8080ff;}
+.wizard .changedBoth {background:#ff8080;}
+.wizard .notFound {background:#ffff80;}
+.wizard .putToServer {background:#ff80ff;}
+.wizard .gotFromServer {background:#80ffff;}
+
+#messageArea {border:1px solid [[ColorPalette::SecondaryMid]]; background:[[ColorPalette::SecondaryLight]]; color:[[ColorPalette::Foreground]];}
+#messageArea .button {color:[[ColorPalette::PrimaryMid]]; background:[[ColorPalette::SecondaryPale]]; border:none;}
+
+.popupTiddler {background:[[ColorPalette::TertiaryPale]]; border:2px solid [[ColorPalette::TertiaryMid]];}
+
+.popup {background:[[ColorPalette::TertiaryPale]]; color:[[ColorPalette::TertiaryDark]]; border-left:1px solid [[ColorPalette::TertiaryMid]]; border-top:1px solid [[ColorPalette::TertiaryMid]]; border-right:2px solid [[ColorPalette::TertiaryDark]]; border-bottom:2px solid [[ColorPalette::TertiaryDark]];}
+.popup hr {color:[[ColorPalette::PrimaryDark]]; background:[[ColorPalette::PrimaryDark]]; border-bottom:1px;}
+.popup li.disabled {color:[[ColorPalette::TertiaryMid]];}
+.popup li a, .popup li a:visited {color:[[ColorPalette::Foreground]]; border: none;}
+.popup li a:hover {background:[[ColorPalette::SecondaryLight]]; color:[[ColorPalette::Foreground]]; border: none;}
+.popup li a:active {background:[[ColorPalette::SecondaryPale]]; color:[[ColorPalette::Foreground]]; border: none;}
+.popupHighlight {background:[[ColorPalette::Background]]; color:[[ColorPalette::Foreground]];}
+.listBreak div {border-bottom:1px solid [[ColorPalette::TertiaryDark]];}
+
+.tiddler .defaultCommand {font-weight:bold;}
+
+.shadow .title {color:[[ColorPalette::TertiaryDark]];}
+
+.title {color:[[ColorPalette::SecondaryDark]];}
+.subtitle {color:[[ColorPalette::TertiaryDark]];}
+
+.toolbar {color:[[ColorPalette::PrimaryMid]];}
+.toolbar a {color:[[ColorPalette::TertiaryLight]];}
+.selected .toolbar a {color:[[ColorPalette::TertiaryMid]];}
+.selected .toolbar a:hover {color:[[ColorPalette::Foreground]];}
+
+.tagging, .tagged {border:1px solid [[ColorPalette::TertiaryPale]]; background-color:[[ColorPalette::TertiaryPale]];}
+.selected .tagging, .selected .tagged {background-color:[[ColorPalette::TertiaryLight]]; border:1px solid [[ColorPalette::TertiaryMid]];}
+.tagging .listTitle, .tagged .listTitle {color:[[ColorPalette::PrimaryDark]];}
+.tagging .button, .tagged .button {border:none;}
+
+.footer {color:[[ColorPalette::TertiaryLight]];}
+.selected .footer {color:[[ColorPalette::TertiaryMid]];}
+
+.sparkline {background:[[ColorPalette::PrimaryPale]]; border:0;}
+.sparktick {background:[[ColorPalette::PrimaryDark]];}
+
+.error, .errorButton {color:[[ColorPalette::Foreground]]; background:[[ColorPalette::Error]];}
+.warning {color:[[ColorPalette::Foreground]]; background:[[ColorPalette::SecondaryPale]];}
+.lowlight {background:[[ColorPalette::TertiaryLight]];}
+
+.zoomer {background:none; color:[[ColorPalette::TertiaryMid]]; border:3px solid [[ColorPalette::TertiaryMid]];}
+
+.imageLink, #displayArea .imageLink {background:transparent;}
+
+.annotation {background:[[ColorPalette::SecondaryLight]]; color:[[ColorPalette::Foreground]]; border:2px solid [[ColorPalette::SecondaryMid]];}
+
+.viewer .listTitle {list-style-type:none; margin-left:-2em;}
+.viewer .button {border:1px solid [[ColorPalette::SecondaryMid]];}
+.viewer blockquote {border-left:3px solid [[ColorPalette::TertiaryDark]];}
+
+.viewer table, table.twtable {border:2px solid [[ColorPalette::TertiaryDark]];}
+.viewer th, .viewer thead td, .twtable th, .twtable thead td {background:[[ColorPalette::SecondaryMid]]; border:1px solid [[ColorPalette::TertiaryDark]]; color:[[ColorPalette::Background]];}
+.viewer td, .viewer tr, .twtable td, .twtable tr {border:1px solid [[ColorPalette::TertiaryDark]];}
+
+.viewer pre {border:1px solid [[ColorPalette::SecondaryLight]]; background:[[ColorPalette::SecondaryPale]];}
+.viewer code {color:[[ColorPalette::SecondaryDark]];}
+.viewer hr {border:0; border-top:dashed 1px [[ColorPalette::TertiaryDark]]; color:[[ColorPalette::TertiaryDark]];}
+
+.highlight, .marked {background:[[ColorPalette::SecondaryLight]];}
+
+.editor input {border:1px solid [[ColorPalette::PrimaryMid]];}
+.editor textarea {border:1px solid [[ColorPalette::PrimaryMid]]; width:100%;}
+.editorFooter {color:[[ColorPalette::TertiaryMid]];}
+.readOnly {background:[[ColorPalette::TertiaryPale]];}
+
+#backstageArea {background:[[ColorPalette::Foreground]]; color:[[ColorPalette::TertiaryMid]];}
+#backstageArea a {background:[[ColorPalette::Foreground]]; color:[[ColorPalette::Background]]; border:none;}
+#backstageArea a:hover {background:[[ColorPalette::SecondaryLight]]; color:[[ColorPalette::Foreground]]; }
+#backstageArea a.backstageSelTab {background:[[ColorPalette::Background]]; color:[[ColorPalette::Foreground]];}
+#backstageButton a {background:none; color:[[ColorPalette::Background]]; border:none;}
+#backstageButton a:hover {background:[[ColorPalette::Foreground]]; color:[[ColorPalette::Background]]; border:none;}
+#backstagePanel {background:[[ColorPalette::Background]]; border-color: [[ColorPalette::Background]] [[ColorPalette::TertiaryDark]] [[ColorPalette::TertiaryDark]] [[ColorPalette::TertiaryDark]];}
+.backstagePanelFooter .button {border:none; color:[[ColorPalette::Background]];}
+.backstagePanelFooter .button:hover {color:[[ColorPalette::Foreground]];}
+#backstageCloak {background:[[ColorPalette::Foreground]]; opacity:0.6; filter:'alpha(opacity=60)';}
+/*}}}*/</pre>
+</div>
+<div title="StyleSheetLayout">
+<pre>/*{{{*/
+* html .tiddler {height:1%;}
+
+body {font-size:.75em; font-family:arial,helvetica; margin:0; padding:0;}
+
+h1,h2,h3,h4,h5,h6 {font-weight:bold; text-decoration:none;}
+h1,h2,h3 {padding-bottom:1px; margin-top:1.2em;margin-bottom:0.3em;}
+h4,h5,h6 {margin-top:1em;}
+h1 {font-size:1.35em;}
+h2 {font-size:1.25em;}
+h3 {font-size:1.1em;}
+h4 {font-size:1em;}
+h5 {font-size:.9em;}
+
+hr {height:1px;}
+
+a {text-decoration:none;}
+
+dt {font-weight:bold;}
+
+ol {list-style-type:decimal;}
+ol ol {list-style-type:lower-alpha;}
+ol ol ol {list-style-type:lower-roman;}
+ol ol ol ol {list-style-type:decimal;}
+ol ol ol ol ol {list-style-type:lower-alpha;}
+ol ol ol ol ol ol {list-style-type:lower-roman;}
+ol ol ol ol ol ol ol {list-style-type:decimal;}
+
+.txtOptionInput {width:11em;}
+
+#contentWrapper .chkOptionInput {border:0;}
+
+.externalLink {text-decoration:underline;}
+
+.indent {margin-left:3em;}
+.outdent {margin-left:3em; text-indent:-3em;}
+code.escaped {white-space:nowrap;}
+
+.tiddlyLinkExisting {font-weight:bold;}
+.tiddlyLinkNonExisting {font-style:italic;}
+
+/* the 'a' is required for IE, otherwise it renders the whole tiddler in bold */
+a.tiddlyLinkNonExisting.shadow {font-weight:bold;}
+
+#mainMenu .tiddlyLinkExisting,
+	#mainMenu .tiddlyLinkNonExisting,
+	#sidebarTabs .tiddlyLinkNonExisting {font-weight:normal; font-style:normal;}
+#sidebarTabs .tiddlyLinkExisting {font-weight:bold; font-style:normal;}
+
+.header {position:relative;}
+.header a:hover {background:transparent;}
+.headerShadow {position:relative; padding:4.5em 0 1em 1em; left:-1px; top:-1px;}
+.headerForeground {position:absolute; padding:4.5em 0 1em 1em; left:0px; top:0px;}
+
+.siteTitle {font-size:3em;}
+.siteSubtitle {font-size:1.2em;}
+
+#mainMenu {position:absolute; left:0; width:10em; text-align:right; line-height:1.6em; padding:1.5em 0.5em 0.5em 0.5em; font-size:1.1em;}
+
+#sidebar {position:absolute; right:3px; width:16em; font-size:.9em;}
+#sidebarOptions {padding-top:0.3em;}
+#sidebarOptions a {margin:0 0.2em; padding:0.2em 0.3em; display:block;}
+#sidebarOptions input {margin:0.4em 0.5em;}
+#sidebarOptions .sliderPanel {margin-left:1em; padding:0.5em; font-size:.85em;}
+#sidebarOptions .sliderPanel a {font-weight:bold; display:inline; padding:0;}
+#sidebarOptions .sliderPanel input {margin:0 0 0.3em 0;}
+#sidebarTabs .tabContents {width:15em; overflow:hidden;}
+
+.wizard {padding:0.1em 1em 0 2em;}
+.wizard h1 {font-size:2em; font-weight:bold; background:none; padding:0; margin:0.4em 0 0.2em;}
+.wizard h2 {font-size:1.2em; font-weight:bold; background:none; padding:0; margin:0.4em 0 0.2em;}
+.wizardStep {padding:1em 1em 1em 1em;}
+.wizard .button {margin:0.5em 0 0; font-size:1.2em;}
+.wizardFooter {padding:0.8em 0.4em 0.8em 0;}
+.wizardFooter .status {padding:0 0.4em; margin-left:1em;}
+.wizard .button {padding:0.1em 0.2em;}
+
+#messageArea {position:fixed; top:2em; right:0; margin:0.5em; padding:0.5em; z-index:2000; _position:absolute;}
+.messageToolbar {display:block; text-align:right; padding:0.2em;}
+#messageArea a {text-decoration:underline;}
+
+.tiddlerPopupButton {padding:0.2em;}
+.popupTiddler {position: absolute; z-index:300; padding:1em; margin:0;}
+
+.popup {position:absolute; z-index:300; font-size:.9em; padding:0; list-style:none; margin:0;}
+.popup .popupMessage {padding:0.4em;}
+.popup hr {display:block; height:1px; width:auto; padding:0; margin:0.2em 0;}
+.popup li.disabled {padding:0.4em;}
+.popup li a {display:block; padding:0.4em; font-weight:normal; cursor:pointer;}
+.listBreak {font-size:1px; line-height:1px;}
+.listBreak div {margin:2px 0;}
+
+.tabset {padding:1em 0 0 0.5em;}
+.tab {margin:0 0 0 0.25em; padding:2px;}
+.tabContents {padding:0.5em;}
+.tabContents ul, .tabContents ol {margin:0; padding:0;}
+.txtMainTab .tabContents li {list-style:none;}
+.tabContents li.listLink { margin-left:.75em;}
+
+#contentWrapper {display:block;}
+#splashScreen {display:none;}
+
+#displayArea {margin:1em 17em 0 14em;}
+
+.toolbar {text-align:right; font-size:.9em;}
+
+.tiddler {padding:1em 1em 0;}
+
+.missing .viewer,.missing .title {font-style:italic;}
+
+.title {font-size:1.6em; font-weight:bold;}
+
+.missing .subtitle {display:none;}
+.subtitle {font-size:1.1em;}
+
+.tiddler .button {padding:0.2em 0.4em;}
+
+.tagging {margin:0.5em 0.5em 0.5em 0; float:left; display:none;}
+.isTag .tagging {display:block;}
+.tagged {margin:0.5em; float:right;}
+.tagging, .tagged {font-size:0.9em; padding:0.25em;}
+.tagging ul, .tagged ul {list-style:none; margin:0.25em; padding:0;}
+.tagClear {clear:both;}
+
+.footer {font-size:.9em;}
+.footer li {display:inline;}
+
+.annotation {padding:0.5em; margin:0.5em;}
+
+* html .viewer pre {width:99%; padding:0 0 1em 0;}
+.viewer {line-height:1.4em; padding-top:0.5em;}
+.viewer .button {margin:0 0.25em; padding:0 0.25em;}
+.viewer blockquote {line-height:1.5em; padding-left:0.8em;margin-left:2.5em;}
+.viewer ul, .viewer ol {margin-left:0.5em; padding-left:1.5em;}
+
+.viewer table, table.twtable {border-collapse:collapse; margin:0.8em 1.0em;}
+.viewer th, .viewer td, .viewer tr,.viewer caption,.twtable th, .twtable td, .twtable tr,.twtable caption {padding:3px;}
+table.listView {font-size:0.85em; margin:0.8em 1.0em;}
+table.listView th, table.listView td, table.listView tr {padding:0px 3px 0px 3px;}
+
+.viewer pre {padding:0.5em; margin-left:0.5em; font-size:1.2em; line-height:1.4em; overflow:auto;}
+.viewer code {font-size:1.2em; line-height:1.4em;}
+
+.editor {font-size:1.1em;}
+.editor input, .editor textarea {display:block; width:100%; font:inherit;}
+.editorFooter {padding:0.25em 0; font-size:.9em;}
+.editorFooter .button {padding-top:0px; padding-bottom:0px;}
+
+.fieldsetFix {border:0; padding:0; margin:1px 0px;}
+
+.sparkline {line-height:1em;}
+.sparktick {outline:0;}
+
+.zoomer {font-size:1.1em; position:absolute; overflow:hidden;}
+.zoomer div {padding:1em;}
+
+* html #backstage {width:99%;}
+* html #backstageArea {width:99%;}
+#backstageArea {display:none; position:relative; overflow: hidden; z-index:150; padding:0.3em 0.5em;}
+#backstageToolbar {position:relative;}
+#backstageArea a {font-weight:bold; margin-left:0.5em; padding:0.3em 0.5em;}
+#backstageButton {display:none; position:absolute; z-index:175; top:0; right:0;}
+#backstageButton a {padding:0.1em 0.4em; margin:0.1em;}
+#backstage {position:relative; width:100%; z-index:50;}
+#backstagePanel {display:none; z-index:100; position:absolute; width:90%; margin-left:3em; padding:1em;}
+.backstagePanelFooter {padding-top:0.2em; float:right;}
+.backstagePanelFooter a {padding:0.2em 0.4em;}
+#backstageCloak {display:none; z-index:20; position:absolute; width:100%; height:100px;}
+
+.whenBackstage {display:none;}
+.backstageVisible .whenBackstage {display:block;}
+/*}}}*/
+</pre>
+</div>
+<div title="StyleSheetLocale">
+<pre>/***
+StyleSheet for use when a translation requires any css style changes.
+This StyleSheet can be used directly by languages such as Chinese, Japanese and Korean which need larger font sizes.
+***/
+/*{{{*/
+body {font-size:0.8em;}
+#sidebarOptions {font-size:1.05em;}
+#sidebarOptions a {font-style:normal;}
+#sidebarOptions .sliderPanel {font-size:0.95em;}
+.subtitle {font-size:0.8em;}
+.viewer table.listView {font-size:0.95em;}
+/*}}}*/</pre>
+</div>
+<div title="StyleSheetPrint">
+<pre>/*{{{*/
+@media print {
+#mainMenu, #sidebar, #messageArea, .toolbar, #backstageButton, #backstageArea {display: none !important;}
+#displayArea {margin: 1em 1em 0em;}
+noscript {display:none;} /* Fixes a feature in Firefox 1.5.0.2 where print preview displays the noscript content */
+}
+/*}}}*/</pre>
+</div>
+<div title="PageTemplate">
+<pre>&lt;!--{{{--&gt;
+&lt;div class='header' macro='gradient vert [[ColorPalette::PrimaryLight]] [[ColorPalette::PrimaryMid]]'&gt;
+&lt;div class='headerShadow'&gt;
+&lt;span class='siteTitle' refresh='content' tiddler='SiteTitle'&gt;&lt;/span&gt;&amp;nbsp;
+&lt;span class='siteSubtitle' refresh='content' tiddler='SiteSubtitle'&gt;&lt;/span&gt;
+&lt;/div&gt;
+&lt;div class='headerForeground'&gt;
+&lt;span class='siteTitle' refresh='content' tiddler='SiteTitle'&gt;&lt;/span&gt;&amp;nbsp;
+&lt;span class='siteSubtitle' refresh='content' tiddler='SiteSubtitle'&gt;&lt;/span&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div id='mainMenu' refresh='content' tiddler='MainMenu'&gt;&lt;/div&gt;
+&lt;div id='sidebar'&gt;
+&lt;div id='sidebarOptions' refresh='content' tiddler='SideBarOptions'&gt;&lt;/div&gt;
+&lt;div id='sidebarTabs' refresh='content' force='true' tiddler='SideBarTabs'&gt;&lt;/div&gt;
+&lt;/div&gt;
+&lt;div id='displayArea'&gt;
+&lt;div id='messageArea'&gt;&lt;/div&gt;
+&lt;div id='tiddlerDisplay'&gt;&lt;/div&gt;
+&lt;/div&gt;
+&lt;!--}}}--&gt;</pre>
+</div>
+<div title="ViewTemplate">
+<pre>&lt;!--{{{--&gt;
+&lt;div class='toolbar' macro='toolbar [[ToolbarCommands::ViewToolbar]]'&gt;&lt;/div&gt;
+&lt;div class='title' macro='view title'&gt;&lt;/div&gt;
+&lt;div class='subtitle'&gt;&lt;span macro='view modifier link'&gt;&lt;/span&gt;, &lt;span macro='view modified date'&gt;&lt;/span&gt; (&lt;span macro='message views.wikified.createdPrompt'&gt;&lt;/span&gt; &lt;span macro='view created date'&gt;&lt;/span&gt;)&lt;/div&gt;
+&lt;div class='tagging' macro='tagging'&gt;&lt;/div&gt;
+&lt;div class='tagged' macro='tags'&gt;&lt;/div&gt;
+&lt;div class='viewer' macro='view text wikified'&gt;&lt;/div&gt;
+&lt;div class='tagClear'&gt;&lt;/div&gt;
+&lt;!--}}}--&gt;</pre>
+</div>
+<div title="EditTemplate">
+<pre>&lt;!--{{{--&gt;
+&lt;div class='toolbar' macro='toolbar [[ToolbarCommands::EditToolbar]]'&gt;&lt;/div&gt;
+&lt;div class='title' macro='view title'&gt;&lt;/div&gt;
+&lt;div class='editor' macro='edit title'&gt;&lt;/div&gt;
+&lt;div macro='annotations'&gt;&lt;/div&gt;
+&lt;div class='editor' macro='edit text'&gt;&lt;/div&gt;
+&lt;div class='editor' macro='edit tags'&gt;&lt;/div&gt;&lt;div class='editorFooter'&gt;&lt;span macro='message views.editor.tagPrompt'&gt;&lt;/span&gt;&lt;span macro='tagChooser excludeLists'&gt;&lt;/span&gt;&lt;/div&gt;
+&lt;!--}}}--&gt;</pre>
+</div>
+<div title="GettingStarted">
+<pre>To get started with this blank [[TiddlyWiki]], you'll need to modify the following tiddlers:
+* [[SiteTitle]] &amp; [[SiteSubtitle]]: The title and subtitle of the site, as shown above (after saving, they will also appear in the browser title bar)
+* [[MainMenu]]: The menu (usually on the left)
+* [[DefaultTiddlers]]: Contains the names of the tiddlers that you want to appear when the TiddlyWiki is opened
+You'll also need to enter your username for signing your edits: &lt;&lt;option txtUserName&gt;&gt;</pre>
+</div>
+<div title="OptionsPanel">
+<pre>These [[InterfaceOptions]] for customising [[TiddlyWiki]] are saved in your browser
+
+Your username for signing your edits. Write it as a [[WikiWord]] (eg [[JoeBloggs]])
+
+&lt;&lt;option txtUserName&gt;&gt;
+&lt;&lt;option chkSaveBackups&gt;&gt; [[SaveBackups]]
+&lt;&lt;option chkAutoSave&gt;&gt; [[AutoSave]]
+&lt;&lt;option chkRegExpSearch&gt;&gt; [[RegExpSearch]]
+&lt;&lt;option chkCaseSensitiveSearch&gt;&gt; [[CaseSensitiveSearch]]
+&lt;&lt;option chkAnimate&gt;&gt; [[EnableAnimations]]
+
+----
+Also see [[AdvancedOptions]]</pre>
+</div>
+<div title="ImportTiddlers">
+<pre>&lt;&lt;importTiddlers&gt;&gt;</pre>
+</div>
+</div>
+<!--POST-SHADOWAREA-->
+<div id="storeArea">
+<div title="BookmarkServices.en" modifier="BookmarksCommand" created="201003120600">
+<pre>!Decriptions of Params
+|!Params |%0|%1|%2|%3|%4|%5|
+|!Descriptions|title|url|selections|descriptions|rererence|tags|
+!Lingos of command button
+{{{
+''text:'' Bookmarks
+''tooltip:'' Bookmark this tiddlers to ...
+''popupNone:'' There are no bookmark services
+}}}
+!List of Services
+{{{
+''Services:'' Del.icio.us,Digg,Google,Yahoo,Furl,HemiDemi,MyShare,Baidu,Youpus,Technorati
+}}}
+!Definition of Services
+{{{
+''HemiDemi:''&lt;br/&gt;[[HemiDemi|http://www.hemidemi.com/user_bookmark/new?title=%0&amp;url=%1&amp;quotes=%2&amp;description=%3&amp;via=%4&amp;tag_string=%5]]
+''MyShare:''&lt;br/&gt;[[MyShare|http://myshare.url.com.tw/index.php?func=newurl&amp;from=mysharepop&amp;url=%1&amp;desc=%0&amp;contents=%3]]
+''Baidu:''&lt;br/&gt;[[Baidu|http://cang.baidu.com/do/add?iu=%1&amp;it=%0&amp;dc=%3]]
+''Google:''&lt;br/&gt;[[Google|http://www.google.com/bookmarks/mark?op=add&amp;title=%0&amp;bkmk=%1&amp;annotation=%3&amp;labels=%5]]
+''Yahoo:''&lt;br/&gt;[[Yahoo|http://tw.myweb2.search.yahoo.com/myresults/bookmarklet?t=%1&amp;u=%0&amp;d=%3&amp;ei=UTF-8]]
+''Del.icio.us:''&lt;br/&gt;[[Del.icio.us|http://del.icio.us/post?title=%0&amp;url=%1&amp;notes=%3&amp;tags=%5]]
+''Digg:''&lt;br/&gt;[[Digg|http://digg.com/submit?phase=2&amp;url=%0&amp;title=%1&amp;bodytext=%3]]
+''Technorati:''&lt;br/&gt;[[Technorati|http://technorati.com/faves?add=%1&amp;title=%0]]
+''Furl:''&lt;br/&gt;[[Furl|http://www.furl.net/storeIt.jsp?t=%0&amp;u=%1&amp;r=%4&amp;c=%2&amp;p=1]]
+''Youpush:''&lt;br/&gt;[[Youpush|http://www.youpush.net/submit.php?url=%1]]
+}}}</pre>
+</div>
+<div title="MarkupPreBody" modifier="YourName" created="200703080842" modified="200805140513" tags="excludeLists excludeMissing systemTiddlers">
+<pre>&lt;!--{{{--&gt;
+&lt;!-- Borrowed --&gt;
+&lt;script type=&quot;text/javascript&quot; src=&quot;plugins/BigThemePack.js&quot;&gt;&lt;/script&gt;
+&lt;script type=&quot;text/javascript&quot; src=&quot;plugins/NestedSlidersPlugin.js&quot;&gt;&lt;/script&gt;
+&lt;!--}}}--&gt;
+&lt;!--{{{--&gt;
+&lt;!-- PTW --&gt;
+&lt;script type=&quot;text/javascript&quot; src=&quot;plugins/ArchivedTimeline.js&quot;&gt;&lt;/script&gt;
+&lt;script type=&quot;text/javascript&quot; src=&quot;plugins/BreadCrumbs2.js&quot;&gt;&lt;/script&gt;
+&lt;script type=&quot;text/javascript&quot; src=&quot;plugins/BookrmarksCommand.js&quot;&gt;&lt;/script&gt;
+&lt;script type=&quot;text/javascript&quot; src=&quot;plugins/ListExtensionsCode.js&quot;&gt;&lt;/script&gt;
+&lt;script type=&quot;text/javascript&quot; src=&quot;plugins/TiddlyCalendar.js&quot;&gt;&lt;/script&gt;
+&lt;script type=&quot;text/javascript&quot; src=&quot;plugins/XMLReader2.js&quot;&gt;&lt;/script&gt;
+&lt;!--}}}--&gt;</pre>
+</div>
+<div title="PTW files released" modifier="BramChen" created="200703080843" modified="200705240609">
+<pre>&lt;&lt;rssfeed asHtml &quot;http://sourceforge.net/export/rss2_projfiles.php?group_id=150646&quot;&gt;&gt;</pre>
+</div>
+<div title="Plugins - external .js files" modifier="BramChen" created="200703290425" modified="200705240643">
+<pre>&lt;&lt;listExtCode&gt;&gt;</pre>
+</div>
+<div title="SelectThemePlugin" modifier="YourName" created="200704011547" modified="200805140512" tags="excludeLists systemConfig">
+<pre>/***
+
+''This plugin was previously called StyleChooser.''
+
+|Name|SelectThemePlugin|
+|Created by|SimonBaird and SaqImtiaz|
+|Source|http://tw.lewcid.org/#SelectThemePlugin|
+|Version|1.2.5|
+|CoreVersion:|~TW2.x|
+!Description
+*An alternative style switcher, can be used to switch just stylesheets and/or pagetemplates, or a combination of both (a theme)
+*you can add your own stylesheets and pagetemplates, or use a ThemePack, like BigThemePack.
+
+!Usage
+* You have to have fetch or create some styleSheets and pageTemplates to use this plugin.
+**You can either get a ThemePack like BigThemePack which automatically adds themes to ThemeSelect.
+**or create tiddlers with styleSheets and pageTemplates and tag them styleSheets and pageTemplates respectively.
+* Put {{{&lt;&lt;themeSelect style 'Select theme'&gt;&gt;}}} in your SideBarOptions.
+
+!Creating Theme Packs
+*You can create your own theme pack if you like. Instructions can be found [[here.|CreateThemePack]]
+
+!History
+*20-Dec-06, v 1.2.5, fixed horizontal rules for IE (thanks Clint), compatibility fix with HoverMenuPlugin
+* 08-Sept-06, v1.2.4, fixed bug with TW2.1
+* 15-May-06, v1.2.3, added paramifier so you can put theme on url, eg http://www.somewhere.com/twfile.html#theme:Berry2, thanks Clint (Simon).
+* 28-Apr-o6, v1.2.2, fixed bug with opening TW after deleting themepacks. (Saq)
+* 26-Apr-06, v1.2.1, more code optimization, dropdowns now updated on the fly. (Saq)
+* 25-Apr-06, v1.2.0, added 3rd party ThemePack support, and made various other improvements.(Simon &amp; Saq)
+* 24-Apr-06, v1.1.0, added: no styles and default styles options,&lt;&lt;br&gt;&gt;support for ThemePack, support for tag variations(Saq)
+* 21-Apr-06, v1.0.0, Reworked dropdowns to include option for pagetemplates (Saq)
+* 21-Apr-06, v0.9.0, Rewrote and added Saq's lovely dropdown select (Simon)
+* 20-Apr-06, v0.0.1, Basic switcher working (Simon)
+
+!Examples
+|!Source|!Output|h
+|{{{&lt;&lt;themeSelect style&gt;&gt;}}} for a dropdown with StyleSheets|&lt;&lt;themeSelect style&gt;&gt;|
+|{{{&lt;&lt;themeSelect pagetemplate&gt;&gt;}}} for a dropdown with PageTemplates|&lt;&lt;themeSelect pagetemplate&gt;&gt;|
+|{{{&lt;&lt;themeSelect style customlabel&gt;&gt;}}} to use a customlabel|&lt;&lt;themeSelect style customlabel&gt;&gt;|
+* When applying a stylesheet or template, it also looks for a template or stylesheet respectively based on naming convention, eg MyFunkyStyleSheet and MyFunkyPageTemplate.
+
+!Notes
+* See also http://www.tiddlytools.com/#SelectStyleSheetPlugin for a more feature-rich style sheet switcher
+
+! Ideas
+* do ViewTemplate also?
+* Pretty up the [x] bit
+
+!Code
+***/
+//{{{
+// for compatibility with TW &lt;2.0.9
+if (!Array.prototype.contains)
+   Array.prototype.contains = function(item)
+   {
+    return this.find(item) != null;
+    };
+
+// for compatibility with TW &lt;2.0.9
+if (!Array.prototype.containsAny)
+   Array.prototype.containsAny = function(items)
+   {
+    for(var i=0; i&lt;items.length; i++)
+        if (this.contains(items[i]))
+            return true;
+    return false;
+    };
+//}}}
+
+//{{{
+version.extensions.SelectTheme = { major: 1, minor: 2, revision: 5, date: new Date(2006,12,20),
+	source: &quot;http://tw.lewcid.org/#SelectThemePlugin&quot;
+};
+
+config.SelectTheme = {
+	things: {
+		style: {
+			tag:        [&quot;StyleSheets&quot;,&quot;StyleSheet&quot;,&quot;styleSheet&quot;,&quot;styleSheets&quot;,&quot;stylesheet&quot;,&quot;stylesheets&quot;],
+			theDefault: &quot;StyleSheet&quot;,
+			suffix:     &quot;StyleSheet&quot;,
+			notify:     refreshStyles,
+			cookie:     &quot;txtStyleSheet&quot;,
+			otherThing: &quot;pagetemplate&quot;,
+			label:      &quot;Choose StyleSheet: &quot;,
+			tooltip:     &quot;Choose a StyleSheet&quot;,
+			caseNone: { text:&quot;None&quot;, title:&quot;NoStyleSheet&quot;},
+                        caseDefault: { text:&quot;Default&quot;, title:&quot;StyleSheet&quot; }
+
+		},
+		pagetemplate: {
+			tag:        [&quot;PageTemplates&quot;,&quot;PageTemplate&quot;,&quot;pageTemplates&quot;,&quot;pageTemplate&quot;,&quot;pagetemplate&quot;,&quot;pagetemplates&quot;],
+			theDefault: &quot;PageTemplate&quot;,
+			suffix:     &quot;PageTemplate&quot;,
+			notify:     refreshPageTemplate,
+			cookie:     &quot;txtPageTemplate&quot;,
+			otherThing: &quot;style&quot;,
+			label: &quot;Choose PageTemplate: &quot;,
+			tooltip:    &quot;Choose a PageTemplate&quot;,
+			caseNone: { text:&quot;None&quot;, title:&quot;NoPageTemplate&quot;},
+                        caseDefault: { text:&quot;Default&quot;, title:&quot;PageTemplate&quot; }
+		}
+
+	},
+
+                         specialCases: [&quot;caseNone&quot;,&quot;caseDefault&quot;]
+
+};
+
+TiddlyWiki.prototype.removeNotification = function(title,fn) {
+	for (var i=0;i&lt;this.namedNotifications.length;i++)
+		if((this.namedNotifications[i].name == title) &amp;&amp; (this.namedNotifications[i].notify == fn))
+			this.namedNotifications.splice(i,1); // counting on it only being there once
+}
+
+
+var things = config.SelectTheme.things;
+var specialCases=config.SelectTheme.specialCases;
+
+for (var zz in things) {
+	// make sure we have a value
+	if (!config.options[things[zz].cookie])
+		config.options[things[zz].cookie] = things[zz].theDefault;
+
+	// remove core notify
+	store.removeNotification(things[zz].theDefault,things[zz].notify);
+
+	// and add our one
+	store.addNotification(config.options[things[zz].cookie],things[zz].notify);
+
+}
+
+//checks to see if a tiddler exists in store or as a shadow.
+TiddlyWiki.prototype.isTiddler= function (title)
+        {return store.tiddlerExists(title) || store.isShadowTiddler(title)}
+
+//hijack core function &amp; make sure template exists
+window.applyPageTemplate_themeSelect=window.applyPageTemplate;
+window.applyPageTemplate=function(title){
+           if(!store.isTiddler(title))
+                       {title = things.pagetemplate.theDefault;}
+           applyPageTemplate_themeSelect(title);
+ }
+
+TiddlyWiki.prototype.makeActiveTheme = function(what,title,alsoCheckOtherThing) {
+
+	var thing = things[what];
+        if (!store.isTiddler(title))
+		title = thing.theDefault;
+
+	var oldTitle = config.options[thing.cookie];
+
+	if (what == &quot;style&quot;) {
+		// remove old style element from DOM
+		var oldStyleElement = document.getElementById(oldTitle);
+		if (oldStyleElement) oldStyleElement.parentNode.removeChild(oldStyleElement);
+	}
+
+	store.removeNotification(oldTitle,thing.notify);
+	store.addNotification(title,thing.notify);
+	store.notify(title);
+
+	config.options[thing.cookie] = title;
+	saveOptionCookie(thing.cookie);
+	if (alsoCheckOtherThing)
+		this.makeActiveTheme(thing.otherThing,
+				title.replace(new RegExp(thing.suffix+&quot;$&quot;),&quot;&quot;) + things[thing.otherThing].suffix,
+						false);
+};
+
+if (config.hoverMenu)
+    {
+    old_hovermenu_makeActiveTheme = TiddlyWiki.prototype.makeActiveTheme;
+    TiddlyWiki.prototype.makeActiveTheme = function(what,title,alsoCheckOtherThing)
+        {
+         old_hovermenu_makeActiveTheme.apply(this,arguments);
+         if (!alsoCheckOtherThing)
+                    config.hoverMenu.handler();
+        };
+    }
+
+config.shadowTiddlers.NoStyleSheet = config.shadowTiddlers.StyleSheet;
+config.shadowTiddlers.NoPageTemplate = config.shadowTiddlers.PageTemplate;
+
+
+function switchTheme(e){
+         if (!e) var e = window.event;
+         var theTarget = resolveTarget(e);
+         var theLink = theTarget;
+         var switchTo= theLink.getAttribute(&quot;switchTo&quot;);
+         var mode = theLink.getAttribute(&quot;mode&quot;);
+         if ((config.options[things[mode].cookie])!=switchTo)
+               {store.makeActiveTheme(mode,switchTo,true);};
+         return(false);
+}
+
+
+config.macros.themeSelect={};
+config.macros.themeSelect.dropdownchar = (document.all?&quot;▼&quot;:&quot;▾&quot;);
+config.macros.themeSelect.handler = function(place,macroName,params,wikifier,paramString,tiddler){
+         var arrow = config.macros.themeSelect.dropdownchar;
+         var mode = params[0];
+         var label = (params[1]?params[1]:things[mode].label) + arrow;
+         var cookie = (config.options[things[mode].cookie]);
+
+         var onclick = function(e)
+             { if (!e) var e = window.event;
+             var popup = Popup.create(this);
+
+             var tagged=[];
+
+	     store.forEachTiddler(function(title,tiddler) {
+                  if ((tiddler.tags).containsAny(things[mode].tag)){
+					tagged.push(tiddler.title);}
+	     });
+
+             //integrate ThemePacks
+	     if (config.themes) {
+		     // see what themes have been loaded...
+		     for (var i=0;i&lt;config.themes.length;i++) {
+			    // see if there is one
+			    var lookForThis = config.themes[i] + things[mode].suffix;
+			    if (store.isShadowTiddler(lookForThis)) {
+				   tagged.pushUnique(lookForThis);
+			    }
+		    }
+		     tagged = tagged.sort();
+             }
+
+             //this function used later to create buttons
+             var createThemeButton = function(switchTo){
+                        var theButton = createTiddlyButton(createTiddlyElement(popup,&quot;li&quot;),text,null,switchTheme,useClass);
+                        theButton.setAttribute(&quot;switchTo&quot;,switchTo);
+                        theButton.setAttribute(&quot;mode&quot;,mode);};
+
+            //create Buttons for None(shadow styles) &amp; Default (StyleSheet)
+                     // Default button is not created if StyleSheet doesnt exist.
+             for(var t=0; t&lt;specialCases.length; t++){
+             var special = specialCases[t];
+             var text = things[mode][special].text;
+             var useClass = &quot;tiddlyLinkExisting&quot;;   //redundant, optimize!
+             if ((things[mode][special].title==cookie)||(special==&quot;caseNone&quot;&amp;&amp;!store.isTiddler(cookie)))
+                      {text+= &quot; [x]&quot;;
+                      useClass = &quot;currentlySelected&quot;;}
+             if (!((special==&quot;caseDefault&quot;)&amp;&amp;(!store.getTiddler(things[mode][special].title))))
+             createThemeButton(things[mode][special].title);     }
+
+             //insert horizontal rule
+             //createTiddlyElement(createTiddlyElement(popup,&quot;li&quot;),&quot;hr&quot;);
+             createTiddlyElement(createTiddlyElement(popup,&quot;li&quot;,null,&quot;listBreak&quot;),&quot;div&quot;);
+
+             //create buttons for all other stylesheet tiddlers
+             for(var t=0; t&lt;tagged.length; t++)
+                     { var useClass = &quot;tiddlyLinkExisting&quot;;
+                       var text = (tagged[t]).replace((things[mode].suffix),&quot;&quot;);
+                     if (tagged[t]==(cookie) )
+                           {text+=&quot; [x]&quot;; useClass=&quot;currentlySelected&quot;;}
+                     if ((tagged[t]!= (things[mode].theDefault))&amp;&amp;tagged[t]!= (things[mode].none))
+                        {createThemeButton(tagged[t]);}}
+             Popup.show(popup,false);
+             e.cancelBubble = true;
+             if (e.stopPropagation)
+                e.stopPropagation();
+             return(false);
+             };
+
+        var createdropperButton = function(place){
+           var sp = createTiddlyElement(place,&quot;span&quot;,null,&quot;ThemeChooserButton&quot;);
+           var theDropDownBtn = createTiddlyButton(sp,label,things[mode].tooltip,onclick);
+        };
+
+        createdropperButton(place);
+};
+
+
+setStylesheet(&quot;.popup li a.currentlySelected {background:#ccc;color:black;font-weight:bold;}&quot;,&quot;currentlySelectedStyle&quot;); // could do better probably...
+
+config.macros.layoutChooser=config.macros.themeSelect;
+
+//shadow tiddler to hold instructions for creating ThemePacks
+config.shadowTiddlers.ThemePack='See http://simonbaird.com/mptw/#CreateThemePack'; 
+
+config.macros.applyTheme = {handler: function (place,macroName,params,wikifier,paramString,tiddler) {
+	var theme = params[0];
+	var label = params[1]?params[1]:'Apply theme &quot;' + theme + '&quot;';
+        var tooltip = 'Apply the &quot;'+theme+'&quot; theme to this TiddlyWiki';
+	createTiddlyButton(place,label,tooltip,function() {
+		store.makeActiveTheme(&quot;style&quot;,theme+things.style.suffix,true);
+	});
+}};
+
+
+// this means you can put #theme:ThemeName in url. suggested by Clint
+config.paramifiers.theme = {
+	onstart: function(themeName) {
+		store.makeActiveTheme(&quot;style&quot;,themeName+config.SelectTheme.things.style.suffix,true);
+	}
+};
+
+//}}}</pre>
+</div>
+<div title="SideBarOptions" modifier="YourName" created="200705240637" modified="201003120600" tags="excludeLists excludeMissing systemTiddlers" changecount="1">
+<pre>&lt;&lt;slider chkOptionsPanel01 [[SideBarOptions##Panel01]] 'Sidebar Panel' 'Sidebar Menu'&gt;&gt;&lt;&lt;slider chkOptionsPanel02 [[SideBarOptions##Panel02]] 'Mangement' 'Mangement'&gt;&gt;&lt;&lt;slider chkOptionsPanel03 [[SideBarOptions##Panel03]] 'Control Panel' 'Control Panel'&gt;&gt;
+/%
+!OptionPanels
+!Panel01
+&lt;&lt;search&gt;&gt;
+&lt;&lt;closeAll&gt;&gt;
+&lt;&lt;permaview&gt;&gt;
+&lt;&lt;newTiddler&gt;&gt;
+&lt;&lt;newJournal YYYY0MM0DD&gt;&gt;
+&lt;&lt;saveChanges&gt;&gt;
+&lt;&lt;slider chkSliderOptionsPanel OptionsPanel &quot;options  »&quot; &quot;Change TiddlyWiki advanced options&quot;&gt;&gt;
+!Panel02
+[[Import Tiddlers|ImportTiddlers]]
+[[Plugin Manager|PluginManager]]
+[[Exterl js|Plugins - external .js files]]
+!Panel03
+&lt;&lt;tabs txtLookAndFeel
+ 'Configs' 'Configurations of Site' [[SideBarOptions##Panel03_01]]
+ Menus 'Main menu、Side Bars' [[SideBarOptions##Panel03_02]]
+ Stytles 'Stylesheets、Switch themes' [[SideBarOptions##Panel03_03]]
+ &gt;&gt;
+!!Panel03_01
+SiteTitle
+SiteSubtitle
+WindowTitle
+DefaultTiddlers
+SiteUrl
+!!Panel03_02
+MainMenu
+SideBarOptions
+SideBarTabs
+!!Panel03_03
+StyleSheet
+StyleSheetColors
+StyleSheetLayout
+StyleSheetPrint
+ColorPalette
+&lt;&lt;themeSelect style&gt;&gt;
+!End of Sections
+%/</pre>
+</div>
+<div title="TabTimeline" modifier="YourName" created="200805140443" modified="200805140513" tags="excludeLists excludeMissing systemTiddlers">
+<pre>&lt;&lt;tCalendar lastModified&gt;&gt;</pre>
+</div>
+</div>
+<!--POST-STOREAREA-->
+<!--POST-BODY-START-->
+<!--POST-BODY-END-->
+<script type="text/javascript">
+//<![CDATA[
+if(useJavaSaver)
+	document.write("<applet style='position:absolute;left:-1px' name='TiddlySaver' code='TiddlySaver.class' archive='TiddlySaver.jar' width='1' height='1'></applet>");
+//]]>
+</script>
+<!--POST-SCRIPT-START-->
+
+<!--POST-SCRIPT-END-->
+</body>
+</html>

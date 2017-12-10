@@ -1,0 +1,41 @@
+﻿<html>
+<style>
+.rolodex table {
+border: 0px solid;
+background-color:#eeeff;
+}
+
+.rolodex tr, .rolodex td {
+border: 0px solid;
+}
+</style>
+<span class="rolodex">
+ <table>
+ <tr>
+ <td align="right"><b>Author(s):</b></td>
+ <td colspan="3"><input name=author type=text style="width:300%" /></td></tr>
+ <tr>
+ <td align="right"><b>Book title:</b></td>
+ <td colspan="3"><input name=booktitle type=text style="width:300%" /></td></tr>
+ <tr>
+ <td align="right"><b>Publisher information:</b></td>
+ <td colspan="3"><input name=pubinfo type=text style="font-style:italic; width:300%;" /></td></tr>
+ <tr>
+ <td align="right"><b>Call number:</b></td>
+ <td colspan="3"><input name=callnumber type=text style="width:300%" /></td></tr>
+ <tr>
+<td align="right"><b>I own it:</b></td>
+<input name=mine type=checkbox /></td></tr>
+ <td align="right"><b>Where I keep it:</b></td>
+ <td colspan="3"><input name=location type=text style="width:300%" /></td></tr>
+ <tr>
+ <td align="right"><b>Primary topic:</b></td>
+ <td colspan="3"><input name=primtopic type=text style="width:300%" /></td></tr>
+  <tr>
+ <td align="right"><b>BibTeX key:</b></td>
+ <td colspan="3"><input name=bibtexkey type=text style="width:300%" /></td></tr><tr></span> </html>
+1. In viewing mode add data to the form fields above
+2. In edit mode add image URL above form fields using the following syntax: {{{[img[URL for your image here]]}}}
+3. In edit mode add notes below, and use the tag window below to add tags for additional topics
+
+! Notes

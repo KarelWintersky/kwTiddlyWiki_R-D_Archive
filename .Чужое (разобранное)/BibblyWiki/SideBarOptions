@@ -1,0 +1,2 @@
+﻿<<search>>
+<<newTiddler title:"Start this title with author last name" label:"new book" text:{{"<<formTiddler NewBookTemplate\>\>"}} tag:"bibentry">><<newTiddler title:"Add title here" label:"new article" text:{{"<<formTiddler NewArticleTemplate\>\>"}} tag:"bibentry" tag:"article">><<newTiddler>><<slider chkSliderOptionsPanel OptionsPanel 'options »' 'Change TiddlyWiki advanced options'>><<closeAll>><<saveChanges>><<slider chkSideMenu SideMenu 'How to use BibblyWiki »'>>

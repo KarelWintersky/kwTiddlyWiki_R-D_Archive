@@ -1,0 +1,156 @@
+/*
+{{{
+*/
+config.views.wikified.toolbarCloseOthers = {text: "закрыть другие", tooltip: "Закрыть все записки, кроме этой"};
+config.views.wikified.toolbarNewHere = {text: "новая", tooltip: "Создать записку с тем же набором тэгов, что и у этой"};
+config.views.wikified.toolbarCollapse = {text: "свернуть", tooltip: "Свернуть эту запискуr", toggleText: "развернуть", toggleTooltip: "Развернуть эту записку"};
+config.views.editor.toolbarDuplicate = {text: "дубликат", tooltip: "Дублировать эту записку", suffix: "Копия "};
+
+window.onClickToolbarNewHere = function(e)
+{
+ if (!e) var e = window.event;
+ clearMessage();
+ if(this.parentNode.id) {
+ displayTiddler(this.parentNode,"New Tiddler",2,null,null,false,false);
+ tagBox = document.getElementById("editorTagsNew Tiddler"); 
+ tagBox.value = this.parentNode.id.substring(7);
+ }
+ e.cancelBubble = true;
+ if (e.stopPropagation) e.stopPropagation();
+ return(false);
+}
+
+window.onClickToolbarDuplicate= function(e)
+{
+ if (!e) var e = window.event;
+ clearMessage();
+ if(this.parentNode.id) {
+
+ clearMessage();
+ var lingo = config.views
+ lingo = lingo.editor;
+ var thisSrc = document.getElementById(this.parentNode.id);
+ var thisTiddler = this.parentNode.id.substr(7);
+ var dupBody = document.getElementById("editorBody" + thisTiddler).value;
+ var dupTitle = thisTiddler + lingo.toolbarDuplicate.suffix;
+ displayTiddler(thisSrc,dupTitle,2,null,null,false);
+ document.getElementById("editorBody" + dupTitle).value = dupBody;
+ tagBox = document.getElementById("editorTags"+dupTitle);
+ tagBox.value = document.getElementById("editorTags"+ thisTiddler).value;
+
+ // If you want the original tiddler to close completely after you click 'duplicate,' then remove the slashes at the start of the next line
+ //closeTiddler(thisTiddler,false);
+ }
+ e.cancelBubble = true;
+ if (e.stopPropagation) e.stopPropagation();
+ return(false);
+}
+
+function onClickToolbarCollapse(e)
+{
+ if (!e) var e = window.event;
+ title = this.parentNode.id.substr(7);
+ if(title)
+ {
+ var viewerStatus = document.getElementById("viewer" + title).style.display
+ var displayStyle;
+ var buttonText;
+ var buttonTooltip;
+ var lingo = config.views
+ lingo = lingo.wikified;
+ if(viewerStatus == "none")
+ {
+ displayStyle = "block";
+ buttonText = lingo.toolbarCollapse.text;
+ buttonTooltip = lingo.toolbarCollapse.tooltip;
+ }
+ else
+ {
+ displayStyle = "none";
+ buttonText = lingo.toolbarCollapse.toggleText;
+ buttonTooltip = lingo.toolbarCollapse.toggleTooltip;
+ }
+ document.getElementById("viewer" + title).style.display = displayStyle; 
+ document.getElementById("footer" + title).style.display = displayStyle; 
+ this.innerHTML = buttonText;
+ this.title = buttonTooltip;
+ }
+}
+
+window.onClickToolbarCloseOthers = function(e)
+{
+ if (!e) var e = window.event;
+ clearMessage();
+ if(this.parentNode.id)
+ closeAllOtherTiddlers(this.parentNode.id.substr(7));
+ e.cancelBubble = true;
+ if (e.stopPropagation) e.stopPropagation();
+ return(false);
+}
+
+function closeAllOtherTiddlers(thisTitle)
+{
+ clearMessage();
+ var place = document.getElementById("tiddlerDisplay");
+ var tiddler = place.firstChild;
+ var nextTiddler;
+ while(tiddler)
+ {
+ nextTiddler = tiddler.nextSibling;
+ if(tiddler.id)
+ if(tiddler.id.substr(0,7) == "tiddler")
+ {
+ var title = tiddler.id.substr(7);
+ if(!document.getElementById("editor" + title) && title != thisTitle)
+ place.removeChild(tiddler);
+ }
+ tiddler = nextTiddler;
+ }
+ window.scrollTo(0,0);
+}
+// Create a tiddler toolbar according to whether it's an editor or not
+window.createTiddlerToolbar = function(title,isEditor)
+{
+var theToolbar = document.getElementById("toolbar" + title);
+var lingo = config.views;
+if(theToolbar)
+{
+removeChildren(theToolbar);
+insertSpacer(theToolbar);
+if(isEditor)
+{
+// Editor toolbar
+lingo = lingo.editor;
+createTiddlyButton(theToolbar,lingo.toolbarDone.text,lingo.toolbarDone.tooltip,onClickToolbarSave);
+insertSpacer(theToolbar);
+createTiddlyButton(theToolbar,lingo.toolbarDuplicate.text,lingo.toolbarDuplicate.tooltip,onClickToolbarDuplicate);
+insertSpacer(theToolbar);
+createTiddlyButton(theToolbar,lingo.toolbarCancel.text,lingo.toolbarCancel.tooltip,onClickToolbarUndo);
+insertSpacer(theToolbar);
+createTiddlyButton(theToolbar,lingo.toolbarDelete.text,lingo.toolbarDelete.tooltip,onClickToolbarDelete);
+}
+else
+{
+// Viewer toolbar
+lingo = lingo.wikified;
+createTiddlyButton(theToolbar,lingo.toolbarClose.text,lingo.toolbarClose.tooltip,onClickToolbarClose);
+insertSpacer(theToolbar);
+createTiddlyButton(theToolbar,lingo.toolbarCloseOthers.text,lingo.toolbarCloseOthers.tooltip,onClickToolbarCloseOthers);
+insertSpacer(theToolbar);
+createTiddlyButton(theToolbar,lingo.toolbarCollapse.text,lingo.toolbarCollapse.tooltip,onClickToolbarCollapse,"toolbarCollapse");
+insertSpacer(theToolbar);
+createTiddlyButton(theToolbar,lingo.toolbarEdit.text,lingo.toolbarEdit.tooltip,onClickToolbarEdit);
+insertSpacer(theToolbar);
+createTiddlyButton(theToolbar,lingo.toolbarPermalink.text,lingo.toolbarPermalink.tooltip,onClickToolbarPermaLink);
+insertSpacer(theToolbar);
+createTiddlyButton(theToolbar,lingo.toolbarReferences.text,lingo.toolbarReferences.tooltip,onClickToolbarReferences);
+insertSpacer(theToolbar);
+createTiddlyButton(theToolbar,lingo.toolbarNewHere.text,lingo.toolbarNewHere.tooltip,onClickToolbarNewHere);
+insertSpacer(theToolbar);
+}
+}
+}
+
+/*
+}}}
+*/

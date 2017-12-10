@@ -1,0 +1,142 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<script type="text/javascript">
+var version = {major: 2, minor: 0, revision: 2, date: new Date("Jan 11, 2006"), extensions: {}};
+</script>
+<!--
+TiddlyWiki 2.0.2 by Jeremy Ruston, (jeremy [at] osmosoft [dot] com)
+
+Copyright (c) Osmosoft Limited 2004-2006
+
+Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions are
+met:
+
+Redistributions of source code must retain the above copyright notice, this
+list of conditions and the following disclaimer.
+
+Redistributions in binary form must reproduce the above copyright
+notice, this list of conditions and the following disclaimer in the
+documentation and/or other materials provided with the distribution.
+
+Neither the name of the Osmosoft Limited nor the names of its
+contributors may be used to endorse or promote products derived from
+this software without specific prior written permission.
+
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+"AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+-->
+
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html;charset=utf-8" >
+<title>ASciencePad - a TiddlyWiki suitable for scientific notes</title>
+
+<!--PJ-->
+<script type="text/javascript" src="HTMLArea/plugins/AsciiMath/ASCIIMathML.js"></script>
+<script type="text/javascript" src="HTMLArea/plugins/AsciiSvg/ASCIIsvg.js"></script>
+<script type="text/javascript" src="HTMLArea/plugins/AsciiSvg/ASCIIsvgAddon.js"></script>
+<script type="text/javascript">
+  _editor_url = "HTMLArea/";
+  _editor_lang = "en";
+</script>
+<script type="text/javascript" src="HTMLArea/htmlarea.js"></script>
+<script type="text/javascript" src="HTMLArea/TiddlyWiki202.js"></script>
+<!--PJ-->
+
+<style type="text/css">
+#saveTest {
+	display: none;
+}
+.zoomer {
+	display: none;
+}
+#messageArea {
+	display: none;
+}
+#storeArea, #copyright {
+	display: none;
+}
+.popup {
+	position: absolute;
+}
+</style>
+<noscript>
+<style type="text/css">
+#storeArea {
+    display: block;
+    margin: 4em 10em 3em;
+}
+#storeArea div {
+ padding: 0.5em;
+ margin: 1em 0em 0em 0em;
+ border-color: #f0f0f0 #606060 #404040 #d0d0d0; 
+ border-style: solid; 
+ border-width: 2px;
+ overflow: auto;
+}
+#javascriptWarning {
+    width: 100%;
+    text-align: center;
+    font-weight: bold;
+    background-color: #dd1100;
+    color: #fff;
+    padding:1em 0em; 
+}
+</style>
+</noscript>
+</head>
+<body onload="main();" onunload="if(checkUnsavedChanges) checkUnsavedChanges();">
+	<script>
+	if (detectPlugin("TiddlyWiki Saver"))
+		{
+		document.write('<embed style="display: none" name="tiddlyWikiSafariSaver" width="0" height="0" type="application/x-webkit-tiddlywiki-saver"></embed>'); 
+		saveUsingSafari = true;
+		}
+	</script>
+	<div id="copyright">
+	Welcome to TiddlyWiki by Jeremy Ruston, Copyright &copy; 2005 Osmosoft Limited
+	</div>
+	<noscript>
+		<div id="javascriptWarning">This page requires JavaScript to function properly</div>
+	</noscript>
+	<div id="saveTest"></div>
+	<div id="contentWrapper"></div>
+	<div id="contentStash"></div>
+	<div id="storeArea"><div tiddler="ASCIIMathCalculator" modifier="PeterJipsen" modified="200603311809" created="200603302320" tags="">&lt;html&gt;The editor now includes a button `~~` that calculates the value of the current math expression (if possible). The cursor should be at the end of the read box, and the answer will be inserted at that point. If the expression contains a string of equalities, only the expression after the last equality is evaluated. Some expressions are considered too easy (this behavior can be switched off by editing the value of AMpreventEasyCalculations in ascii-math.js). The syntax and code for the Calculate button are derived from the [[ASCIIMathCalculator|http://www.chapman.edu/~jipsen/mathml/asciimathcalculator.html]]. Separate expressions with&#160;&amp;quot;;&amp;quot;.&lt;/html&gt;</div>
+<div tiddler="ASCIIMathML" modifier="PeterJipsen" modified="200601141728" created="200601141728" tags="">&lt;html&gt;ASCIIMathML.js is a JavaScript that translates simple ASCII mathematics expressions to MathML while the webpage is loading. It works in InternetExplorer+MathPlayer and Firefox. See &lt;a href=&quot;http://www1.chapman.edu/~jipsen/asciimath.html&quot;&gt;http://www1.chapman.edu/~jipsen/asciimath.html&lt;/a&gt; for more details.&lt;br /&gt;&lt;/html&gt;</div>
+<div tiddler="ASCIIsvg" modifier="PeterJipsen" modified="200601141724" created="200601141724" tags="">&lt;html&gt;ASCIIsvg.js is a JavaScript that translates simple descriptions of diagrams into [[SVG]] while the webpage is loading. It works in InternetExplorer+SVGview and [[Firefox 1.5]]. See &lt;a href=&quot;http://www1.chapman.edu/~jipsen/asciisvg.html&quot;&gt;http://www1.chapman.edu/~jipsen/asciisvg.html&lt;/a&gt; for more details.&lt;br /&gt;&lt;/html&gt;</div>
+<div tiddler="ASciencePad" modifier="PeterJipsen" modified="200601141914" created="200601141752" tags="">&lt;html&gt;&lt;p&gt;This is a modification of TiddlyWiki that adds a convenient editor, namely a slightly modified version of HTMLArea 3.0 with AsciiMath and AsciiSvg plugins developed by [[Peter Jipsen|http://www.chapman.edu/~jipsen]] and [[David Lippman|http://www.pierce.ctc.edu/dlippman/]].&lt;/p&gt;&lt;p&gt;The net result is that one can now easily&#160;create mathematical and scientific webpages with formulas and graphs&#160;using a familiar browser interface. These pages are&#160;saved locally&#160;and can be&#160;uploaded to a webserver. Effectively this is a lightweight scientific wordprocessor and computer algebra system (without any symbolic capabilities at the moment). Various plugins for TiddlyWiki can be used to extend the features, e.g. to display parts of the webpage in the form of presentation slides.&lt;/p&gt;&lt;p&gt;The latest version of ASciencePad can be&#160;freely downloaded&#160;from &lt;a href=&quot;http://math.chapman.edu/~jipsen/asciencepad&quot;&gt;http://math.chapman.edu/~jipsen/asciencepad&lt;/a&gt;. The current version is 1.1a and has not yet been tested extensively. If you use ASciencePad or&#160;notice problems (and perhaps fix them:-)&#160;please send me an email at &lt;a href=&quot;mailto:jipsen@chapman.edu&quot;&gt;jipsen@chapman.edu&lt;/a&gt;. &lt;/p&gt;&lt;p&gt;Note that ASciencePad does not take the approach of embedding the entire JavaScript into the&#160;webpage (since the&#160;HTMLArea editor consists of numerous files). This reduces the size of the main html file (and its many backups), but does imply that this html&#160;file should always be in the same folder as the HTMLArea folder.&lt;/p&gt;&lt;/html&gt;</div>
+<div tiddler="AdobeSVGview" modifier="PeterJipsen" modified="200601141721" created="200601141721" tags="">&lt;html&gt;SVGview.exe is the filename of the Adobe SVG Viewer plugin for InternetExplorer. It is freely available from &lt;a href=&quot;http://www.adobe.com/svg&quot;&gt;http://www.adobe.com/svg&lt;/a&gt;.&lt;/html&gt;</div>
+<div tiddler="AsciiMath" modifier="PeterJipsen" modified="200601141924" created="200601141924" tags="">&lt;html&gt;&lt;p&gt;This plugin for the HTMLArea editor uses the&#160;ASCIIMathML script to enable the editing of mathematical expressions within a webpage. The expressions are displayed using MathML, and when the user clicks on&#160;an expression it is converted to a readable ASCII&#160;representation that can be easily edited using a keyboard or by choosing symbols from a popup panel.&lt;/p&gt;&lt;p&gt;The AsciiMath plugin for the&#160;HTMLArea editor&#160;was developed jointly by&#160;Peter Jipsen&#160;and David Lippman. It requires some minor modifications to the editor script (htmlarea.js), and with similar modifications&#160;the plugin can also be used with the [[Xinha|http://xinha.python-hosting.com/]] editor.&lt;/p&gt;&lt;/html&gt;</div>
+<div tiddler="AsciiSvg" modifier="PeterJipsen" modified="200601141935" created="200601141925" tags="">&lt;html&gt;&lt;p&gt;This plugin for the HTMLArea editor&#160;allows a&#160;user to easily create&#160;mathematical graphs within a webpage. The graphs are displayed using [[SVG]], and when the user double-clicks on&#160;a graph (or selects the graph and clicks on the Insert Graph button in Firefox),&#160;a popup panel opens&#160;in which&#160;the graph&#160;can be modified. In&#160;[[Firefox 1.5]] the graphs are currently&#160;not displayed in the editor window, but they are shown in the popup panel&lt;/p&gt;&lt;p&gt;The AsciiSvg plugin for the&#160;HTMLArea editor&#160;was developed by&#160;David Lippman, based on the ASCIIsvg script developed&#160;by Peter Jipsen. It requires some minor modifications to the editor script (htmlarea.js), and with similar modifications&#160;the plugin can also be used with the [[Xinha|http://xinha.python-hosting.com/]] editor.&lt;/p&gt;&lt;/html&gt;</div>
+<div tiddler="DefaultTiddlers" modifier="PeterJipsen" modified="200601131144" created="200512211000" tags="systemTiddlers">StartHere MathExamples ASCIIMathCalculator SwitchingOffWYSIWYG</div>
+<div tiddler="Download" modifier="PeterJipsen" modified="200601141958" created="200601141957" tags="">&lt;html&gt;&lt;p&gt;&lt;span&gt;ASciencePad is &lt;/span&gt;&lt;strong&gt;&lt;span&gt;freely available&lt;/span&gt;&lt;/strong&gt;&lt;span&gt; for noncommercial use (various parts covered by ~BSD-style&#160;or&#160;GPL licenses).&#160;The latest version can be&#160;downloaded&#160;from &lt;/span&gt;&lt;a href=&quot;http://math.chapman.edu/~jipsen/asciencepad/&quot;&gt;&lt;span&gt;&lt;/span&gt;&lt;/a&gt;&lt;span&gt;.&lt;/span&gt;&lt;/a /&gt;&lt;a class=&quot;externalLink&quot; title=&quot;External link to http://math.chapman.edu/~jipsen/asciencepad/&quot; href=&quot;http://math.chapman.edu/~jipsen/asciencepad/&quot; target=&quot;_blank&quot;&gt;&lt;font color=&quot;#0044bb&quot;&gt;http://math.chapman.edu/~jipsen/asciencepad/&lt;/font&gt;&lt;/a&gt;&lt;/p&gt;&lt;/html&gt;</div>
+<div tiddler="Firefox 1.5" modifier="PeterJipsen" modified="200601141726" created="200601141726" tags="">&lt;html&gt;Firefox 1.5 is a version of the Firefox browser that supports both MathML and [[SVG]] right out of the box. It's free, its easy to install, its standards compliant, and it works on many platforms. Don't hesitate to get your own copy at &lt;a href=&quot;http://www.mozilla.org/products/firefox/&quot;&gt;http://www.mozilla.org/products/firefox/&lt;/a&gt;.&lt;/html&gt;</div>
+<div tiddler="HTMLArea" modifier="PeterJipsen" modified="200601141820" created="200601141820" tags="">&lt;html&gt;&lt;p&gt;This is the name of&#160;an editor written in JavaScript that can&#160;replace&#160;any &amp;lt;textarea&amp;gt; input field in a webpage. HTMLArea can be easily extended by various plugins, and is being used in numerous web applications, including ASciencePad. It can be&#160;obtained in its original form&#160;from &lt;a href=&quot;http://www.dynarch.com/projects/htmlarea/&quot;&gt;http://www.dynarch.com/projects/htmlarea/&lt;/a&gt;.&lt;/p&gt;&lt;/html&gt;</div>
+<div tiddler="InternetExplorer" modifier="PeterJipsen" modified="200601141736" created="200601141735" tags="">&lt;html&gt;&lt;p&gt;Internet Explorer is reportedly the most widely used&#160;browser for reading webpages. Fortunately TiddlyWiki and ASciencePad work with this browser, though the latter only on ~MSWindows with MathPlayer and AdobeSVGview plugins installed.&lt;/p&gt;&lt;/html&gt;</div>
+<div tiddler="JavaScript" modifier="PeterJipsen" modified="200601141729" created="200601141729" tags="">&lt;html&gt;JavaScript is a computer language that is implemented in many webbrowsers and is used to create dynamic webpages. In InternetExplorer it is called ~JScript, and part of the language has been standardized as ~ECMAscript. It is a weakly typed language with a syntax based on c and a prototype mechnism for handling objects. JavaScript programs are downloaded with the webpage, cached and interpreted on the client machine.&lt;/html&gt;</div>
+<div tiddler="MainMenu" modifier="PeterJipsen" modified="200601141939" created="200510302117" tags="systemTiddlers">StartHere\nASciencePad\nMathExamples\n[[Download]]\n[[Thanks]]</div>
+<div tiddler="MathExamples" modifier="PeterJipsen" modified="200601142036" created="200601131128" tags="">&lt;html&gt;&lt;p&gt;To edit this webpage, you first need to&#160;get a local&#160;copy of it and the modified&#160;HTMLArea editor (bundled at &lt;a href=&quot;http://math.chapman.edu/~jipsen/asciencepad&quot;&gt;http://math.chapman.edu/~jipsen/asciencepad&lt;/a&gt;). If you are using Internet Explorer, you also need to install the&#160;MathPlayer and AdobeSVGview plugins. [[Firefox 1.5]] may need some additional fonts (if squareroots display incorrectly).&lt;/p&gt;&lt;p&gt;Assuming things are setup ok, just double-click any plain&#160;text or heading to start the editor. To insert math, you can click the &amp;quot;&lt;strong&gt;Insert New Math&lt;/strong&gt;&amp;quot; button&#160;(&lt;span class=&quot;AM&quot;&gt;`sum+`&lt;/span&gt;) or you can type a backquote (usually on the top-left corner of&#160; us-keyboards, but you can also configure this so that another key is used, e.g. \s$). In the red box that appears, you type your mathematics using&#160;a calculator-style&#160;syntax (called linear ASCII math). If you need specific symbols and don't know (or don't remember) what to type, click the &amp;quot;&lt;strong&gt;Insert Math Symbols&lt;/strong&gt;&amp;quot;&#160;button (&lt;span class=&quot;AM&quot;&gt;`sum`&lt;/span&gt;)&#160;&#160;and choose from the popup window. When you click outside of the red box, the expression is displayed in typeset form using MathML (usually in red, but this can also be changed).&lt;/p&gt;&lt;p&gt;Here is an example: &lt;span class=&quot;AM&quot;&gt;`int_-1^1 sqrt(1-x^2)dx = pi/2`&lt;/span&gt; is the area of a unit semicircle. Point at the formula to see what was typed. (If integrals are unfamiliar, consider the example below.)&lt;/p&gt;&lt;p&gt;To&#160;create a graph of this semicircle, click the &amp;quot;&lt;strong&gt;Insert Graph&lt;/strong&gt;&amp;quot; button, &lt;embed id=&quot;mygraph6&quot; style=&quot;FLOAT: right; VERTICAL-ALIGN: middle; WIDTH: 300px; HEIGHT: 200px&quot; src=&quot;HTMLArea/plugins/AsciiSvg/d.svg&quot; alt=&quot;Graphs: y=sqrt(1-x^2); &quot; sscr=&quot;-1.5,1.5,-.5,1.5,1,1,1,1,1,300,200,func,sqrt(1-x^2),null,0,0,-1,1,blue,2,none&quot; script=&quot; &quot; /&gt; enter sqrt(1-x^2) from -1 to 1 and&#160;change the values for &lt;strong&gt;xmin, xmax, ymin, ymax&lt;/strong&gt; (here I also chose to have the graph positioned &amp;quot;float right&amp;quot;).&lt;/p&gt;&lt;p&gt;Finally, click &amp;quot;&lt;strong&gt;done&lt;/strong&gt;&amp;quot; right above the editor window, and then click &amp;quot;&lt;strong&gt;save changes&lt;/strong&gt;&amp;quot;&#160;on the top&#160;right&#160;column of the webpage (there is also an option to save the file automatically after every edit). &lt;strong&gt;That's it!&lt;/strong&gt;&lt;/p&gt;&lt;p&gt;Another example: The roots of the quadratic equation &lt;span class=&quot;AM&quot;&gt;`ax^2+bx+c=0`&lt;/span&gt; are &lt;span class=&quot;AM&quot;&gt;`x_(1,2)=(-b+-sqrt(b^2-4ac))/(2a)`&lt;/span&gt;. &lt;/p&gt;&lt;/html&gt;</div>
+<div tiddler="MathML" modifier="PeterJipsen" modified="200601141722" created="200601141722" tags="">&lt;html&gt;MathML is the W3C standard for mathematics notation on webpages. See &lt;a href=&quot;http://w3.org/Math&quot;&gt;http://w3.org/Math&lt;/a&gt; for more details.&lt;/html&gt;</div>
+<div tiddler="MathPlayer" modifier="PeterJipsen" modified="200601141720" created="200601141720" tags="">&lt;html&gt;MathPlayer is a free plugin for InternetExplorer that allows this browser to display MathML. The plugin is available from &lt;a href=&quot;http://dessci.com&quot;&gt;http://dessci.com&lt;/a&gt;.&lt;/html&gt;</div>
+<div tiddler="PeterJipsen" modifier="PeterJipsen" modified="200601141823" created="200601141822" tags="">&lt;html&gt;&lt;p&gt;For more information see the&#160;homepage&#160;at&#160;&lt;a href=&quot;http://www.chapman.edu/~jipsen&quot;&gt;http://www.chapman.edu/~jipsen&lt;/a&gt;. &lt;/p&gt;&lt;/html&gt;</div>
+<div tiddler="SVG" modifier="PeterJipsen" modified="200601141725" created="200601141725" tags="">&lt;html&gt;SVG is the W3C standard for scalable vector graphics on webpages. See &lt;a href=&quot;http://www.w3.org/Graphics/SVG/&quot;&gt;http://www.w3.org/Graphics/SVG/&lt;/a&gt; for more details.&lt;/html&gt;</div>
+<div tiddler="SiteSubtitle" modifier="PeterJipsen" modified="200601141708" created="200507121318" tags="systemTiddlers">a TiddlyWiki suitable for scientific notes</div>
+<div tiddler="SiteTitle" modifier="PeterJipsen" modified="200601101142" created="200509212109" tags="systemTiddlers">ASciencePad</div>
+<div tiddler="SiteUrl" modifier="PeterJipsen" modified="200601141718" created="200507121318" tags="systemTiddlers">http://www.math.chapman.edu/asp/asciencepad.html</div>
+<div tiddler="StartHere" modifier="PeterJipsen" modified="200601141910" created="200601112200" tags="">&lt;html&gt;&lt;p&gt;This is an adaptation of Jeremy Ruston's TiddlyWiki (version 2.0.2) that is suitable for writing scientific notes (e.g. research notes,&#160;lecture notes, projects,&#160;homework, ...). TiddlyWiki is an amazing JavaScript program that lets you&#160;read, edit, save and share infomation conveniently in a single html file using&#160;a familiar browser&#160;even without an internet connection.&#160;ASciencePad extends this by integrating a &lt;strong&gt;what-you-see-is-what-you-get editor&lt;/strong&gt;&#160;where one can easily type &lt;strong&gt;mathematical formulas&lt;/strong&gt; (displayed with MathML)&#160;and produce 2D&#160;cartesian, parametric and&#160;polar &lt;strong&gt;graphs&lt;/strong&gt; (displayed with [[SVG]]). The HTMLArea editor was originally&#160;developed by&#160;&lt;a href=&quot;http://www.interactivetools.com/&quot;&gt;www.interactivetools.com&lt;/a&gt;, now maintained by&#160;Mihai Bazon at &lt;a href=&quot;http://www.dynarch.com/&quot;&gt;www.dynarch.com&lt;/a&gt;,&#160;and the plugins that provide the math extensions were developed by [[Peter Jipsen|http://www.chapman.edu/~jipsen]]&#160;and [[David Lippman|http://www.pierce.ctc.edu/dlippman/]]. See&#160;AsciiMath and AsciiSvg&#160;for a brief description of the additional&#160;scripts that enable the display and &lt;strong&gt;WYSIWYG&#160;editing&lt;/strong&gt; of math formulas and graphs.&lt;/p&gt;&lt;p&gt;The math&#160;features require InternetExplorer+MathPlayer+AdobeSVGview or [[Firefox 1.5]].&#160;If you can see&#160;the MathExamples below, your browser is setup okay, otherwise install the two free plugins for InternetExplorer or&#160;install a free copy of [[Firefox 1.5]].&lt;/p&gt;&lt;p&gt;ASciencePad is &lt;strong&gt;freely available&lt;/strong&gt; for noncommercial use (various parts covered by ~BSD-style&#160;or&#160;GPL license). You can download the latest version (currently 1.1a)&#160;from &lt;a href=&quot;http://math.chapman.edu/~jipsen/asciencepad/&quot;&gt;http://math.chapman.edu/~jipsen/asciencepad/&lt;/a&gt;.&lt;/p&gt;&lt;/html&gt;</div>
+<div tiddler="SwitchingOffWYSIWYG" modifier="PeterJipsen" modified="200603311144" created="200603211000" tags="systemTiddlers">To switch off the HTMLarea WYSIWYG editor and use the original TiddlyWiki editor, tag the tiddler with a string that starts with system (edit this tiddler to see an example).</div>
+<div tiddler="Thanks" modifier="PeterJipsen" modified="200601141954" created="200601141954" tags="">&lt;html&gt;&lt;p&gt;Many thanks to all who have contributed to making ASciencePad possible.&lt;/p&gt;&lt;p&gt;TiddlyWiki is due to Jeremy Ruston (with contributions from other volunteers).&lt;br /&gt;HTMLArea was originally&#160;developed by &lt;a href=&quot;http://interactivetools.com&quot;&gt;http://interactivetools.com&lt;/a&gt; and version 3.0 is due to Mihai Bazon.&lt;br /&gt;ASCIIMathML and ASCIIsvg are scripts&#160;I wrote (mostly)&#160;in early 2004.&lt;br /&gt;The AsciiMath plugin for the HTMLArea editor was developed jointly&#160;by David Lippman and myself, and the AsciiSvg plugin is due to David Lippman.&lt;br /&gt;The integration of the&#160;HTMLArea editor&#160;into TiddlyWiki and the ASciencePad webpage are an ongoing project of mine.&lt;br /&gt;Thanks also to the many individuals who have worked on creating MathML, [[SVG]], JavaScript, [[Firefox 1.5]], InternetExplorer, MathPlayer and AdobeSVGview.&lt;/p&gt;&lt;/html&gt;</div>
+<div tiddler="TiddlyWiki" modifier="PeterJipsen" modified="200601141719" created="200601141719" tags="">&lt;html&gt;Take a look at &lt;a href=&quot;http://www.tiddlywiki.com&quot;&gt;http://www.tiddlywiki.com&lt;/a&gt; for a description of TiddlyWiki and the latest version of Jeremy Ruston's fantastic script. &lt;/html&gt;</div>
+		</div>
+	</body>
+</html>

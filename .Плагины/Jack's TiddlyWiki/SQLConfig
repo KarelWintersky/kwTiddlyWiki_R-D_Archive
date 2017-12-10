@@ -1,0 +1,2 @@
+﻿Connection1: DRIVER={SQL Server};SERVER=(local);DATABASE=Northwind;
+pubs: DRIVER={SQL Server};SERVER=(local);DATABASE=pubs;

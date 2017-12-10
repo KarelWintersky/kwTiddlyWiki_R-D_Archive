@@ -1,0 +1,10 @@
+﻿// // override cookie settings for CalendarPlugin:
+//{{{
+config.options.txtCalFirstDay=0;
+config.options.txtCalStartOfWeekend=5;
+//}}}
+
+// // override internal default settings for CalendarPlugin:
+//{{{
+config.macros.calendar.journalDateFmt="DD.0MM.YYYY";
+//}}}

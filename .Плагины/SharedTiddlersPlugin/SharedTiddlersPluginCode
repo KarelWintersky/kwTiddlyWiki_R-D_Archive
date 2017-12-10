@@ -1,0 +1,1701 @@
+﻿/***
+|''Name''|SharedTiddlersPlugin|
+|''Version''|2.4.0|
+|''Type''|plugin|
+|''~CoreVersion''|2.2.6|
+|''Requires''|UpToDateFiltersPlugin|
+|''Requirements note''|[[UpToDateFiltersPlugin|http://yakovl.bplaced.net/TW/ExtraFilters.html#UpToDateFiltersPlugin]] is necessary only for TW below v2.6.2|
+|''Description''|Introduces a possibility to use tiddlers from other ~TiddlyWikis (with or without importing them)|
+|''Documentation''|http://yakovl.bplaced.net/TW/STP/STP.html#SharedTiddlersPluginInfo|
+|''Source''|http://yakovl.bplaced.net/TW/STP/STP.html#SharedTiddlersPlugin|
+|''Author''|Yakov Litvin|
+|''Forked from''|[[IncludePlugin|http://tiddlywiki.abego-software.de/#IncludePlugin]], by Udo Borkowski|
+|''Contact''|see [[docs|SharedTiddlersPluginInfo]]|
+|''Copyright''|Yakov Litvin, 2013|
+|''Licence''|[[BSD-like open source license|http://yakovl.bplaced.net/TW/STP/STP.html#%5B%5BYakov%20Litvin%20Public%20Licence%5D%5D]]|
+***/
+// // ''Config:''
+//{{{
+config.options.STP_hijackPrettyLink = true;
+config.options.STP_hijackImageFormatter = true;
+//}}}
+// // ''Code:''
+//{{{
+config.filters.all = function(results,match) {
+	if(match[3] == "with included") { // brings included tiddlers as well
+		var m,matched = this.reverseLookup();
+		for(m = 0; m < matched.length; m++)
+			results.pushUnique(matched[m]);
+	} else
+		this.forEachTiddler(function(tName,tiddler){
+			results.pushUnique(tiddler);
+		});
+	return results;
+};
+config.filters.includedFrom = function(results,match) {
+
+	var node = twWeb.checkNodeNotation(match[3]),
+	    url = node ? twWeb.getNodeUrl(node) : match[3];
+	if(!url)
+		return [];
+
+	for(var i = 0; i < results.length; i++)
+		if(results[i].getIncludeURL() != url)
+			results.splice(i--,1);
+	return results;
+};
+config.filters.external = function(results,match) {
+
+	for(var i = 0; i < results.length; i++)
+		if(!results[i].getIncludeURL())
+			results.splice(i--,1);
+	return results;
+};
+config.filters.internal = function(results,match) {
+
+	for(var i = 0; i < results.length; i++)
+		if(results[i].getIncludeURL())
+			results.splice(i--,1);
+	return results;
+};
+
+(function(){
+//==============================================================================
+// install only once stuff
+
+// Ensure the global abego namespace is set up.
+if (!window.abego) window.abego = {};
+
+// Install only once (don't install if abego.IncludePlugin is installed as well)
+if (abego.TiddlyWikiIncluder) {
+	alert("Warning: abego.TiddlyWikiIncluder already exists, so probably two copies of SharedTiddlersPlugin and/or IncludePlugin are installed and activated. It is highly recommended to deactivate all but one copy. You can find those by searching 'abego.TiddlyWikiIncluder'.");
+	return;
+};
+
+//==============================================================================
+// Helpers
+
+// This is used instead of displayMessage, because the latter sometimes doesn't show the messages
+var displayAndLogMessage = function(text,linkText) {
+	displayMessage(text,linkText);
+	console.log(text);
+};
+
+var invokeLater = function(func, delay, priority) {
+	return setTimeout(func,delay);
+};
+
+//------------------------------------------------------------------------------
+// url helpers
+
+var isRelativeURL = function(url) {
+// as Unix filesystem root is "/", urls starting with it are not considered as relative
+
+	return (url.search(/^(?:((http(s)?)|(file)):)|(.\:\\)|(\\\\)|(\/)/) != 0);
+};
+
+var getPathFromURL = function(url) {
+
+	return (url.lastIndexOf("/") > -1) ?
+		url.substr(0, url.lastIndexOf("/") + 1) : "";
+};
+
+var resolveUrlFrom = function(urlToResolve, sourceUrl) {
+
+	return (isRelativeURL(urlToResolve) && sourceUrl) ?
+		getPathFromURL(sourceUrl) + urlToResolve : urlToResolve;
+};
+
+// limitedly turns URI (URL) reference into an absolute URI (URL) and windows paths into URL
+var stp_resolveURL = function(url) {
+
+	if (url.search(/^((http(s)?)|(file)):/) != 0) {
+	// no protocol prefix..
+
+		if (isRelativeURL(url))
+
+			url = resolveUrlFrom(url, document.location.toString());
+		else
+		// "url" is an "absolute" path to a local file. Prefix it with file://
+
+			url = "file://" + url;
+
+		// replace every \ by a /, to cover Windows style pathes
+		url = url.replace(/\\/mg,"/");
+	}
+	return url;
+};
+
+//------------------------------------------------------------------------------
+// file/tw loading functions
+
+// an evolution of the deprecated loadRemoteFile function with TW 2.7.0 codes
+var stp_loadRemoteFile = function(url,callback,params) {
+	if(version.major < 2 || version.major == 2 && version.minor < 7) {
+		var httpSuccess = function(xhr) {
+			try {
+				return (!xhr.status && location.protocol === "file:") ||
+					(xhr.status >= 200 && xhr.status < 300) ||
+					xhr.status === 304 || xhr.status === 1223;
+			} catch(e) {}
+			return false;
+		};
+		var options = {
+			type:"GET",
+			url:url,
+			processData:false,
+			data:undefined, // cut off?
+			cache:false,
+			beforeSend: function(xhr) {;},
+			complete: function(xhr,textStatus) {
+				if(httpSuccess(xhr))
+					callback(true,params,xhr.responseText,url,xhr);
+				else
+					callback(false,params,null,url,xhr);
+			}
+		};
+		try {
+			if(window.Components && window.netscape && window.netscape.security && document.location.protocol.indexOf("http") == -1)
+				window.netscape.security.PrivilegeManager.enablePrivilege("UniversalBrowserRead");
+		} catch (ex) {}
+		return jQuery.ajax(options);
+	} else
+		return httpReq("GET",url,callback,params);
+};
+
+// Asynchronously load the given (local or remote) file.
+// 
+// @param	url
+// value:	either an URL or a local file path to a file
+//
+//	Examples:
+//	* http://www.abego-software.de/index.html
+//	* file:///C:/abegoWebSite-Copy/index.html
+//	* C:\abegoWebSite-Copy\index.html    (for Windows machines)
+//
+//	Notice: backslashes in JavaScript string constants must be escaped, 
+//	i.e. the last example must be written as: "C:\\abegoWebSite-Copy\\index.html"
+//	when "hardcoded" in JavaScript source code.
+// 
+// @param	callback
+// value:	function(content,url,params,errorMessage) 
+//		called at the end of the operation. 
+//		On success content holds the content of the loaded file. 
+//		On error content is undefined and errorMessage holds an error message. 
+//		params is the params passed into stp_LoadFile.
+//
+// @param	params
+//		passed through to the callback function
+// 
+var stp_LoadFile = function(url,callback,params) {
+
+	var onLoad = function(status,params,responseText,url,xhr) {
+		return status 
+				? callback(responseText, url, params)
+				: callback(undefined, url, params, "Error loading %0".format([url]));
+	};
+
+	// Make sure the URL is a real URL, with protocol prefix etc.
+	url = stp_resolveURL(url);
+	
+	stp_loadRemoteFile(url,onLoad,params);
+};
+
+// Asynchronously load the given (local or remote) TiddlyWiki store.
+// 
+// @param	url
+// value:	either an URL or a local file path to a TiddlyWiki file (absolute or relative)
+//
+//	Examples:
+//	* http://www.abego-software.de/index.html
+//	* file:///C:/abegoWebSite-Copy/index.html
+//	* include/beta.html
+//	* C:\abegoWebSite-Copy\index.html    (for Windows machines)
+//
+//	Notice: backslashes in JavaScript string constants must be escaped, 
+//	i.e. the last example must be written as: "C:\\abegoWebSite-Copy\\index.html"
+//	when "hardcoded" in JavaScript source code.
+// 
+// @param	callbackWithStore
+// value:	function(theStore,url,params,errorMessage) 
+//			called at the end of the operation. 
+//			On success theStore holds the loaded store (a TiddlyWiki object). 
+//			On error theStore is undefined and errorMessage holds an error message. 
+//			params is the params passed into stp_loadTiddlyWikiStore
+//
+// @param	params
+//		passed through to the callbackWithStore
+//
+// @param	progress	[optional]
+// value:	function(message, sender, state, url, params)
+//		called in various situations during the operation,
+//		typically used to show "the progress" of the operation.
+//		sender: the constant "stp_loadTiddlyWikiStore"
+//		state: one of these: "Started", "Processing", "Done", "Failed"
+//		"Processing" means the data has been received and in now processed.
+// 
+var stp_loadTiddlyWikiStore = function(url,callbackWithStore,params,progress) {
+	
+	var sendProgress = function(message, state) {
+		if (progress)
+			progress(message,"stp_loadTiddlyWikiStore",state,url,params);
+	};
+	
+	var sendError = function(message) {
+		sendProgress("Error when loading %0".format([url]),"Failed");
+		callbackWithStore(undefined, url, params, message);
+		return message;
+	};
+
+	var sendStore = function(store) {
+		sendProgress("Loaded %0".format([url]),"Done");
+		callbackWithStore(store, url, params);
+		return null;
+	};
+	
+	
+	var callback = function(content,theURL,params,errorMessage) {
+		if (content === undefined) {
+			sendError(errorMessage);
+			return;
+		};
+		
+		sendProgress("Processing %0".format([url]),"Processing");
+		var invalidFileErrorMsg = "The file '%0' does not appear to be a valid TiddlyWiki file";
+		try {
+			// Load the content from the "content" string into a TiddlyWiki() object
+			var importStore = new TiddlyWiki();
+			var errorText = importStore.importTiddlyWiki(content)? null :
+				"Problem with importing TiddlyWiki, probable reason is: "+
+				invalidFileErrorMsg.format([url]);
+			if(errorText)
+				sendError(errorText);
+			else
+				sendStore(importStore);
+		} catch (ex) {
+			sendError(exceptionText(ex));
+		};
+	};
+	
+	sendProgress("Start loading %0".format([url]),"Started");
+	stp_LoadFile(url,callback,params);
+};
+
+
+//==============================================================================
+// Shared Tiddlers Plugin
+
+// Constants
+
+var WAITING = "waiting";
+var LOADING = "loading";
+
+var ANI_DURATION_HIDE_STATE = 1000;
+
+var REFRESH_PRIORITY = -200;
+var ANIMATION_PRIORITY = -100;
+var UPDATE_STATE_PRIORITY = -300;
+
+// --------------------------------------------------
+// Variables
+
+var useInclude;         // this variable can be used to control include enabling by other things than cookies
+var includedStores = {};  // url(String) -> TiddlyWiki or String; if not (yet) loaded a status or an error string
+var pendingOnLoadURLs = []; // [] of String: a list of urls that should be passed with the next "notifyListeners"
+var refreshTiddlyWikiTimerID; // for delayed refresh
+var listeners = [];
+var progress;
+
+// rules pointing which stores tiddlers with conflicting names should be fetched from
+function FetchPreferences() {
+	var prefs = {};
+	
+	this.add = function(tiddlerName,sourceUrl,substitute,substituteShadow) {
+		if(!substitute && !substituteShadow)
+			return;
+		if(prefs[tiddlerName] == undefined)
+			prefs[tiddlerName] = {urlsSubs: [], urlsSubsSh: []};
+		if(substitute)
+			prefs[tiddlerName].urlsSubs.pushUnique(sourceUrl);
+		if(substituteShadow)
+			prefs[tiddlerName].urlsSubsSh.pushUnique(sourceUrl);
+	};
+/*	this.getPrefs = function(tiddlerName) {
+		return jQuery.extend(true, {}, prefs[tiddlerName]);
+	};
+*/	this.getSubsUrl = function(tiddlerName) {
+		var pref = prefs[tiddlerName];
+		if(pref == null)
+			return null;
+		if(pref.urlsSubs.length == 0)
+			return null;
+		return pref.urlsSubs[0];
+	};
+	this.getSubsShUrl = function(tiddlerName) {
+		var pref = prefs[tiddlerName];
+		if(pref == null)
+			return null;
+		if(pref.urlsSubsSh.length == 0)
+			return null;
+
+		// check if there's a tiddler with both preferences
+		var i, j;
+		for(i = 0; i < pref.urlsSubs.length; i++)
+			for(j = 0; i < pref.urlsSubsSh.length; j++)
+				if(pref.urlsSubs[i] == pref.urlsSubsSh[j])
+					return pref.urlsSubs[i];
+
+		return pref.urlsSubsSh[0];
+	};
+	this.containSubsUrl = function(tName,url) {
+		var pref = prefs[tName];
+		if(pref == null)
+			return false;
+		return pref.urlsSubs.contains(url);
+	};
+	this.containSubsShUrl = function(tName,url) {
+		var pref = prefs[tName];
+		if(pref == null)
+			return false;
+		return pref.urlsSubsSh.contains(url);
+	};
+	this.removeByUrl = function(url) {  // removes all priorities of tiddlers, included from the url
+
+		var tName, pref, i;
+
+		for(tName in prefs) {
+			pref = prefs[tName]
+			for(i = 0; i < pref.urlsSubs.length; i++)
+				if(pref.urlsSubs[i] == url)
+					pref.urlsSubs.splice(i--,1);
+			for(i = 0; i < pref.urlsSubsSh.length; i++)
+				if(pref.urlsSubsSh[i] == url)
+					pref.urlsSubsSh.splice(i--,1);
+			// if (pref.urlsSubs.length == 0 && pref.urlsSubsSh.length == 0), not nec. to delete pref
+		}
+	};
+};
+var fetchPreferences = new FetchPreferences();
+
+function Conflicts() {
+
+	// hashmaps by tiddler name of potentially conflicting tiddlers with that name;
+	// each element is a hashmap by url of tiddlers with such names
+	var pConfs = {},  // doesn't contain info about tiddlers in the main store
+	    pSConfs = {}; // for tiddlers that may conflict when substituting a shadow
+
+	this.init = function() {
+		// notify of name conflicts in the whole set of initial and included tiddlers?
+		if(config.options.chkWarnOnSharedTiddlersConflicts == undefined) config.options.chkWarnOnSharedTiddlersConflicts = true;
+		// use alert() for notifications?
+		if(config.options.chkAlertOnSharedTiddlersConflicts == undefined) config.options.chkAlertOnSharedTiddlersConflicts = false;
+	};
+	// check whether a new tiddler (not included yet) may cause a conflict (now or in the future)
+	this.checkNew = function(tName, url, subs, subsSh) {
+
+		// use to add when a tiddler with such name is already present
+		var addData = function(confsMap, tidParams) {
+
+			var includeData = function(tidParams) {		// better to create a separate class
+				return { subs: tidParams.substitute, warned: false };
+			};
+			var getSubsPriority = function(data) {
+				return data.subs;
+			}
+
+			var conf = confsMap[tidParams.title];
+			if(!conf) {
+				conf = confsMap[tidParams.title] = {};
+				conf[tidParams.url] = includeData(tidParams);
+			} else {
+				var confPart = conf[tidParams.url];
+				if(!confPart)
+					conf[tidParams.url] = includeData(tidParams);
+				else {
+					if(!getSubsPriority(confPart) && tidParams.substitute)
+						conf[tidParams.url] = includeData(tidParams);
+						// better to set subs to true and warned to false
+				}
+			}
+		}
+
+		// check if there's a tiddler with such a name
+		var existingTid = forEachLoadedStore(function(theStore, storeUrl) {	// in included stores
+			if(storeUrl != url)
+				return theStore.fetchTiddler(tName);
+		}) || window.sharedTiddlersAPI.orig_fetchTiddler(tName);		// or in the main one
+		// if the tiddler is added to the main store after exactly one tiddler is included, no conflict is
+		// detected by this algorithm; also, it doesn't account deleting the tiddler from the main store
+
+		if(!existingTid)
+			return;
+		var mainStoreId = "main store",
+		    existingTidUrl = existingTid.getIncludeURL();
+
+		// check conflicts among all included tiddlers (important when no shadow with such name exists)
+		if(!pConfs[tName])
+			addData(pConfs, {
+				title: tName,
+				url: existingTidUrl || mainStoreId,
+				substitute: existingTidUrl ? fetchPreferences.containSubsUrl(tName,existingTidUrl) : undefined
+			});
+		addData(pConfs, { title: tName, url: url, substitute: subs });
+
+		// check conflicts among tiddlers that substitute a shadow
+		if(subsSh) {
+			var existingTidSubsSh = forEachLoadedStore(function(theStore, storeUrl) {
+				if(storeUrl != url && fetchPreferences.containSubsShUrl(tName,storeUrl))
+					return theStore.fetchTiddler(tName);
+			}) || window.sharedTiddlersAPI.orig_fetchTiddler(tName);
+			// same problems
+			
+			if(!existingTidSubsSh)
+				return;
+			var existingTidSubsShUrl = existingTidSubsSh.getIncludeURL();
+
+			// conflicts among substituting tiddlers are important when a shadow with such name exists
+			if(!pSConfs[tName])
+				addData(pSConfs, {
+					title: tName,
+					url: existingTidSubsShUrl || mainStoreId,
+					substitute: existingTidSubsShUrl ? fetchPreferences.containSubsShUrl(tName,existingTidSubsShUrl) : undefined
+				});
+			addData(pSConfs, { title: tName, url: url, substitute: subs });
+		}
+	};
+	this.markNodeUnloaded = function(url) {
+		var t;
+		for(t in pConfs)
+			if(pConfs[t][url])
+				delete pConfs[t][url];
+		for(t in pSConfs)
+			if(pSConfs[t][url])
+				delete pSConfs[t][url];
+	};
+	this.notify = function() {
+		var msgAndLog = config.options.chkWarnOnSharedTiddlersConflicts;
+		var doAlert   = config.options.chkAlertOnSharedTiddlersConflicts;
+		if(!doAlert && !msgAndLog)
+			return; // no conflict is marked as "warned" - this is by intent
+		var tName, tUrl;
+
+		var checkOrDisplayConflicts = function(map,msgAndLog,markWarned) {
+			var msg = ""; // message to return (for alerting etc)
+			var addM = function(m) { // pushes all notification messages
+				msg += ("\n"+m);
+				if(msgAndLog)
+					displayAndLogMessage(m);
+			};
+			var tName, tSources, tUrl, subs, nOfConflicting, newPresent,
+				subsMsg = "  (with the subsitute priority)";
+				// mark conflicts among tiddlers with the substitute priority
+
+			// find out where necessary, notify
+			for(tName in map) {
+				tSources = map[tName];
+
+				// find out which priority is of interest
+				subs = false;
+				for(tUrl in tSources)
+					if(tSources[tUrl].subs)
+						subs = true;
+
+				// if there's only one tiddler with "substitute", there's no conflict
+				nOfConflicting = 0;
+				for(tUrl in tSources)
+					if(tSources[tUrl].subs == subs)
+						nOfConflicting++;
+				if(nOfConflicting < 2)
+					break;
+
+				// find out if new conflicting tiddlers are present
+				newPresent = false;
+				for(tUrl in tSources)
+					if(tSources[tUrl].subs == subs && !tSources[tUrl].warned)
+						newPresent = true;
+
+				// start notification
+				if(newPresent) {
+					addM("* "+tName+" in:");
+					for(tUrl in tSources)
+						if(tSources[tUrl].subs == subs && !tSources[tUrl].warned) {
+							addM("** "+tUrl);
+							if(markWarned)
+								tSources[tUrl].warned = true;
+						}
+					if(subs)
+						addM(subsMsg);
+				}
+			}
+			return msg;
+		};
+
+		var msg = "";
+		if(checkOrDisplayConflicts(pConfs,false,false)) { // new conflicts present
+			msg += "New conflicts:";
+			if(msgAndLog) displayAndLogMessage(msg);
+			msg += checkOrDisplayConflicts(pConfs,msgAndLog,true);
+		};
+		if(checkOrDisplayConflicts(pSConfs,false,false)) { // new conflicts among tiddlers substituting shadows present
+			if(msg) msg += "\n";
+			var m = "New conflicts among tiddlers competing for substituting shadows:";
+			msg += m;
+			if(msgAndLog) displayAndLogMessage(m);
+			msg += checkOrDisplayConflicts(pSConfs,msgAndLog,true);
+		};
+		if(doAlert && msg)
+			alert(msg);
+	};
+//	this.state = // return current state as a string (for includeState)
+};
+conflicts = new Conflicts();
+conflicts.init();
+
+// Define the API namespace:
+window.sharedTiddlersAPI = {};
+
+// --------------------------------------------------
+// Helper functions
+
+var isIncludeEnabled = function() {
+	if (useInclude === undefined)
+		useInclude = config.options.chkUseInclude === undefined || config.options.chkUseInclude;
+	return useInclude;
+};
+
+var getMissingIncludeMsg = function(url) {
+	return "No include specified for %0".format([url])
+};
+
+// Called after one or more included TiddlyWikis are loaded
+//
+var notifyListeners = function() {
+	var urls = pendingOnLoadURLs;
+	pendingOnLoadURLs = [];
+	if (urls.length)
+		for (var i = 0; i < listeners.length; i++)
+			listeners[i](urls);
+};
+
+var idleCount; // Reset to 0 when the system is "not idle", incremented inside refreshTiddlyWiki
+
+var refreshTiddlyWiki = function() {
+	// To avoid to much refreshing/flickering don't refresh immediately 
+	// but wait until the system was idle for a certain time.
+
+	if (refreshTiddlyWikiTimerID !== undefined) clearInterval(refreshTiddlyWikiTimerID);
+
+	idleCount = 0;
+
+	var sendDone = function() {
+		config.extensions.SharedTiddlersPlugin.sendProgress("","","Done");
+	};
+
+	refreshTiddlyWikiTimerID = setInterval(function() {
+		idleCount++;
+		if (idleCount <= 10)
+			return;
+
+		clearInterval(refreshTiddlyWikiTimerID);
+		refreshTiddlyWikiTimerID = undefined;
+
+		config.extensions.SharedTiddlersPlugin.sendProgress("Refreshing...","","");
+		refreshDisplay();
+		invokeLater(sendDone,0,REFRESH_PRIORITY);
+	},1);
+};
+
+// Calls callback for every loaded store and returns the first non-false/null.. value returned by callback.
+//
+// @param	callback
+// value:	function(store, url)
+//
+var forEachLoadedStore = function(callback) {
+	var result;
+	for(var url in includedStores) {
+		var theStore = config.extensions.SharedTiddlersPlugin.getStore(url);
+		if (theStore && (result = callback(theStore, url)))
+			return result;
+	}
+};
+
+// hijack fetchTiddler so that it works with tiddlers from included stores as well
+var attachToStore = function() {
+	if (!window.store)
+		return invokeLater(attachToStore,100);
+
+	var orig_fetchTiddler = store.fetchTiddler;
+	window.sharedTiddlersAPI.orig_fetchTiddler = orig_fetchTiddler;
+	// reserve access to the original method to be able to fetch tiddlers from main store,
+	// including substituted ones
+
+	store.fetchTiddler = function(title) {
+		var t, subsUrl = fetchPreferences.getSubsUrl(title), subsShUrl;
+
+		// first, look for the tiddler in the main store, unless there's nothing to substitute with
+		if(!subsUrl) {
+			t = orig_fetchTiddler.apply(this,arguments);
+			if(t) return t;
+		} else
+			return includedStores[subsUrl].fetchTiddler(title);
+		
+		// then, look for shadowed tiddlers in main store and external ones to substitute those
+		if(config.shadowTiddlers[title] !== undefined) {
+			if(subsShUrl = fetchPreferences.getSubsShUrl(title))
+				return includedStores[subsShUrl].fetchTiddler(title);
+			else
+				return undefined;
+		};
+
+		// Don't look for the "New Tiddler" tiddler in the included TiddlyWikis,
+		// since returning such a tiddler (that is readonly) will make it impossible
+		// in the Main TiddlyWiki to create new tiddlers via standart "new tiddler" button.
+		if (title == config.macros.newTiddler.title) return undefined;
+
+		// finally, look for an external one without "substitute" preference
+		return forEachLoadedStore(function(theStore, url) {
+			return theStore.fetchTiddler(title);
+		});
+	};
+
+	// refresh TiddlyWiki to reflect the new included Tiddlers (if we have any).
+	if(config.extensions.SharedTiddlersPlugin.getIncludes().length)
+		refreshTiddlyWiki();
+};
+
+var includeFromIncludeList = function() {
+	if (!window.store)
+		return invokeLater(includeFromIncludeList,100);
+	
+	var includeListText = store.getTiddlerText("IncludeList");
+	if (includeListText)
+		wikify(includeListText,document.createElement("div"),undefined,store.fetchTiddler("IncludeList"));
+};
+
+var getFunctionUsingForReallyEachTiddler = function(func) {
+	var wrapper = function() {
+		var orig_forEachTiddler = store.forEachTiddler;
+
+		var forEachTiddlerWithIncludes = function(callback) {
+			var done = {};
+
+			var callbackWrapper = function(title, tiddler) {
+				// ensure every title is only processed once
+				if(done[title]) 
+					return;
+				
+				// do and set done for appropriate tiddlers
+				if(!fetchPreferences.getSubsUrl(title)||
+				   (fetchPreferences.getSubsUrl(title) == tiddler.getIncludeURL())) {
+					done[title] = 1;
+					callback.apply(this,arguments);
+				};
+			};
+			
+			// first, forEachTiddler over the original tiddlers
+			orig_forEachTiddler.call(store, callbackWrapper);
+			
+			// add nonsubstituted shadowTiddler titles to done 
+			// (to avoid an included store hide a shadow tiddler)
+			for (var n in config.shadowTiddlers)
+				if(!fetchPreferences.getSubsShUrl(n))
+					done[n] = 1;
+
+			// add the "New Tiddler" tiddler to done
+			// to avoid an included store (with such tiddler) prevent creating new tiddlers
+			done[config.macros.newTiddler.title] = 1;
+
+			// forEachTiddler over every included store
+			forEachLoadedStore(function(theStore, url) {
+				theStore.forEachTiddler(callbackWrapper);
+			});
+		};
+		
+		store.forEachTiddler = forEachTiddlerWithIncludes;
+		try {
+			return func.apply(this,arguments);
+		} finally {
+			store.forEachTiddler = orig_forEachTiddler;
+		};
+	};
+	
+	return wrapper;
+};
+
+var useForReallyEachTiddler = function(object,property) {
+	return object[property] = getFunctionUsingForReallyEachTiddler(object[property]);
+};
+
+
+//================================================================================
+// config.extensions.SharedTiddlersPlugin (the "includer" engine)
+
+config.extensions.SharedTiddlersPlugin = {
+
+	setProgressFunction: function(func) {
+		progress = func;
+	},
+	getProgressFunction: function(func) {
+		return progress;
+	},
+	sendProgress: function(message, sender, state) {
+		if (progress)
+			progress.apply(this,arguments);
+	},
+	
+	// Called when an included TiddlyWiki could not be loaded.
+	// By default an error message is displayed.
+	//
+	onError: function(url, errorMessage) {
+		displayAndLogMessage("Error when including '%0':\n%1".format([url, errorMessage]));
+	},
+	
+	// Returns true when there are "pending" includes, i.e. TiddlyWiki that are not yet loaded.
+	// A TiddlyWiki that failed loading is not pending.
+	//
+	hasPendingIncludes: function() {
+		for(var url in includedStores) {
+			var state = config.extensions.SharedTiddlersPlugin.getState(url);
+			if (state == WAITING || state == LOADING)
+				return true;
+		};
+		return false;
+	},
+	
+	// @return [] of Strings, the URLs of the includes
+	//
+	getIncludes: function() {
+		var includes = [];
+		for(var url in includedStores)
+			includes.push(url);
+		return includes;
+	},
+	// @return [may be null] a state/error text of the store with the given URL, or null when the store is already loaded
+	//
+	getState: function(url) {
+		var s = includedStores[url];
+		if (!s)
+			return getMissingIncludeMsg(url);
+		return typeof s == "string" ? s : null;
+	},
+	// @return [may be null] the (TiddlyWiki) store with the given URL, null if not (yet) loaded.
+	//
+	getStore: function(url) {
+		var s = includedStores[url];
+		if(s)
+			if(s instanceof TiddlyWiki)
+				return s;
+		return null;
+	},
+	
+	// function config.extensions.SharedTiddlersPlugin.getFunctionUsingForReallyEachTiddler(func)
+	//
+	// Returns a function that behaves as func, but every call to store.forEachTiddler will actually 
+	// be a call to forReallyEachTiddler (see below), i.e. iterate over the tiddlers of the main store 
+	// and of the included TiddlyWikis
+	//
+	// @return the patched function
+	//
+	getFunctionUsingForReallyEachTiddler: getFunctionUsingForReallyEachTiddler,
+	
+	// function config.extensions.SharedTiddlersPlugin.useForReallyEachTiddler(object,property)
+	//
+	// Patches the function hold in the given property of the object in such a way that every call
+	// to store.forEachTiddler will actually be a call to forReallyEachTiddler (see below), i.e.
+	// iterate over the tiddlers of the main store and of the included TiddlyWikis
+	//
+	// @param  object
+	// @param  property the name of the property of the object containing the function to be patched.
+	// @return the patched function
+	//
+	useForReallyEachTiddler: useForReallyEachTiddler,
+	
+	// Add a listener function to the TiddlyWikiIncluder.
+	//
+	// @param  listener  function(urls)
+	//			urls: [] of Strings, containing the urls of the TiddlyWiki just included
+	//			(see url@config.extensions.SharedTiddlersPlugin.include)
+	//			called whenever one or more TiddlyWiki store are successfully included.
+	//
+	addListener: function(listener) {
+		listeners.push(listener);
+	},
+
+	// reload one included store or all of them
+	// previous inclusions are done again, by default only those without eval and import
+	// important: reload doesn't work correctly with <<include>> usages with multiple urls
+	//
+	// @param  reloadParams  an object containing some of these configuration properties:
+	//	urlOrNodeList	an array of TWs' IDs (url or "node: nodeName") to reload;
+	//			if undefined, all TWs are reloaded
+	//	eval		points whether to redo inclusions with the "eval" parameter (undefined == false)
+	//	import		same for the "import" parameter, but undefined/null -> true
+	//	wikify		same for the "wikify" parameter
+	reload: function(reloadParams) {
+
+		// determine a TW(s) to reload (undefined => all)
+		var twsToReload = reloadParams.urlOrNodeParam;
+
+		// turn "IDs" into actual urls; filter out node names for which urls are not defined
+		// so waiting tasks are not doubled
+		if(twsToReload)
+			for(i = 0; i < twsToReload.length; i++){ 
+				nodeName = twWeb.checkNodeNotation(twsToReload[i]);
+				twsToReload[i] = nodeName ? twWeb.getNodeUrl(nodeName) : twsToReload[i];
+				if(!twsToReload[i])
+					twsToReload.splice(i--,1);
+			}
+
+		if(reloadParams.import === undefined || reloadParams.import === null)
+			reloadParams.import = true;
+		if(reloadParams.wikify === undefined || reloadParams.wikify === null)
+			reloadParams.wikify = true;
+
+		// collect macro expressions to reload
+			// may the order of including be important?
+		var usage, usages = twWeb.includeUsages.getUsed(),
+		    paramString, params, pParams, urlParam, nodeName,
+			dontReload, i;
+
+		for(usage in usages) {
+
+			// parsing copied from config.macros.include.handler (to get macro params)
+			paramString = usage.substring(10,usage.length - 2);
+			params = paramString.readMacroParams();
+			pParams = paramString.parseParams("url",null,true,false,true);
+			urlParam = pParams[0]["url"][0];
+			nodeName = twWeb.checkNodeNotation(urlParam);
+			urlParam = nodeName ? twWeb.getNodeUrl(nodeName) : urlParam;
+
+			// keep only inclusions that contain IDs corresponding to urls from twsToReload
+			dontReload = true;
+			if(twsToReload) {
+				for(i = 0; i < twsToReload.length; i++)
+					if(urlParam == twsToReload[i])
+						dontReload = false;
+			} else
+				dontReload = false;
+
+			// exclude inclusions with import and eval, if necessary
+			if(!reloadParams.import && getParam(pParams,"import",undefined) ||
+			   !reloadParams.eval && params.contains('eval') ||
+			   !reloadParams.wikify && params.contains('wikify'))
+				dontReload = true;
+
+			if(dontReload) {
+				delete usages[usage];
+				continue;
+			}
+
+			// clean stuff: unload included store, clear priorities, remove conflicts;
+			// deleting "used" marks is outside this loop
+			includedStores[urlParam] = undefined;
+			fetchPreferences.removeByUrl(urlParam);
+			conflicts.markNodeUnloaded(urlParam);
+		}
+		// delete "used" marks
+		twWeb.includeUsages.markUnused(usages);
+		
+		// include again
+		for(usage in usages)
+			wikify(usage,document.createElement("div"),undefined,null);
+	},
+
+	// import a tiddler from an included store
+	//
+	// @param  tiddler - a tiddler to import
+	// @param  mode: undefined or 1 - import anyway (other modes, like "don't substitute" will be supported)
+	// @return the result object:
+	//  .status means: -1 = error, 0 = tiddler is imported, >0 - reserved for other situations
+	//  .errorText is not empty on error
+	//  .tiddler is the tiddler with /the title/ which is in the store after "it is over" (may be null)
+	//  .from is the url line equal to the includeURL of the imported tiddler
+	//
+	importIncluded: function(tiddler,mode) {
+
+		if(mode == undefined)
+			mode = 1;
+		else
+			mode = parseInt(mode);
+
+		var t, tInMain, result = { tiddler: null };
+		var doImport = function(t) {
+			store.addTiddler(t);
+			store.setDirty(true);
+			result.status = 0;
+			result.tiddler = t;
+			result.from = url;
+		};
+
+		if(tiddler instanceof Tiddler) {
+			result.tiddler = window.sharedTiddlersAPI.orig_fetchTiddler(tiddler.title);
+			t = jQuery.extend(true, new Tiddler(), tiddler);
+		} else {
+			result.status = -1;
+			result.errorText = "not a Tiddler instance";
+			return result;
+		};
+		var url;
+		if(url = t.getIncludeURL())
+			t.deleteIncludeURL();
+
+		switch(mode) {
+			case 1: { // import anyway
+				doImport(t);
+				break
+			}
+			case 3: { // import on confirm
+				if(confirm(t.title+" from "+url+" is availabe, import?"))
+					doImport(t);
+				break
+			}
+			case 2: { // import only newer versions/unexisting tiddlers
+				tInMain = window.sharedTiddlersAPI.orig_fetchTiddler(t.title);
+				if(!tInMain || tInMain.modified < t.modified)
+					doImport(t);
+				break
+			}
+			case 4: { // import only newer and on confirm
+				tInMain = window.sharedTiddlersAPI.orig_fetchTiddler(t.title);
+				if(!tInMain || tInMain.modified < t.modified)
+					if(confirm("Up-to-date "+t.title+" from "+url+" is availabe, import?"))
+						doImport(t);
+				break
+			}
+			default: {
+				result.status = -1;
+				result.errorText = "unknown import mode";
+			}
+		};
+		return result;
+	},
+	importAndLog: function(tiddler,mode) {
+
+		var name = tiddler.title;
+		var result = config.extensions.SharedTiddlersPlugin.importIncluded(tiddler,mode);
+		// this.importIncluded is not used to be able to pass the method to the API
+
+		switch(result.status) {
+			case 0:	 console.log("imported: "+name+" from "+result.from);
+				 break
+			case -1: console.log("error importing "+name+": "+result.errorText);
+				 break
+		}
+	}
+};
+
+// iterates over all tiddlers of "the store" and all tiddlers of included (and loaded) stores
+//
+window.sharedTiddlersAPI.forReallyEachTiddler = function(callback) {
+	var caller = function() {
+		store.forEachTiddler(callback);
+	};
+	getFunctionUsingForReallyEachTiddler(caller).call(store);		
+};
+
+// deprecated API for backward compability; presence of abego.TiddlyWikiIncluder is also used
+// in the "install only once" check (which also prevents conflicts with abego.IncludePlugin)
+abego.TiddlyWikiIncluder = {
+	getIncludes:	config.extensions.SharedTiddlersPlugin.getIncludes,
+	getState:	config.extensions.SharedTiddlersPlugin.getState,
+	getStore:	config.extensions.SharedTiddlersPlugin.getStore
+};
+
+// move these methods to "API" namespace also
+window.sharedTiddlersAPI.getIncludes = config.extensions.SharedTiddlersPlugin.getIncludes;
+window.sharedTiddlersAPI.getState = config.extensions.SharedTiddlersPlugin.getState;
+window.sharedTiddlersAPI.getStore = config.extensions.SharedTiddlersPlugin.getStore;
+window.sharedTiddlersAPI.importAndLog = config.extensions.SharedTiddlersPlugin.importAndLog;
+
+
+// Includes the (local or remote) TiddlyWiki store with the given url.
+//
+// @param url		see url@stp_loadTiddlyWikiStore
+// @param includeParams	a set of the following params for including:
+//	filterLine		a filter line used to include particular tiddlers instead of the whole store
+//	substituting		points whether an included tiddler should sustitute one in the main document
+//				if there's a conflict of names
+//	substituteShadows	points whether shadowed tiddlers of the main document with names equal to those
+//				of included ones should be substituted (in cases of conflicts);
+//				works only with (substituting == true)
+//	delayMilliSeconds	addition delay of loading
+//	noRefresh
+//	importMode
+//	evalTiddlers
+//	wikifyTiddlers
+//
+config.extensions.SharedTiddlersPlugin.include = function(urlOrNodeParam, includeParams) {
+
+	if (!isIncludeEnabled())
+		return;
+	var self = this;
+
+	var includeOrHandleUrl = function(url) {
+
+		var loadStoreCallback = function(theStore,urlInCallback,params,errorMessage) {
+
+			if(theStore === undefined) {
+			
+				includedStores[url] = errorMessage;
+				self.onError(url, errorMessage);
+				return;
+			} else
+				includedStores[url] = theStore;
+
+			// keep orig_store not to load tw-documents multiple times
+			// because of multiple include macros:
+			includedStores[url].orig_store = new TiddlyWiki();
+			includedStores[url].forEachTiddler(function(tName,tiddler){
+				tiddler.setIncludeURL(url);
+				includedStores[url].orig_store.addTiddler(tiddler);
+			});
+			includedStores[url].clear();
+
+			// include, create fetchPreferences and notify of conflicts; or import
+			addFromLoadedStore();
+		};
+
+		var addFromLoadedStore = function() {
+		// uses url and includeParams exploiting closure
+
+			var substituting = includeParams.substitute,
+			    substituteShadows = includeParams.substituteShadows,
+			    importMode = includeParams.importMode;
+
+			if(config.extensions.SharedTiddlersPlugin.getStore(url) === null)
+				return invokeLater(addFromLoadedStore, 100);	// 100 milliseconds
+			// new tiddlers should be added *when the store is loaded*
+
+			// add tiddlers to included stores and check new conflicts (among non-substituting tids)
+			var i, t,
+			    new_tiddlers = includedStores[url].orig_store.filterTiddlers(includeParams.filterLine);
+
+			for(i = 0; i < new_tiddlers.length; i++) {
+
+				t = jQuery.extend(true, new Tiddler(), new_tiddlers[i]); // copy (by value)
+
+				if(includedStores[url].orig_store.fetchTiddler(t.title)) {
+				// check empty tiddlers created by the "tiddler" filter
+					if(importMode)
+						config.extensions.SharedTiddlersPlugin.importAndLog(t,importMode);
+					else {
+						// check for upcoming conflicts first
+						conflicts.checkNew(t.title, url, substituting, substituteShadows);
+						// then include
+						includedStores[url].addTiddler(t);
+					};
+					if(includeParams.evalTiddlers)
+						eval(t.text);
+					if(includeParams.wikifyTiddlers)
+						wikify(t.text,document.createElement("div"),undefined,t);
+				};
+			};
+
+			// add items to fetchPreferences if have to
+			if(!importMode && (substituting || substituteShadows))
+				for(i = 0; i < new_tiddlers.length; i++)
+					fetchPreferences.add(new_tiddlers[i].title,url,substituting,substituteShadows);
+			conflicts.notify();
+
+			// "recalc" slices
+			store.slices = {};
+			// refresh things to get included stylesheets, PageTemplate and ViewTemplate applied
+			if(!includeParams.noRefresh) {
+				refreshAll();
+				story.refreshAllTiddlers();
+			}
+
+			pendingOnLoadURLs.push(url);
+			invokeLater(notifyListeners);
+		};
+
+		var loadStore = function() {
+			includedStores[url] = LOADING;
+			stp_loadTiddlyWikiStore(url,loadStoreCallback,null,progress);
+			// {includeParams:includeParams} can be used instead of null so that
+			// loadStoreCallback will have access to the includeParams
+		};
+
+		var urlIsNew = !(includedStores[url]);
+
+		if(urlIsNew) {
+
+			includedStores[url] = WAITING;
+
+			if (includeParams.delayMilliSeconds)
+				invokeLater(loadStore, includeParams.delayMilliSeconds);
+			else
+				loadStore();
+		} else
+			addFromLoadedStore();
+	};
+
+	var nodeName = twWeb.checkNodeNotation(urlOrNodeParam);
+
+	if(nodeName) {
+		if(nodeName == twWeb.getSelfNodeName()) // don't include from the main (self) TiddlyWiki
+			return;
+		twWeb.setWaitingTask(nodeName,function(){
+			var url = twWeb.getNodeUrl(nodeName);
+			includeOrHandleUrl(url);
+		},this);
+	} else
+		includeOrHandleUrl(urlOrNodeParam);
+};
+
+
+// -------------------------------------------------------------------------------
+// TiddlyWikiIncluder initialization code
+
+config.extensions.SharedTiddlersPlugin.addListener(refreshTiddlyWiki);
+
+config.shadowTiddlers.AdvancedOptions +=
+	("\n~IncludePlugin settings:"+
+	 "\n<<option chkUseInclude>> Include ~TiddlyWikis"+
+	 "\n<<option chkAlertOnSharedTiddlersConflicts>> Alert on tiddler name conflicts"+
+	 "\n<<option chkWarnOnSharedTiddlersConflicts>> Display messages and write log in the browser console on conflicts"+
+	 "\nIncludeList | IncludeState | ImportIncluded | [[help|http://yakovl.bplaced.net/TW/SharedTiddlersPlugin.html/#SharedTiddlersPluginInfo]]"+
+	 "\n^^(Reload this ~TiddlyWiki to make changes become effective)^^");
+config.shadowTiddlers.IncludeState = "<<includeState>>";
+
+// add the "importer" engine
+config.shadowTiddlers.ImportIncluded =
+"| the url of the document to import from | <<option txtStoreUrl>>               |\n"+
+"|    the filter of tiddlers to import    | <<option txtFilterTiddlersToImport>> |\n"+
+"|           the importing mode           | <<option txtImportMode>>             |\n"+
+"<html><a href='javascript:;' onclick='\n"+
+"	var storeUrl = config.options.txtStoreUrl,\n"+
+"	    params = {\n"+
+"		filterLine: config.options.txtFilterTiddlersToImport,\n"+
+"		importMode: config.options.txtImportMode,\n"+
+"		noRefresh: true,\n"+
+"	};\n"+
+
+"	if(!storeUrl)\n"+
+"		return displayMessage(\"please specify the url to import from\");\n"+
+"	if(!params.filterLine)\n"+
+"		return displayMessage(\"please specify the filter of tiddlers to import\");\n"+
+"	if(!sharedTiddlersAPI.getStore(storeUrl))\n"+
+"		displayMessage(\"warning: no store was loaded from \"+storeUrl+\" previously, trying now\");\n"+
+
+"	config.extensions.SharedTiddlersPlugin.include(storeUrl,params);\n"+
+"'>import (without saving)<a/></html>";
+
+//================================================================================
+// Default Progress Handling for config.extensions.SharedTiddlersPlugin
+
+var showAnimated = function(e, showing, duration) {
+//	if (!anim || !abego.ShowAnimation) {
+		e.style.display = showing ? "block" : "none";
+		return;
+//	}
+	
+//	anim.startAnimating(new abego.ShowAnimation(e,showing,duration));
+};
+
+config.extensions.SharedTiddlersPlugin.getDefaultProgressFunction = function() {
+
+	setStylesheet(
+		".includeProgressState{\n"+
+		"background-color:#FFCC00;\n"+
+		"position:absolute;\n"+
+		"right:0.2em;\n"+
+		"top:0.2em;\n"+
+		"width:7em;\n"+
+		"padding-left:0.2em;\n"+
+		"padding-right:0.2em\n"+
+		"}\n",
+		"stp_Include");
+
+	var createStateElem = function() {
+		var e = document.createElement("div");
+		e.className = "includeProgressState";
+		e.style.display = "none";
+		document.body.appendChild(e);
+		return e;
+	};
+	
+	var stateElem = createStateElem();
+
+
+	var showState = function(message) {
+		removeChildren(stateElem);
+		createTiddlyText(stateElem,message);
+		showAnimated(stateElem,true,0);
+	};
+
+	var hideState = function() {
+		// hide the state the next idle time 
+		invokeLater(function() {
+			showAnimated(stateElem,false,ANI_DURATION_HIDE_STATE);
+		},100,ANIMATION_PRIORITY);
+	};
+	
+	var myProgressFunction = function(message, sender, state, url, params) {
+		
+		if (state == "Done" || state == "Failed") {
+			hideState();
+			return;
+		}
+		
+		if (sender == "stp_loadTiddlyWikiStore") {
+			idleCount = 0;
+			if (state == "Processing")
+				showState("Including...");
+		} else {
+			showState(message);
+		}
+	};
+	return myProgressFunction;
+};
+
+config.extensions.SharedTiddlersPlugin.setProgressFunction(config.extensions.SharedTiddlersPlugin.getDefaultProgressFunction());
+
+
+//================================================================================
+// The "include" macro
+//
+// Syntax:	<<include [url:]url [filters:filterLine] [substitute]
+//			  [substituteShadows] [hide:hideFlag] [delay:delayDuration]>>
+//
+config.macros.include = {};
+config.macros.include.handler = function(place,macroName,params,wikifier,paramString,tiddler) {
+
+	var macroTWcode = wikifier.source.substring(wikifier.matchStart, wikifier.nextMatch);
+	pParams = paramString.parseParams("url",null,true,false,true); // allowEval, cascadeDefaults, names allowed
+
+	var hide = getFlag(pParams, "hide", false) || params.contains('hide');
+	if (!hide)
+		createTiddlyText(createTiddlyElement(place,"code"),macroTWcode);
+	if (twWeb.includeUsages.isUsed(macroTWcode))
+		return;
+	twWeb.includeUsages.setUsed(macroTWcode);
+
+	var urls = pParams[0]["url"],
+	    includeParams = {
+		delayMilliSeconds:	parseInt(getParam(pParams,"delay","0")),
+		filterLine:		getParam(pParams,"filters","[all[-]]"),
+		substitute:		params.contains('substitute'),
+		substituteShadows:	params.contains('substituteShadows'),
+		noRefresh:		params.contains('noRefresh'),
+		importMode:		getParam(pParams,"import",undefined),
+		evalTiddlers:		params.contains('eval'),
+		wikifyTiddlers:		params.contains('wikify')
+	};
+
+	var checkUrlAndInclude = function(url) {
+
+		if(url == 'hide' || url == 'substituteShadows' || url == 'substitute' || url == 'eval' ||
+				url == 'wikify' || url == 'noRefresh')
+			return;
+
+		config.extensions.SharedTiddlersPlugin.include(url,includeParams);
+	};
+
+	for (var i = 0; urls && i < urls.length; i++)
+		checkUrlAndInclude(urls[i]);
+};
+
+//================================================================================
+// The "reloadIncluded" macro
+//
+// Syntax: <<reloadIncluded [urls:urlsJSON] [reloadParams:otherReloadParamsJSON]
+//		[label:labelText] [tooltip:tooltipText] [class:className]>>
+// (for reloadParams, see config.extensions.SharedTiddlersPlugin.reload)
+//
+config.macros.reloadIncluded = {};
+config.macros.reloadIncluded.handler = function(place,macroName,params,wikifier,paramString,tiddler) {
+
+	// parse params
+	var pParams = paramString.parseParams("url",null,true,false,true),
+	    label    = getParam(pParams,"label","refresh"),
+	    tooltip  = getParam(pParams,"tooltip",undefined),
+	    elClass  = getParam(pParams,"class",""),
+	    urlsText = getParam(pParams,"urls",undefined),
+	    otherReloadParamsText = getParam(pParams,"reloadParams","{}"),
+	    reloadParams = JSON && JSON.parse(otherReloadParamsText) || jQuery.parseJSON(otherReloadParamsText);
+	reloadParams.urlOrNodeList = !urlsText ? undefined :
+			(JSON && JSON.parse(urlsText) || jQuery.parseJSON(urlsText));
+	if(!tooltip) {
+		if(reloadParams.urlOrNodeList) {
+			tooltip = "refresh '"+reloadParams.urlOrNodeList[0]+"'";
+			for(var i = 1; i < reloadParams.urlOrNodeList.length; i++)
+				tooltip += ", '"+reloadParams.urlOrNodeList[i]+"'";
+			tooltip += " nodes"
+		} else
+			tooltip = "refresh all included nodes";
+	}
+
+	// create button, add handler
+	jQuery(place).append(jQuery("<a>", { text:label, title:tooltip, class:elClass, href:"javascript:;"
+			   }).click(function(){
+				var returnHere = function() {
+					if(config.extensions.SharedTiddlersPlugin.hasPendingIncludes()) {
+						invokeLater(returnHere,100);
+						return;
+					} // wait until all the stores are loaded and the page is refreshed
+					var t = tiddler.title, te = DEFAULT_VIEW_TEMPLATE;
+					story.displayTiddler(this,t,story.chooseTemplateForTiddler(t,te));
+				}
+				config.extensions.SharedTiddlersPlugin.reload(reloadParams);
+				invokeLater(returnHere,100); // wait a bit for the nodes to unload
+			}));
+};
+
+//================================================================================
+// The "includeState" macro
+//
+// Syntax: <<includeState>>
+//
+config.macros.includeState = {};
+config.macros.includeState.handler = function(place,macroName,params,wikifier,paramString,tiddler) {
+	var getFullState = function () {
+		var s = "";
+		var includes = config.extensions.SharedTiddlersPlugin.getIncludes();
+		if (!includes.length)
+			return "{{noIncludes{\nNo TiddlyWiki is included or including is disabled (see AdvancedOptions)\n}}}\n";
+			
+		s += "|!Address|!State|\n";
+		for (var i = 0; i < includes.length; i++) {
+			var inc = includes[i];
+			s += "|{{{"+inc+"}}}|";
+			var t = config.extensions.SharedTiddlersPlugin.getState(inc);
+			s += t ? "{{{"+t+"}}}" : "included";
+			s += "|\n"
+		}
+		s += "|includeState|k\n";
+		return s;
+	};
+	
+	var updateState = function(){
+		removeChildren(div);
+		wikify(getFullState(),div);
+		if (config.extensions.SharedTiddlersPlugin.hasPendingIncludes())
+			invokeLater(updateState,500,UPDATE_STATE_PRIORITY);
+	};
+
+	var div = createTiddlyElement(place,"div");
+	
+	invokeLater(updateState,0,UPDATE_STATE_PRIORITY);
+};
+
+//================================================================================
+// Tiddler extension/modification
+
+Tiddler.prototype.isIncluded = function() {
+	return this.includeURL != undefined;
+};
+
+Tiddler.prototype.getIncludeURL = function() {
+	return this.includeURL;
+};
+
+Tiddler.prototype.setIncludeURL = function(url) {
+	this.includeURL = url;
+};
+
+Tiddler.prototype.deleteIncludeURL = function() {
+	delete this.includeURL;
+};
+
+// make included tiddlers readonly
+config.extensions.SharedTiddlersPlugin.orig_Tiddler_isReadOnly = Tiddler.prototype.isReadOnly;
+
+Tiddler.prototype.isReadOnly = function() {
+	return config.extensions.SharedTiddlersPlugin.orig_Tiddler_isReadOnly.apply(this,arguments) || this.isIncluded();
+}
+
+//================================================================================
+// TiddlyWiki modifications
+
+// In some TiddlyWiki functions the "forEachTiddler" should work on all tiddlers, also those from 
+// included store. (E.g. TiddlyWiki.prototype.getTags)
+//
+// But not for all (e.g. TiddlyWiki.prototype.getTiddlers is used for saving, but only the "own" tiddlers should be saved)
+//
+// Therefore explicitly list the functions that should be "wrapped" to use the "forReallyEachTiddler".
+//
+var tiddlyWikiFunctionsUsingForReallyEachTiddler = {
+	getMissingLinks: 1, getOrphans: 1,
+	getTags: 1, reverseLookup: 1, updateTiddlers: 1};
+	
+for (var n in tiddlyWikiFunctionsUsingForReallyEachTiddler)
+	useForReallyEachTiddler(TiddlyWiki.prototype,n);
+
+//================================================================================
+// Web of TiddlyWikis
+
+function IncludingMemorizer() { // the structure to store info about already handled include macros
+	var used = {};
+	this.isUsed  = function(line) { return used[line]? true : false; };
+	this.setUsed = function(line) { used[line] = 1; };
+	this.getUsed = function() { return jQuery.extend(true, {}, used) };
+	this.markUnused = function(usedMap) {
+
+		for(var u in usedMap)
+			used[u] = undefined; // don't delete to keep the order of inclusion (for reloading)
+	};
+};
+
+function TwWeb() {
+
+	var nodes = {};			// hashmap by node name of nodes' metadata
+	var nodeConflicts = {};		// hashmap by node name of arrays of conflicts
+	var nodeWaitingTasks = {};	// hashmap by node name of arrays of Waiting Tasks
+	var nodeDescription = function(url) { // PoG: can be turned into a separated "class"
+		return { url : url };
+	};
+	var selfNodeName;
+
+	this.includeUsages = new IncludingMemorizer();
+
+	// set/get the name of "main" (including) node
+	this.setSelfNodeName = function(name) {
+		selfNodeName = name;
+	};
+	this.getSelfNodeName = function() {
+		return selfNodeName;
+	};
+
+	// set/get/delete node description
+	this.setNodeDesc = function(nodeName, desc) {
+
+		var existing = this.getNodeDesc(nodeName);
+
+		// currently, doesn't change metadata on conflict
+		if(existing)
+			this.addConflict(nodeName, desc);
+		else
+			nodes[nodeName] = desc;
+
+		this.callWaitingTasks(nodeName);
+	};
+	this.getNodeDesc = function(nodeName) {
+		return nodes[nodeName];
+	};
+	this.deleteNodeDesc = function(nodeName) {
+		nodes[nodeName] = null;
+	};
+
+	this.getNodeUrl = function(nodeName) {
+
+		var desc = this.getNodeDesc(nodeName);
+		return desc? desc.url : null;
+	};
+	// returns "better" description if one is "strictly better" than the other or "even" and null otherwise
+	this.compareNodeDesc = function(desc1, desc2) {
+
+		return (desc1.url == desc2.url)? desc1 : null;
+	};
+
+	this.setNodeNotation = function(nodeName) {
+
+		return "node: " + nodeName;
+	};
+	this.checkNodeNotation = function(urlParam) {
+
+		var nodeCalcRE = /node: (.*)/,
+		    nodeCalcMatch = nodeCalcRE.exec(urlParam);
+
+		return nodeCalcMatch ? nodeCalcMatch[1] : null;
+	};
+
+	this.addConflict = function(nodeName, nodeDesciption) {
+
+		var betterDesc = this.compareNodeDesc(nodeDesciption,this.getNodeDesc(nodeName));
+		if(betterDesc) {
+			this.deleteNodeDesc(nodeName);
+			this.setNodeDesc(nodeName, betterDesc);
+			return;
+		}
+
+		if(nodeConflicts[nodeName])
+			nodeConflicts[nodeName].push(nodeDesciption);
+		else
+			nodeConflicts[nodeName] = [ nodeDesciption ];
+
+		alert(  "Warning: more than one description of the "+nodeName+" node was pushed. "+
+			"The earlier version is kept."  );
+	};
+
+	this.setWaitingTask = function(nodeName, waitingTaskFunc, waitingTaskSelf) {
+
+		var waitingTask = { action: waitingTaskFunc, self: waitingTaskSelf };
+
+		if(nodeWaitingTasks[nodeName])
+			nodeWaitingTasks[nodeName].push(waitingTask);
+		else
+			nodeWaitingTasks[nodeName] = [ waitingTask ];
+
+		if(this.getNodeUrl(nodeName))
+			this.callWaitingTasks(nodeName);
+	};
+	this.callWaitingTasks = function(nodeName) {
+
+		var toDo = nodeWaitingTasks[nodeName];
+
+		if(toDo)
+			for(var i = 0; i < toDo.length; i++)
+				toDo[i].action.call(toDo[i].self);
+
+		nodeWaitingTasks[nodeName] = null; // remove called Waiting Tasks
+	};
+
+	// "API" method to be used in the macro
+	this.addNodeDesc = function(nodeName, url) {
+		this.setNodeDesc(nodeName, nodeDescription(url));
+	};
+};
+twWeb = new TwWeb();
+
+//================================================================================
+// The "describeNode" macro
+//
+// Syntax: <<describeNode nodeName {nodeUrl|self}>>
+//
+config.macros.describeNode = {};
+config.macros.describeNode.handler = function(place,macroName,params,wikifier,paramString,tiddler) {
+
+	var macroTWcode = wikifier.source.substring(wikifier.matchStart, wikifier.nextMatch);
+	createTiddlyText(createTiddlyElement(place,"code"),macroTWcode);
+
+	// node description duplicates are handled when adding, so no "handle only once" here
+
+	var includeURL = tiddler.getIncludeURL(),
+	    nodeName = params[0],
+	    urlParam = params[1],
+	    self = (urlParam == "self");
+
+	if(self) {
+		var oldSelf = twWeb.getSelfNodeName();
+		if(oldSelf && (oldSelf != nodeName))
+			return alert("The \'"+oldSelf+"\' alias is already assigned as the name of the current "+
+					"TiddlyWiki; the new attempt to assign \'"+nodeName+"\' is ignored.");
+		twWeb.setSelfNodeName(nodeName);
+		return;
+	}
+
+	var url = resolveUrlFrom(urlParam, includeURL);
+	url = stp_resolveURL(url); // if no includeURL
+
+	twWeb.addNodeDesc(nodeName,url);
+};
+
+//================================================================================
+// Change standart formatters
+
+var getFormatterIndex = function(formatterName) {
+	for(var i = 0; i < config.formatters.length; i++)
+		if(config.formatters[i].name == formatterName)
+			return i;
+	return null;
+}
+
+//--------------------------------------------------------------------------------
+// Change the prettyLink formatter so that it
+// * recognizes [[text|target]]@nodeName and [[target]]@nodeName syntax
+// * takes into account includeURL of the tiddler and propagates inclusion
+
+if(config.options.STP_hijackPrettyLink) {
+	var prettyLinkFormatterIndex = getFormatterIndex("prettyLink");
+	config.extensions.SharedTiddlersPlugin.orig_prettyLinkFormatter = config.formatters[prettyLinkFormatterIndex];
+	config.formatters[prettyLinkFormatterIndex] = {
+
+		name:  "prettyLink",
+		match: "\\[\\[",
+		lookaheadRegExp: /\[\[(.*?)(?:\|(~)?(.*?))?\]\](?:(?:@(\w+))(?:@([\w\s\:]+)@)?)?/mg,
+		handler: function(w) {
+
+			this.lookaheadRegExp.lastIndex = w.matchStart;
+			var lookaheadMatch = this.lookaheadRegExp.exec(w.source);
+			if(lookaheadMatch && lookaheadMatch.index == w.matchStart) {
+
+				// call the formatter
+				config.extensions.SharedTiddlersPlugin.orig_prettyLinkFormatter.handler(w);
+
+				// call the include.handler, if necessary
+				var node = lookaheadMatch[4]? lookaheadMatch[4] : undefined,
+				    includeURL = w.tiddler? w.tiddler.getIncludeURL() : null,
+				    urlParam = node? twWeb.setNodeNotation(node) : (includeURL? includeURL : undefined),
+				    target = lookaheadMatch[3]? lookaheadMatch[3] : lookaheadMatch[1],
+				    paramString = '"'+urlParam+'" filters:"[['+target+']]" hide noRefresh ';
+				if(lookaheadMatch[5])
+					paramString += lookaheadMatch[5];
+				if(urlParam)
+					config.macros.include.handler(w.output,"include",
+						paramString.readMacroParams(true),w,paramString,w.tiddler);
+
+				// move nextMatch according to this.lookaheadRegExp, not original prettyLink
+				w.nextMatch = this.lookaheadRegExp.lastIndex;
+			}
+		}
+	};
+}
+
+//--------------------------------------------------------------------------------
+// Change the image formatter so that it
+// * takes into account includeURL of the tiddler and recalcs relative urls
+
+if(config.options.STP_hijackImageFormatter) {
+	var imageFormatterIndex = getFormatterIndex("image");
+	config.extensions.SharedTiddlersPlugin.orig_imageFormatterHandler = config.formatters[imageFormatterIndex].handler;
+	config.formatters[imageFormatterIndex].handler = function(w) {
+
+		var lastChildBeforeHandling = w.output.lastChild;
+		config.extensions.SharedTiddlersPlugin.orig_imageFormatterHandler.apply(this,arguments);
+
+		if(w.output.lastChild != lastChildBeforeHandling) {
+
+			var img = w.output.lastChild,
+			    includeURL = w.tiddler ? w.tiddler.getIncludeURL() : "",
+			    imgSrc = jQuery(img).attr("src");
+
+			// take includeURL into account:
+			img.src = resolveUrlFrom(imgSrc, includeURL);
+		}
+	}
+}
+
+//================================================================================
+// Add inline-management tools by hijacking .edit.handler
+
+config.extensions.SharedTiddlersPlugin.orig_editHandler = config.macros.edit.handler;
+config.macros.edit.handler = function(place,macroName,params,wikifier,paramString,tiddler) {
+	var includeUrl = tiddler.getIncludeURL();
+	if(params[0] == "text" && includeUrl){ // only for "text", not other fields
+		var e = createTiddlyElement(null,"div");
+		e.className = "manageIncludedPanel";
+		createTiddlyText(e,"manage the included tiddler: ");
+
+		// go to the source
+		var sourceUrl = includeUrl + "#[["+tiddler.title+"]]";
+		createExternalLink(e, sourceUrl, "open in the source TiddlyWiki");
+
+		// import
+		if(!readOnly) {
+			createTiddlyText(e," | ");
+			jQuery(e).append(jQuery("<a>", { href:"javascript:;", title:"import this tiddler",
+					 text:"import" }).click(function(){
+						config.extensions.SharedTiddlersPlugin.importAndLog(tiddler,1);
+					 }));
+		}
+
+		// reload
+		createTiddlyText(e," | ");
+		config.macros.reloadIncluded.handler(e,"",null,null,'urls:\'["'+includeUrl+'"]\'',tiddler);
+
+		// other actions
+
+		// if the read only mode is not set, display all tools otherwise ...
+		place.appendChild(e);
+	}
+	return config.extensions.SharedTiddlersPlugin.orig_editHandler(place,macroName,params,wikifier,paramString,tiddler);
+};
+
+//================================================================================
+// Perform plugin startup tasks
+
+attachToStore();
+invokeLater(includeFromIncludeList,100);
+})();
+//}}}

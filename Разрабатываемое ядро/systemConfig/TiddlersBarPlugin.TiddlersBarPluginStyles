@@ -1,0 +1,7 @@
+﻿/*{{{*/
+#tiddlersBar .button {border:0}
+#tiddlersBar .tab {white-space:nowrap}
+#tiddlersBar {padding : 1em 0.5em 2px 0.5em}
+.tabUnselected .tabButton, .tabSelected .tabButton {padding : 0 2px 0 2px; margin: 0 0 0 4px;}
+.tiddler, .tabContents {border:1px [[ColorPalette::TertiaryPale]] solid;}
+/*}}}*/

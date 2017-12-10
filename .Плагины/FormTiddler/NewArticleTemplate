@@ -1,0 +1,40 @@
+﻿<html>
+<style>
+.rolodex table {
+border: 0px solid;
+background-color:#eeeff;
+}
+
+.rolodex tr, .rolodex td {
+border: 0px solid;
+}
+</style>
+<span class="rolodex">
+ <table>
+ <tr>
+ <td align="right"><b>Author(s):</b></td>
+ <td colspan="3"><input name=author type=text style="width:300%" /></td></tr>
+ <tr>
+ <td align="right"><b>Article title (put in "quotes"):</b></td>
+ <td colspan="3"><input name=articletitle type=text style="width:300%" /></td></tr>
+ <tr>
+ <td align="right"><b>Journal Title:</b></td>
+ <td colspan="3"><input name=journalinfo type=text style="width:300%" /></td></tr>
+ <tr>
+ <td align="right"><b>Volume (year): page numbers:</b></td>
+ <td colspan="3"><input name=pagenumbers type=text style="width:300%" /></td></tr>
+ <tr>
+ <td align="right"><b>Call number:</b></td>
+ <td colspan="3"><input name=callnumber type=text style="width:300%" /></td></tr>
+ <tr>
+ <td align="right"><b>Where I keep it:</b></td>
+ <td colspan="3"><input name=location type=text style="width:300%" /></td></tr>
+ <tr>
+ <td align="right"><b>Primary topic:</b></td>
+ <td colspan="3"><input name=primtopic type=text style="width:300%" /></td></tr>
+ <tr></span> </html>
+1. In viewing mode, add data to form fields
+2. In edit mode, add your notes below and in the bottom window add extra tags for any additional topics
+3. In edit mode, add an url for an image of the magazine or journal cover at the top of the tiddler if you wish. Here's how: {{{[img[YOUR URL HERE]]}}}
+
+! Notes

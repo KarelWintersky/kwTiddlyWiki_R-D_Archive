@@ -1,0 +1,9 @@
+<div class='tagging' macro='tagging'></div> - походу лишний во ViewTemplate, если его убрать - не меняется ничего.
+вероятно, наследие первых редакций
+====
+
+fields - список разных полей тиддлера - реализация в toolbar macro
+
+// Custom fields to be automatically added to new tiddlers
+config.defaultCustomFields = {};
+

@@ -1,0 +1,84 @@
+﻿/***
+|Name|Broccoli Links|
+|Created by|Clint Checketts and Simon Baird|
+|Location|http://checkettsweb.com/styles/themes.htm#%5B%5BBroccoli%20Links%5D%5D|
+|Summary|Provides options to disable auto-linking of camel case words and lets pretty links point to tiddlers rather than external files|
+|Current version|1.0 (20-Oct-2005)|
+!Description
+This plugin changes the default behaviors of pretty links (links that display one text but link to a different tiddler like [[this|Welcome!]]). Pretty links that point to non-existent tiddlers are asumed to point to external files. This plugin allows you to disable that functionality, and instead point to the non-existent tiddler. This plugin also allows you to disable the auto wikification of camel case words (ThisIsACamelCaseWord). The name 'broccoli' was inspired by the Jeremy's [[photo|http://www.flickr.com/photos/jermy/10134618/]], and with a name like TiddlyWiki, extensions deserve silly names too (who names a broccoli Mervyn?).
+
+To switch this functionality on or off, select the corresponding check boxes in the [[AdvancedOptions]] tiddler or right here:
+<<option chkPrettyLinksPointToFile>> PrettyLinksPointToFiles
+<<option chkAutoLinkCamelCase >> AutoLinkCamelCaseWords
+
+Change the following 'config.options' lines to true if you want the plugins off by default
+***/
+//{{{
+config.options.chkPrettyLinksPointToFile = true;
+config.options.chkAutoLinkCamelCase = true;
+
+
+config.shadowTiddlers.AdvancedOptions += "sn<<option chkPrettyLinksPointToFile>> PrettyLinksPointToFilessn<<option chkAutoLinkCamelCase >> AutoLinkCamelCaseWords";
+
+
+for (var i=0;i<config.formatters.length;i++)
+  if (config.formatters[i].name == "prettyLink"){
+     config.formatters[i].handler= function(w)
+	{
+		var lookaheadRegExp = new RegExp(this.lookahead,"mg");
+		lookaheadRegExp.lastIndex = w.matchStart;
+		var lookaheadMatch = lookaheadRegExp.exec(w.source)
+		if(lookaheadMatch && lookaheadMatch.index == w.matchStart && lookaheadMatch[2]) // Simple bracketted link
+			{
+			var link = createTiddlyLink(w.output,lookaheadMatch[1],false);
+			w.outputText(link,w.nextMatch,w.nextMatch + lookaheadMatch[1].length);
+			w.nextMatch += lookaheadMatch[1].length + 2;
+			}
+		else if(lookaheadMatch && lookaheadMatch.index == w.matchStart && lookaheadMatch[3]) // Pretty bracketted link
+			{
+			var e;
+			if(store.tiddlerExists(lookaheadMatch[4]))
+				e = createTiddlyLink(w.output,lookaheadMatch[4],false);
+			else
+// Extra 'if' statement to decide whether to use point to files or not (by Clint)==========
+				if (config.options.chkPrettyLinksPointToFile)
+                                     e = createExternalLink(w.output,lookaheadMatch[4]);
+                                else
+                                     e = createTiddlyLink(w.output,lookaheadMatch[4],false);
+// end additions ================================================
+			w.outputText(e,w.nextMatch,w.nextMatch + lookaheadMatch[1].length);
+			w.nextMatch = lookaheadMatch.index + lookaheadMatch[0].length;
+			}
+	}
+}
+
+
+
+for (var i=0;i<config.formatters.length;i++)
+  if (config.formatters[i].name == "wikiLink"){
+   config.formatters[i].handler= function(w){
+// Check to see if you want the wirds turned into links (by Clint) ===========
+    if (!config.options.chkAutoLinkCamelCase){
+     w.outputText(w.output,w.matchStart,w.nextMatch);
+     return false;
+   }
+// end additions ==========================================
+		var preRegExp = new RegExp(config.textPrimitives.anyLetter,"mg");
+		var preMatch = null;
+		if(w.matchStart > 0)
+			{
+			preRegExp.lastIndex = w.matchStart-1;
+			preMatch = preRegExp.exec(w.source);
+			}
+		if(preMatch && preMatch.index == w.matchStart-1)
+			w.outputText(w.output,w.matchStart,w.nextMatch);
+		else if(w.matchText.substr(0,1) == config.textPrimitives.unWikiLink)
+			w.outputText(w.output,w.matchStart + 1,w.nextMatch);
+		else
+			{
+			var link = createTiddlyLink(w.output,w.matchText,false);
+			w.outputText(link,w.matchStart,w.nextMatch);
+			}
+	}
+}
+//}}}

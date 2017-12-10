@@ -1,0 +1,221 @@
+/***
+|''Name:''|TiddlerAliasPlugin|
+|''Version:''|1.0.0 BETA 4 (2009-03-30)|
+|''Source:''|http://tiddlywiki.abego-software.de/Beta.html#TiddlerAliasPlugin|
+|''Author:''|UdoBorkowski (ub [at] abego-software [dot] de)|
+|''Licence:''|[[BSD open source license (abego Software)|http://www.abego-software.de/legal/apl-v10.html]]|
+|''Copyright:''|&copy; 2009 [[abego Software|http://www.abego-software.de]]|
+|''~CoreVersion:''|2.1.0|
+|''Browser:''|Firefox 1.5.0.7 or better; InternetExplorer 6.0|
+!Description
+
+Reference a tiddler through an alias (or even through many aliases). E.g. a tiddler "William Shakespeare" may also be referenced as {{{[[Shaxper]]}}}.
+
+When editing a tiddler you may enter alternative names for the tiddler in the "Alias" field (below the tags field), similar to the way you enter tags. You may even specify multiple alias names, separated by spaces. Alias names containing spaces must be written as {{{[[...]]}}}
+
+Also this plugin implements the "Auto Non-Space Alias" feature: for tiddlers with titles containing whitespaces an alias is automatically created that has every whitespace replaced by a dash ("-"). E.g. a tiddler called [[Tiddler with no alias defined]] can also be referenced by [[Tiddler-with-no-alias-defined]].
+
+!Revision history
+* v1.0.0 Beta 4 (2009-03-30)
+** Bugfix: ToggleLinks does not work when TiddlerAliasPlugin is installed (Thanks to Jonnan West for reporting the bug)
+* v1.0.0 Beta 3 (2006-09-23)
+** Support "Auto Non-Space Alias" feature: For tiddler with titles containing whitespaces an alias is automatically created that has every whitespace replaced by a dash ("-")
+* v1.0.0 Beta 2 (2006-09-22)
+** Bugfix: Tiddler is displayed more than once when opened both through title and alias (Thanks to KenGirard for reporting)
+* v1.0.0 Beta 1 (2006-09-21)
+** Beta 1 release
+!Code
+***/
+//{{{
+	
+//============================================================================
+//============================================================================
+//		   TiddlerAliasPlugin
+//============================================================================
+//============================================================================
+
+// Only install once
+if (!version.extensions.TiddlerAliasPlugin) {
+
+version.extensions.TiddlerAliasPlugin = {
+	major: 1, minor: 0, revision: 0, beta: 4,
+	date: new Date(2009,2,30), 
+	source: "http://tiddlywiki.abego-software.de/Beta.html#TiddlerAliasPlugin",
+	licence: "[[BSD open source license (abego Software)|http://www.abego-software.de/legal/apl-v10.html]]",
+	copyright: "Copyright (c) abego Software GmbH, 2005-2009 (www.abego-software.de)"
+};
+
+(function() {
+
+window.abegoTiddlerAlias = {
+	lingo:  {
+		aliasPrompt: "Type alias names (i.e. alternative names for this tiddler) separated with spaces, [[use double square brackets]] if necessary"
+	}, 
+	
+	editTemplateExtension: "<div class='editor' macro='edit alias'></div><div class='editorFooter'><span macro='message abegoTiddlerAlias.lingo.aliasPrompt'></span></div>"
+};
+
+var oldFetchTiddler;
+var oldSaveTiddler;
+var oldDisplayTiddler;
+
+var fWithAutoNonSpaceAlias = true;
+
+function withAutoNonSpaceAlias() {
+	return fWithAutoNonSpaceAlias;
+}
+
+function addNonSpaceAlias(map, title) {
+	var s = title.replace(/\s/g,"-");
+	if (s != title)
+		map[s] = title;
+}
+
+function calcAliases() {
+	var result = {};
+	store.forEachTiddler(function(title,tiddler) {
+		var s = store.getValue(tiddler,"alias");
+		if (s) {
+			var p = s.parseParams("list",null,false,true);
+			for(var i=1; i<p.length; i++)
+				result[p[i].value] = title;
+		}
+		if (withAutoNonSpaceAlias())
+			addNonSpaceAlias(result,title);
+	});
+	return result;
+}
+
+// Returns a map that maps an alias name to the title of the tiddler
+abegoTiddlerAlias.getAliases = function() {
+	if (!store.aliases)
+		store.aliases = calcAliases();
+	return store.aliases;
+}
+
+// Returns the title of the tiddler for the given alias.
+// When no such alias is defined but a tiddler with that name exists the alias is returned.
+// Otherwise null is returned.
+abegoTiddlerAlias.getAliasTitle = function(alias) {
+	var t = abegoTiddlerAlias.getAliases()[alias];
+	return t ? t : (store.fetchTiddler(alias) ? alias : null)
+}
+
+function hasEditTemplateExtension(s) {
+	return s.indexOf(abegoTiddlerAlias.editTemplateExtension) >= 0;
+}
+
+function addEditTemplateExtension(s) {
+	if (s && !hasEditTemplateExtension(s)) {
+		var i = s.lastIndexOf("</div>");
+		if (i >= 0)
+			return s.slice(0,i+6)+"\n"+abegoTiddlerAlias.editTemplateExtension+s.slice(i+6);
+	}
+	return null;
+}
+
+function hijackFetchTiddler() {
+	oldFetchTiddler = store.fetchTiddler;
+
+	store.fetchTiddler = function(title) {
+		var result = oldFetchTiddler.apply(this, arguments);
+		if (!result && title) {
+			title = abegoTiddlerAlias.getAliases()[title];
+			if (title)
+				result = oldFetchTiddler.apply(this, [title])
+		}
+		return result;	
+	};
+}
+
+function hijackSaveTiddler() {
+	oldSaveTiddler = TiddlyWiki.prototype.saveTiddler;
+	TiddlyWiki.prototype.saveTiddler = function() {
+		var result = oldSaveTiddler.apply(this, arguments);
+		delete store.aliases;				
+		return result;	
+	}
+}
+
+
+function hijackDisplayTiddler() {
+	oldDisplayTiddler = Story.prototype.displayTiddler;
+	Story.prototype.displayTiddler = function(srcElement,title,template,animate,slowly,customFields,toggle,animationSrc) {
+		// Ensure that a tiddler is always opened with its "original" title (not an alias)
+		var tiddler = store.fetchTiddler(title);
+		if (tiddler) 
+			title = tiddler.title;
+		return oldDisplayTiddler.apply(this, [srcElement,title,template,animate,slowly,customFields,toggle,animationSrc]);
+	}
+}
+	
+
+function modifyEditTemplate() {
+	// The shadow tiddler
+	var s = addEditTemplateExtension(config.shadowTiddlers["EditTemplate"]);
+	if (s) 
+		config.shadowTiddlers["EditTemplate"] = s;
+	
+	// The "real" tiddler (if defined)
+	var t = store.getTiddler("EditTemplate");
+    if (t && !hasEditTemplateExtension(t.text))
+          t.set(null,addEditTemplateExtension(t.text));		
+}
+
+// Requires store is defined.
+function doHijacking() {
+	hijackFetchTiddler();
+	hijackSaveTiddler();
+	hijackDisplayTiddler();
+	modifyEditTemplate();
+}
+
+// for debugging the plugin is not loaded through the systemConfig mechanism but via a script tag. 
+// At that point in the "store" is not yet defined. In that case hijackFetchTiddler through the restart function.
+// Otherwise hijack now.
+if (!store) {
+	var oldRestartFunc = restart;
+	window.restart = function() {
+		doHijacking();
+		oldRestartFunc.apply(this,arguments);
+	};
+} else
+	doHijacking();
+
+// To support the access through the "message" macro
+config.abegoTiddlerAlias = abegoTiddlerAlias;
+})();
+} // of "install only once"
+
+
+/***
+!Licence and Copyright
+Copyright (c) abego Software ~GmbH, 2005 ([[www.abego-software.de|http://www.abego-software.de]])
+
+Redistribution and use in source and binary forms, with or without modification,
+are permitted provided that the following conditions are met:
+
+Redistributions of source code must retain the above copyright notice, this
+list of conditions and the following disclaimer.
+
+Redistributions in binary form must reproduce the above copyright notice, this
+list of conditions and the following disclaimer in the documentation and/or other
+materials provided with the distribution.
+
+Neither the name of abego Software nor the names of its contributors may be
+used to endorse or promote products derived from this software without specific
+prior written permission.
+
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY
+EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT
+SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
+INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED
+TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR
+BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
+ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH
+DAMAGE.
+***/
+
+//}}}

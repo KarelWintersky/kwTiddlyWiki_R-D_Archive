@@ -1,0 +1,358 @@
+﻿/***
+|''Name''|RollonPlugin|
+|''Description''|A plugin to "Roll" on Tables, creating tiddlers containing random elements of lists, extracted from other tiddlers|
+|''Icon''||
+|''Author''|Joshua Macy|
+|''Contributors''||
+|''Version''|1.0rc1|
+|''Date''|2009-03-11|
+|''Status''|@@beta@@;|
+|''Source''|http://rollon.tiddlyspot.com#RollonPlugin|
+|''CodeRepository''|http://rollon.tiddlyspot.com|
+|''Copyright''|Joshua Macy, 2009|
+|''License''|Creative Commons Attribution-Noncommercial-Share Alike 3.0 United States License|
+|''CoreVersion''|2.4.1|
+|''Requires''||
+|''Overrides''|Adds String methods for trim, rtrim and ltrim|
+|''Feedback''|joshua.macy@gmail.com|
+|''Documentation''|http://rollon.tiddlyspot.com|
+|''Keywords''|rollon|
+!Description
+A Plugin to roll on tables (formatted as lists). The plugin provides a rollon macro that has two functions, depending on the context where it's called.
+*If the macro is in a tiddler that lacks the rollonResult tag, it creates a text label describing the table and a button to press to roll on that table. Pressing the button creates a new tiddler with the 
+rollonResult tag and places the macro in that tiddler
+*If the macro is in a tiddler that has a rollonResult tag it looks at the named tiddler as a table and to chooses a random element from that table and places it in the current tiddler
+Thus, if you click on the roll button, you get a new tiddler with a random element from the table that you named.
+Note that rollon calls can call other rollon calls!  If the entry selected from the table contains another rollon macro, that rollon macro is executed to select a random entry from ''it's'' table, and so on
+until it bottoms out with an entry that contains no other rollon macros.  The results of all these calls are placed in order in the tiddler that originated the call, allowing you to build up complete sentences
+and paragraphs of results, almost like a Mad-Lib.
+
+You can control many parameters to the rollon call, or allow it to default to (hopefully sensible) values.
+!Notes
+Doesn't yet support entries that have sub-lists
+!Usage
+{{{
+<<rollon tiddlername times>>
+}}}
+tiddlername - name of a tiddler containing a list of entries.
+times - the number of times to roll.  May be a dice expression like 1d6 or 2d3+2
+
+for more control you can use named parameters:
+{{{
+<<rollon table:tiddlername times:n separator:sep-char result:prompt>>
+}}}
+
+A complete list of parameters:
+* table -  the name of the table to roll on.  "prompt" will cause it to prompt the user for a table name.  If the table name doesn't exist but appears to be a dice expression, like 1d6+2, it will evaluate the dice expression and return the value instead
+* times - the number of times to roll on the table.  "prompt" will cause it to prompt the user for a number of times.  If the number of times appears to be a dice expression, it will evaluate the expression and roll that number of times.  The results are separated in the tiddler by a character (default is comma). ''Defaults to 1.''
+* dice - a dice expression, such as 1d20, 3d6+1, 1d4+1d6, etc.  If no table is provided, the macro will return the result of the roll.  If a table is provided, the macro will roll that dice expression on the table.  ''Defaults to the highest number in the table.''  E.g. a table with 30 entries will have one of them selected at random, as if a 1d30 had been rolled.
+* separator - the character used to separate multiple results.  ''Defaults to comma.''  Use {{{<br>}}} to separate results by line breaks
+* resultName - the name of the new tiddler to create to hold the results.  ''Defaults to the name of the current tiddler, plus " Result" plus a numeric suffix, such as (1) or (3) to ensure the tiddler name is unique.''
+* force - to force the result of the die roll to be a particular number.  Generally this is used for debugging. ''No default.''
+
+The first two parameters are assumed to be table and times, if named parameters aren't used.  Named parameters are required for all the others, and can be used for table and times for clarity.
+If any parameter is set to the string &quot;prompt&quot;, then the user will be prompted for the appropriate value when the roll button is pushed.
+
+Tables are any Tiddler that contains a list (ordered or unordered), or a series of lines each starting with a number.  If the tiddler has text
+prior to the beginning of the list, the text will be copied into the result, trimmed of leading and trailing spaces.  If you want new lines in the preamble,
+use {{{<br>}}} elements. Whitespace between the * or # or number at the beginning of a line is preserved.
+
+{{{
+!!Examples
+<<rollon "Bar Names">>
+
+<<rollon table:"Bar Names" separator:"," times:3d6>>
+
+<<rollon BarNames 3d6 separator:->>
+
+!Configuration Options
+None
+!Revision History
+!!v<1.0rc1> (2009-03-11) release candidate 1
+* 
+!To Do
+add setting and consulting variables
+add formatting options (first letter capitalization, gender agreement helpers, etc)
+!Code
+***/
+//{{{
+if(!version.extensions.RollonPlugin) { //# ensure that the plugin is only installed once
+version.extensions.RollonPlugin = { installed: true };
+
+if(!config.extensions) { config.extensions = {}; } //# obsolete from v2.4.2
+
+config.macros.rollon = {
+	suffixText: ' (%0)',
+	suffixPattern: / \(([0-9]+)\)$/,
+	zeroPad: 0,
+	sparse: false,
+	diceRE : /(\d+)[dD]([\d]+)/g,
+	listRE : /^(?:[\*#]|\d+\.?)([^\*#].+)$/gim,
+	defRE : /^([:;])(.+)$/gim,
+	rangeRE : /^(\d+)(?:-(\d+))?\s*/,
+	handler: function (place, macroName, params, wikifier, paramString, tiddler) {
+		var taggedResult = tiddler.isTagged("rollonResult");
+		var prms = paramString.parseParams("anon", null, true);
+		var table = getParam(prms, "table", null) || params[0];
+		var times = getParam(prms, "times") || params[1] || 1;
+		var dice = getParam(prms, "dice");
+		var sep = getParam(prms, "separator", ",");
+		var resultName = getParam(prms, "resultName", tiddler.title + " Result");
+		var force = getParam(prms, "force", null);
+		if (taggedResult) {
+			if (times === "prompt") {
+				times = prompt("Enter number of times to roll", "1");
+			}
+			if (dice === "prompt") {
+				dice = prompt("Enter the dice expression to roll");
+			}
+			if (table === "prompt") {
+				table = prompt("Enter the table name to roll on");
+			}
+			if (sep === "prompt") {
+				sep = prompt("Enter the separator character(s)");
+			}
+			if (force === "prompt") {
+				force = prompt("Force the die to roll the following number");
+			}
+		}
+		var t = r = result = btn = preamble = temp = null;
+		var content = startLink = null;
+		var html = "";
+		var resultList = [];
+		var entries = [];
+		var temp, low, high, rangeRE, range, rangeEntry, dieRoll;
+		if (taggedResult) {
+			if (times) {
+				if (dice && times.indexOf("dice:") > -1) {
+					// dice: was passed as 2nd param
+					times = 1
+				} else {
+					if (/^\d+$/.test(times)) {
+						//all digits
+						times = parseInt(times);
+					} else {
+						result = this.diceRE.exec(times);
+						if (result) {
+							times = this.rollExpr(times);
+						}
+						else {
+							times = 1;
+						}
+					}					
+				}
+			} else {
+				times = 1;
+			}			
+			if (table) {
+				t = store.getTiddler(table);
+				if (t) {
+					result = this.listRE.exec(t.text);
+					if (result) {
+						preamble = result.input.substring(0, result.index);
+						if (preamble) {
+							html = wikifyStatic(preamble.trim(), null, tiddler);
+						}
+						while (result != null) {
+							entries.push(result[1]);
+							result = this.listRE.exec(t.text);
+						}
+						for (var i = 0; i < times; i ++) {
+							if  (!force) {
+								if (!dice) {
+									r = Math.floor(Math.random() * entries.length);								
+								} else {
+									r = Math.min(this.rollExpr(dice), entries.length);
+									r = r - 1; // entries starts at 0, even though dice start at 1
+								}
+							} else {
+								r = Math.min(force, entries.length);
+							}
+							temp = wikifyStatic(entries[r], null, tiddler);
+							resultList.push(temp);
+						}
+						html += resultList.join(sep);
+						html = html.replace(/<[\/]*span>/igm, '');
+						wikify(html, place, null, tiddler);
+					} else {
+						result = this.defRE.exec(t.text);
+						if (result) { // definition list
+							preamble = result.input.substring(0, result.index);
+							if (preamble) {
+								html = wikifyStatic(preamble.trim(), null, tiddler);
+							}
+							while (result != null) {
+								if (result[1] === ';') {
+									// definition
+									temp = result[2];
+									range = this.rangeRE.exec(temp);
+									if (range) {
+										low = range[1];
+										high = null;
+										if (result[2]) {
+											high = range[2];
+										}
+										entries.push([low, high]);
+									} else {
+										wikify("Definition doesn't seem to be a valid range: " + temp, place, null, tiddler);
+									}
+								} else if (result[1] === ':') {
+									// term, prior must have been a definition (we hope)
+									// we should now have a series of triples: [low, high, term]
+									entries[entries.length-1].push(result[2]);
+								}
+								result = this.defRE.exec(t.text);
+							}
+							// find highest range
+							temp = entries[entries.length-1];
+							if (temp[1]) {
+								high = temp[1];
+							} else {
+								high = temp[0];
+							}
+							for (var i = 0; i < times; i ++) {
+								if  (!force) {
+									// don't require tables to start with number 0
+									r = Math.ceil(Math.random() * high);
+								} else {
+									r = Math.min(force, high);
+								}
+								// find the entry that r falls within
+								rangeEntry = "Couldn't find range encompassing value " + r;
+								for (var j = 0; j < entries.length; j++) {
+									if (r < entries[j][0]) {
+										// too high, not going to see anything with the proper range any more
+										break;
+									}
+									rangeEntry = entries[j][2];
+									if (entries[j][1] && r <= entries[j][1]) {
+										break;
+									}
+								}
+								temp = wikifyStatic(rangeEntry, null, tiddler);
+								resultList.push(temp);
+							}
+							html += resultList.join(sep);
+							html = html.replace(/<[\/]*span>/igm, '');
+							wikify(html, place, null, tiddler);
+						} else {
+							if (t.text.trim().length > 0) {
+								for (var i = 0; i < times; i++) {
+									temp = wikifyStatic(t.text, null, tiddler);
+									resultList.push(temp);
+								}
+								html += resultList.join(sep);
+								html = html.replace(/<[\/]*span>/igm, '');
+								wikify(html, place, null, tiddler);
+							} else {
+								wikify("Table " + t.title + " appears to be empty", place, null, tiddler);
+							}							
+						}
+					}
+				} else {
+					// see if dice were defined
+					if (!dice) {
+						// see if it's a dice string
+						result = this.diceRE.test(table);						
+						if (!result) {
+							wikify("No Tiddler named " + table + " found", place);
+							return;
+						} else {
+							dice = table;
+						}
+					}
+					for (var i = 0; i < times; i++) {
+						dieRoll = this.rollExpr(table);
+						resultList.push(dieRoll);
+					}
+					dieRoll = resultList.join(sep).toString();
+					wikify(dieRoll, place, null, tiddler);
+				}
+			} else {
+				wikify("rollon requires at least one parameter", place);
+			}
+		} else {
+			if (table) {				
+				wikify("roll on [[" + table + "]]", place);
+				btn = createTiddlyButton(place,"roll","<<rollon " + paramString + ">>", config.macros.rollon.onClick);
+				btn.resultName = resultName;
+				btn.suffixText = this.suffixText;
+				btn.suffixPattern = this.suffixPattern;
+				btn.zeroPad = this.zeroPad;
+				btn.sparse = this.sparse;
+			} else {
+				wikify("rollon macro requires at least one parameter", place);			
+			}
+		}
+	},
+	rollExpr: function (expr) {
+		var diceExpr = expr.replace(this.diceRE, "this.roll($1, $2)");
+		var result = 0;
+		result = eval(diceExpr);
+		return result;
+	},
+	roll: function(dice, sides) {
+		var result = 0;
+		for (var i=0; i < dice; i++) {
+			result += Math.ceil(Math.random() * sides);
+		}
+		return result;
+	},
+	onClick: function(ev) {
+		if (!ev) {
+			var ev = window.event;
+		}
+		var button = this;
+		var macroText = button.title;
+		var resultName = button.resultName || "Default Roll Result";
+		if (button.resultName === "prompt") {
+			resultName = prompt("Name for Result?");
+		}
+		var root=resultName.replace(this.suffixPattern,''); // title without suffix..unlikely to have it at this point, but let's be safe
+		// find last matching title
+		var last=root;
+		if (this.sparse) { // don't fill-in holes... really find LAST matching title
+			var tids=store.getTiddlers('title','excludeLists');
+			for (var t=0; t<tids.length; t++) if (tids[t].title.startsWith(root)) last=tids[t].title;
+		}
+		// get next number (increment from last matching title)
+		var n=1; var match=this.suffixPattern.exec(last); if (match) n=parseInt(match[1])+1;
+		var newTitle=root+this.suffixText.format([String.zeroPad(n,this.zeroPad)]);
+		// if not sparse mode, find the next hole to fill in...
+		while (store.tiddlerExists(newTitle)||document.getElementById(story.idPrefix+newTitle))
+			{ n++; newTitle=root+this.suffixText.format([String.zeroPad(n,this.zeroPad)]); }		
+		var t = store.getTiddler(newTitle);
+		t = store.createTiddler(newTitle);
+		t.set(newTitle, macroText);
+		t.tags = ["rollonResult"];
+		t.modifier = "Rollon";
+		story.displayTiddler(null, newTitle);
+		var tiddlerHTML = story.getTiddler(newTitle).innerHTML;
+		var viewerClass = '<div class="viewer">';
+		var viewerPos = tiddlerHTML.indexOf(viewerClass);
+		if (viewerPos > -1) {
+			var endDivPos =  tiddlerHTML.indexOf("</div>", viewerPos);
+			var displayedText = tiddlerHTML.substring(viewerPos + viewerClass.length, endDivPos);
+			displayedText.replace(/<[\/]*span>/igm, '');
+			t.set(null,displayedText);			
+		}		
+		ev.returnValue = false;
+		
+	}
+	
+};
+
+String.prototype.trim = function() {
+	return this.replace(/^\s+|\s+$/g,"");
+}
+String.prototype.ltrim = function(){
+	return this.replace(/^\s+/, "");
+}
+String.prototype.rtrim = function(){
+	return this.replace(/\s+$/, "");
+}
+
+} //# end of "install only once"
+
+
+//}}}

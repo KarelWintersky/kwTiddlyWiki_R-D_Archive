@@ -1,0 +1,59 @@
+﻿''If you want this documentation available offline, you will need to copy this tiddler to your TW.''
+!Description:
+Using the popup macro you can create popups with any wiki text. The wiki text can be written in the macro call, can be generated using a different macro, or included from a tiddler.
+
+!Usage:
+*the button label is the first parameter
+*the text to put in the popup is the second parameter
+**embed macro output like forEachTiddler or tiddlerList
+***start macro calls with {{{<<}}} like normal, but end with {{{$))}}}
+**define popup content inline, or embed from a tidder using the core tiddler macro {{{<<tiddler$))}}}
+*you can nest popups up to one level
+**nested popups have an id of 'nestedpopup' for easier styling.
+**specify unique id's for nested popups by passing the id as a third parameter.
+
+----
+!Example's
+
+''Put a forEachTiddler macro generated list in a popup:''
+{{{<<popup forEachTiddlerDemo [[<<forEachTiddler where 'tiddler.tags.contains("systemConfig")']]$))}}}
+<<popup forEachTiddlerDemo [[<<forEachTiddler
+where
+'tiddler.tags.contains("systemConfig")'$))]]>>
+
+''Use the core {{{<<tiddler>>}}} macro to put the contents of a tiddler into a popup:''
+MainMenu popup:
+{{{<<popup MainMenu [[<<tiddler MainMenu$))]]>>}}}
+<<popup MainMenu [[<<tiddler MainMenu$))]]>>
+
+''Or create a custom menu in a tiddler using various macro's and normal tiddlylinks.''
+{{{<<popup CustomMenu '<<tiddler CustomMenu$))'>>}}}
+<<popup CustomMenu '<<tiddler CustomMenu$))'>>
+this menu was created with a combination of forEachTiddler and normal tiddlyLinks!
+Note that the 'Plugins' button opens a second nested popup.
+Source tiddler: CustomMenu
+
+''Or define your custom menu inline.''
+{{{<<popup 'Inline Custom Menu' [[Custom Menu
+*MainMenu
+----
+<<forEachTiddler
+ where
+ 'tiddler.tags.contains("systemConfig")']]$))]] 
+>>}}}
+<<popup 'Inline Custom Menu' [[Custom Menu
+*MainMenu
+----
+<<forEachTiddler where 'tiddler.tags.contains("systemConfig")'$))]] 
+>>
+
+''Note: you can pass a third parameter and it will be set as the id of any nested popups''
+By default, nested popups have an id of 'nestedpopup' to facilitate styling.
+
+----
+!Current Issues:
+*better support for custom classes for popups and nestedpopups
+----
+!Code
+PopupMacro
+

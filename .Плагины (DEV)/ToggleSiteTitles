@@ -1,0 +1,72 @@
+﻿/%
+|Name|ToggleSiteTitles|
+|Source|http://www.TiddlyTools.com/#ToggleSiteTitles|
+|Version|0.0.0|
+|Author|Eric Shulman - ELS Design Studios|
+|License|http://www.TiddlyTools.com/#LegalStatements &lt;&lt;br&gt;&gt;and [[Creative Commons Attribution-ShareAlike 2.5 License|http://creativecommons.org/licenses/by-sa/2.5/]]|
+|~CoreVersion|2.1|
+|Type|script|
+|Requires|InlineJavascriptPlugin|
+|Overrides||
+|Description|show/hide document 'header' area (containing SiteTitle and SiteSubtitle content)|
+%/&lt;script&gt;
+	var c=document.getElementById('contentWrapper'); 
+	if (config.options.chkHideSiteTitles==undefined) config.options.chkHideSiteTitles=false;
+	for (var i=0; i&lt;c.childNodes.length; i++) if (hasClass(c.childNodes[i],&quot;header&quot;)) var h=c.childNodes[i];
+	h.style.display=config.options.chkHideSiteTitles?&quot;none&quot;:&quot;block&quot;;
+&lt;/script&gt;&lt;&lt;option chkHideSiteTitles&gt;&gt;&lt;script&gt;
+	place.lastChild.checked=!config.options.chkHideSiteTitles;
+	place.lastChild.onchange=function() {
+		var c=document.getElementById('contentWrapper'); 
+		for (var i=0; i&lt;c.childNodes.length; i++) if (hasClass(c.childNodes[i],&quot;header&quot;)) var h=c.childNodes[i];
+		config.options.chkHideSiteTitles=!this.checked;
+		h.style.display=config.options.chkHideSiteTitles?&quot;none&quot;:&quot;block&quot;;
+		saveOptionCookie(&quot;chkHideSiteTitles&quot;);
+	};
+&lt;/script&gt; zeige Titel</pre>
+</div>
+<div title="Uwe Wennmann" modifier="UweWennmann" modified="200710261835" created="200708260737" tags="Karte" changecount="7">
+<pre>[img[images/32px-Crystal_Clear_app_knode.png]]+++!!!*{{big{[Uwe Wennmann=Z|klicken Sie oder drücken Sie Alt-Z zum öffnen]}}}&gt;...
+   Dieser Lehrer hat die vorliegende Lernhilfe konfiguriert.
+[img[Uwe Wennmann|http://bbz-dormagen.de/mitarbeiter_jalbum/Wirtschaft/thumbs/Uwe_Wennmann.jpg]]
+===
+
+&lt;&lt;formTiddler BiggerFormTemplate&gt;&gt;&lt;data&gt;{&quot;level&quot;:&quot;0&quot;}&lt;/data&gt;</pre>
+</div>
+<div title="UweWennmann" modifier="UweWennmann" created="200708260740" changecount="1">
+<pre>&lt;&lt;tiddler &quot;Uwe Wennmann&quot;&gt;&gt;</pre>
+</div>
+<div title="ViewTemplate" modifier="UweWennmann" modified="200710231706" created="200708271604" changecount="15">
+<pre>&lt;div class='toolbar' macro='toolbar -closeTiddler closeOthers editTiddler permalink references jump'&gt;&lt;/div&gt;
+&lt;div class='title' macro='view title'&gt;&lt;/div&gt;
+&lt;!-- &lt;div class='subtitle'&gt;&lt;span macro='view modifier link'&gt;&lt;/span&gt;, &lt;span macro='view modified date'&gt;&lt;/span&gt; (erstellt am &lt;span macro='view created date'&gt;&lt;/span&gt;)&lt;/div&gt; --&gt;
+&lt;!-- &lt;div class='tagging' macro='tagging'&gt;&lt;/div&gt; --&gt;
+&lt;!-- &lt;div class='tagged' macro='tags'&gt;&lt;/div&gt; --&gt;
+&lt;div class='viewer' macro='view text wikified'&gt;&lt;/div&gt;
+&lt;div class='tagClear'&gt;&lt;/div&gt;
+</pre>
+</div>
+<div title="Vokabelliste.txt" modifier="UweWennmann" created="200708282226" changecount="1">
+<pre>&lt;&lt;forEachTiddler
+where
+        'tiddler.tags.contains(&quot;Karte&quot;)'
+sortBy 
+ 'tiddler.data(&quot;level&quot;)'
+ascending
+ write 
+ 'tiddler.title+&quot;\n&quot;' 
+
+ toFile 'file:///c:/Vokabelliste.txt' withLineSeparator '\r\n'
+&gt;&gt;</pre>
+</div>
+<div title="Was ist der Zweck dieser Seite?" modifier="UweWennmann" modified="200710231942" created="200709011808" changecount="50">
+<pre>!!!&lt;&lt;gradient horiz #fc3 #ffffff&gt;&gt;&amp;nbsp;Was ist der Zweck dieser Seite?&gt;&gt;
+Diese Datei ist eine Lernkartei nach dem Muster von Sebastian Leitner. Man kann damit z. B. Vokabeln, Fachbegriffe, Gesichter usw. nach dem Karteikastenprinzip lernen. Die Umsetzung als ~Tiddlywiki-Datei ermöglicht das einfache Einbinden und Verwenden von Bildern, Klängen, Videos und Animationen. Die fertige Datei kann sowohl online als auch lokal verwendet werden. Der Vorteil gegenüber anderen Lernmethoden besteht darin, dass die Lerngegenstände langfristig gelernt und behalten werden. Das Lernen beginnt schon mit dem Anlegen einer neuen Lernkarte. 
+!Die Handhabung gelernter Karten
+{{borderlessL{
+|bgcolor:#99ccff;[img[Handhabung gelernter Karten|http://www.batzelt.de/lkartei.gif][http://www.batzelt.de/lkartei.gif]]&lt;br&gt;&amp;nbsp;&amp;nbsp;Handhabung gelernter Karten|bgcolor:#99ccff;width:25em;Im Idealfall lernen Sie einen Lerninhalt einmal und erinnert sich daran bei jeder Lernwiederholung. Die Karte wandert mit jeder zutreffenden Erinnerung in das nächste Fach. Zwischen dem Wiederholen der einzelnen Fächer liegen stetig wachsende Zeitabstände von anfangs 1 Tag bis hin zu mehreren Wochen. Lernen Sie maximal 30 Lernkarten pro Tag.|
+!Die Handhabung neuer und vergessener Karten
+{{borderlessL{
+|bgcolor:#99ccff;[img[Handhabung neuer und vergessener Karten|http://intern.csg-germering.de/~ammel/LeL/lernkartei.gif][http://intern.csg-germering.de/~ammel/LeL/lernkartei.gif]]&lt;br&gt;&amp;nbsp;&amp;nbsp; Handhabung neuer und vergessener Karten|bgcolor:#99ccff;width:25em;Vergessene (und natürlich neue) Karten werden stets ins erste Fach gelegt.&lt;br&gt;Alle Lernkarten, die das Fach wechseln, werden dort hinter die letzte Karte gesteckt. So werden Karten, an deren Rückseitentext Sie sich erinnern, ins jeweils nächste Fach gelegt, und zwar //hinter// die dort ggf. vorhandenen Karten.|
+ 
+Nähere Infos zum Lernverfahren finden Sie [[hier|http://de.wikipedia.org/wiki/Lernkartei]].  

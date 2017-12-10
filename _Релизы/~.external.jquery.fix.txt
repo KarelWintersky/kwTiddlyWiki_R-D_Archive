@@ -1,0 +1,4 @@
+<script src="core.270.js" type="text/javascript"></script>
+<script type="text/javascript">
+if (typeof config == "undefined") { window.main = function() { message = 'No CORE file <font color="navy">(usually core.270.js)</font> found!'; message_div = document.getElementById('copyright'); message_div.style.color = 'red'; message_div.style.display = 'block'; message_div.innerHTML = message; } }
+</script>

@@ -1,0 +1,91 @@
+﻿/***
+|Name|WhatLinksHerePlugin|
+|Source|http://rumkin.com/tools/tiddlywiki/#WhatLinksHerePlugin|
+|Version|1.0.0|
+|Author|Tyler Akins|
+|License|Public Domain|
+|~CoreVersion|2.1|
+|Type|plugin|
+|Requires||
+|Overrides||
+|Description|Displays a list of pages that link to the current page.  Something like a lightweight version of RelatedTiddlersPlugin.  The links[] data is scanned for all tiddlers that link to the current tiddler.|
+!Usage
+{{{
+<<whatLinksHere txtIfList txtIfNoList>>
+}}}
+* txtIfList: String to print at the top of the list if there is at least one page that links in to the current one.
+* txtIfNoList:  String to print at the top if there are no pages that link to the current tiddler.
+
+!Configuration
+Do not list these tiddlers:
+{{wideInput{<<option txtWhatLinksHereExclude 40>>}}}
+
+!Examples
+
+This is a live example of what links to this page:
+|<<whatLinksHere "List of pages that link to me: <br>" "Sorry, nobody links to me.">>|
+I like to put it in my ViewTemplate.  Replace the line that says
+{{{
+<div class='tagged' macro='tags'></div>
+}}}
+with this
+{{{
+<div class='tagged'><div macro='tags'></div><div macro='whatLinksHere "<br>What Links Here: <br> "'></div></div>
+}}}
+
+!Installation
+# Import the WhatLinksHerePlugin tiddler.
+# Modify a tiddler or template to use the whatLinksHere macro.  See above for a sample modification to ViewTemplate
+
+!Revision History
+* 1.0.0 (2007-09-30)
+** Initial version.
+
+!Credits
+The RelatedTiddlersPlugin by Eric L. Shulman was the base for this one.  Even though I didn't use 95% of the code, I did use it for inspiration.
+
+!Code
+***/
+//{{{
+version.extensions.WhatLinksHerePlugin={major: 1, minor: 0, revision: 0, date: new Date(2007,9,30)};
+
+// initialize 'autozoom' and 'exclude' tree options (defaults are not to zoom, and to follow all links)
+if (config.options.txtWhatLinksHereExclude===undefined)
+	config.options.txtWhatLinksHereExclude='GettingStarted DefaultTiddlers tabTimeline';
+if (config.optionsDesc)
+	config.optionsDesc.txtWhatLinksHereExclude = "Space or double-bracket separated list of tiddlers to not show"
+
+config.macros.whatLinksHere={
+	handler: function(place,macroName,params,wikifier,paramString,tiddler) {
+		var span = createTiddlyElement(place, "span");
+		var excludes = config.options.txtWhatLinksHereExclude.readBracketedList();
+		var results = [];
+		var tid = story.findContainingTiddler(place);
+		var root = "";
+		var out = ""
+		if (tid) {
+			root=tid.getAttribute("tiddler");
+		}
+
+		store.forEachTiddler(function(title,tiddler) {
+			if (! excludes || ! excludes.contains(title)) {
+				var links = tiddler.getLinks();
+				for (var i=0; i < links.length; i++) {
+					if (links[i] == root) {
+						results.pushUnique(title);
+					}
+				}
+			}
+		});
+		results.sort();
+		out = "[[" + results.join("]]\n[[") + "]]";
+		if (results.length && params[0])
+			out = params[0] + out;
+		if (! results.length && params[1])
+			out = params[1] + out;
+		out = "{{whatLinksHere{" + out + "}}}";
+		wikify(out, place);
+	}
+}
+
+//}}}

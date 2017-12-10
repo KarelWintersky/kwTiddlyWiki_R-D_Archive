@@ -1,0 +1,10 @@
+Using the [[TiddlerAliasPlugin]] you may refer to a tiddler using various names. 
+
+In this example the tiddler "William Shakespeare" also defines the alias "Shaxper". I.e. you may write code like this
+{{{
+Read more about [[William Shakespeare]], also known as [[Shaxper]]
+}}}
+''Result:''
+Read more about [[William Shakespeare]], also known as [[Shaxper]]
+
+In addition the "Auto ~Non-Space Alias" feature will automatically create aliases: for tiddlers with titles containing whitespaces an alias is automatically created that has every whitespace replaced by a dash ("-"). E.g. a tiddler called [[Tiddler with no alias defined]] can also be referenced by [[Tiddler-with-no-alias-defined]].

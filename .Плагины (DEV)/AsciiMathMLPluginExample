@@ -1,0 +1,6 @@
+﻿To do math, type it in single backticks (on the tilde key). Most things work as you might expect:
+`int_a^b (3/x) dx  =  sqrt(49)*[(1, 3),(2, x^2)]`
+is actually {{{`int_a^b (3/x) dx  =  sqrt(49)*[(1, 3),(2, x^2)]`}}}
+
+If you do not see any math, make sure you are using Firefox. If you do not see everything correctly, make sure to load the fonts via
+http://www.mozilla.org/projects/mathml/fonts/

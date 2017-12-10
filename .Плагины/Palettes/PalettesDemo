@@ -1,0 +1,6 @@
+﻿I'm using ShowPaletteMacro in my ViewTemplate to display a palettes with a colour swatch. Look at some <<tag palette>>s to see how it looks. The colour swatches update automatically if you edit the colours. Try it and see.
+
+As well as that there is an "apply" button in the toolbar which uses a macro from SelectPaletteMacro to apply that palette's colour scheme.
+
+SelectPaletteMacro also provides a drop-down selector for palettes. It looks like this:
+<<selectPalette>>

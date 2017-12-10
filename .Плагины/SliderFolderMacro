@@ -1,0 +1,55 @@
+﻿/***
+|Name|SliderMacro|
+|Version|1.0.3|
+|Requires|~TW2.x|
+
+
+!Code
+***/
+//{{{
+
+// this part is not actually required but useful to other people using your plugin
+version.extensions.SliderFolderMacro = { major: 1, minor: 0, revision: 3, date: new Date(2006,3,3),
+ source: "http://simonbaird.com/mptw/#HelloWorldMacro"
+};
+
+config.macros.SliderFolder = {
+	label: "SliderFolder",
+	prompt: "This will send a message" 
+};
+config.macros.SliderFolder.handler = function (place,macroName,params,wikifier,paramString,tiddler) {
+	var who = params.length > 0 ? params[0] : "world";
+	var tg = params.length > 0 ? params[0] : "world";
+	var note = params[1] != null ?  params[1] : "please, add a comment"; 
+	note = "[["+note+"]]";
+	var folder = tg + "F";
+	var lbl = tg + "...>";
+	var opn = "[[o|"+tg+"]]";
+
+	//wikify("Hello //" + who + "// from the '" + macroName + "' macro in tiddler [[" + tiddler.title + "]].", place);
+	wikify("<<slider chkSlider" + folder + " " + folder + " " + lbl + " " + note + ">>" + opn,place);
+
+}
+
+// a one liner...
+config.macros.MySlider = { 
+	handler: function(place,name,params) { 
+		wikify("//''@@font-size:5em;color:#696;"+ params[0] + "!@@''//", place); 
+	} 
+};
+
+
+//}}}
+
+/***
+
+!Another example
+{{{<<MySlider Yeah>>}}}
+
+
+<<MySlider Yeah>>
+
+<<SliderFolder>>
+
+
+***/
